@@ -202,7 +202,7 @@ class AppTheme {
           color: AppColors.textOnPrimary,
         ),
       ),
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         elevation: AppDimens.cardElevation,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppDimens.radiusMD),
