@@ -1,0 +1,986 @@
+================================================================================
+  SUPER BUSINESS SHOP MANAGEMENT APP
+  Complete Project Requirements & Developer Guide — Version 2.0
+  Mobile App (Android/iOS) + Web App (PWA)
+  For Pakistani Shopkeepers | Urdu + English
+================================================================================
+
+DOCUMENT INFORMATION
+--------------------
+Project Name   : Super Business Shop Management App
+Version        : 2.0 (Updated)
+Target Users   : Small shopkeepers, kiryana store owners, general retailers
+Platforms      : Android App + iOS App + Flutter Web (PWA)
+Language       : Urdu (primary) + English toggle
+Free Tools     : Flutter, Firebase Free Tier, Google Sheets API, Google Drive API
+New in v2.0    : In-App Google Sheets Editor, Full Buyer/Supplier Ledger System
+
+
+================================================================================
+TABLE OF CONTENTS
+================================================================================
+
+ 01. Project Overview
+ 02. Technology Stack (Free)
+ 03. NEW — In-App Google Sheets Manager (Mobile Editing)
+ 04. NEW — Buyer (Customer) Ledger System — Debit/Credit/Udhaar
+ 05. NEW — Supplier Ledger System — Purchase/Payment/Balance
+ 06. NEW — Money Flow Dashboard (Who Owes What)
+ 07. Functional Requirements (Complete List)
+ 08. Non-Functional Requirements
+ 09. GUI Design Guide (Mobile-First, Uneducated User Friendly)
+ 10. Database Schema (SQLite + Firebase)
+ 11. Google Sheets Structure & Sync Logic
+ 12. Google Drive Backup & Restore
+ 13. Development Workflow (Phases)
+ 14. Flutter Packages List
+ 15. Web App Requirements
+ 16. Testing Requirements
+ 17. Deployment Guide
+ 18. Future Features (v3.0)
+
+
+================================================================================
+SECTION 01 — PROJECT OVERVIEW
+================================================================================
+
+PURPOSE
+-------
+This app is a complete daily shop management system for small Pakistani
+shopkeepers. It runs on Android, iOS, and in any web browser. The design
+goal is that any shopkeeper — even with no education or tech experience —
+can manage their entire business from their smartphone.
+
+WHAT'S NEW IN THIS VERSION
+---------------------------
+Two major additions have been made based on real shopkeeper needs:
+
+1. IN-APP GOOGLE SHEETS EDITOR
+   Shopkeepers should NOT need to open Google Sheets on a laptop to make
+   changes. They can edit, add, and delete products/prices/stock directly
+   from inside the app using a built-in spreadsheet editor that looks and
+   works like Google Sheets — but is part of the app itself.
+
+2. COMPLETE LEDGER SYSTEM
+   Every money transaction between the shopkeeper and buyers (customers)
+   AND between the shopkeeper and suppliers is tracked as a proper
+   debit/credit ledger — just like a traditional shop register (bahi khata)
+   but digital. The app knows exactly:
+   - Who owes money to the shopkeeper (buyers with udhaar)
+   - Who the shopkeeper owes money to (suppliers on credit)
+   - Complete running balance for every person
+
+DESIGN PHILOSOPHY
+-----------------
+• SIMPLE       — Big icons, Urdu labels, minimal typing. Works for illiterate users.
+• FREE         — 100% free tools only. No monthly fees.
+• OFFLINE      — Works without internet. Syncs when connection available.
+• URDU FIRST   — Full Urdu interface. All numbers, alerts, labels in Urdu.
+• LEDGER-BASED — Every rupee is tracked. Nothing is lost.
+
+
+================================================================================
+SECTION 02 — TECHNOLOGY STACK (ALL FREE)
+================================================================================
+
+Layer              | Technology                | Purpose                      | Cost
+-------------------|---------------------------|------------------------------|------
+Mobile App         | Flutter (Dart)            | Android + iOS from 1 codebase| Free
+Web App            | Flutter Web               | Browser version              | Free
+Local Database     | SQLite (sqflite package)  | Offline data storage         | Free
+Cloud Database     | Firebase Firestore        | Cross-device sync (1GB free) | Free
+Authentication     | Firebase Auth             | OTP phone login              | Free
+Sheets Sync        | Google Sheets API v4      | Live spreadsheet sync        | Free
+File Backup        | Google Drive API          | Auto backup to Drive         | Free
+Push Alerts        | Firebase Cloud Messaging  | Low stock / payment alerts   | Free
+PDF Generation     | pdf package (Flutter)     | Bills, reports, ledgers      | Free
+Charts             | fl_chart package          | Sales, profit, balance charts| Free
+Printer Support    | printing package          | Bluetooth thermal printer    | Free
+State Management   | Riverpod                  | App state management         | Free
+Web Hosting        | Firebase Hosting          | Host web app (10GB/month)    | Free
+Background Tasks   | workmanager               | Nightly Drive backup         | Free
+
+
+================================================================================
+SECTION 03 — IN-APP GOOGLE SHEETS MANAGER (NEW — MOBILE EDITING)
+================================================================================
+
+OVERVIEW
+--------
+The shopkeeper must NEVER need to open a laptop or a browser to edit their
+Google Sheet data. All changes happen from inside the app. The app has a
+dedicated "Sheets Manager" screen that shows data in a table/spreadsheet
+format and allows full editing.
+
+HOW IT WORKS (User Flow)
+------------------------
+Step 1: Shopkeeper opens app → taps "گوگل شیٹ" (Google Sheet) from menu.
+Step 2: App shows a tabbed spreadsheet view inside the app:
+        Tab 1: مصنوعات (Products)
+        Tab 2: فروخت (Sales)
+        Tab 3: گاہک (Customers)
+        Tab 4: سپلائر (Suppliers)
+Step 3: Shopkeeper can:
+        • VIEW all rows in a scrollable table
+        • TAP any cell to edit it directly
+        • TAP "+ قطار شامل کریں" (Add Row) to add a new product
+        • SWIPE LEFT on any row to delete it
+        • TAP "محفوظ کریں" (Save) to push changes to Google Sheets
+        • TAP "تازہ کریں" (Refresh) to pull latest data from Sheets
+Step 4: All changes sync both to Google Sheets AND local SQLite database.
+
+IN-APP SHEET EDITOR — DETAILED REQUIREMENTS
+--------------------------------------------
+
+A) PRODUCTS SHEET (مصنوعات)
+Columns visible in app editor:
+  Col 1: نام (Product Name) — text field
+  Col 2: قیمت خرید (Purchase Price) — number field
+  Col 3: قیمت فروخت (Sale Price) — number field
+  Col 4: اسٹاک (Stock) — number field with +/- stepper
+  Col 5: کم از کم اسٹاک (Min Stock Alert) — number field
+  Col 6: زمرہ (Category) — dropdown selector
+
+Actions available:
+  • Add new product row → creates product in app AND Google Sheet
+  • Edit any cell → tap cell → keyboard/number pad appears → auto-save
+  • Delete row → swipe left → confirm → product archived in app + row deleted in Sheet
+  • Sort by: Name, Price, Stock (tap column header)
+  • Filter by: Category (dropdown filter at top)
+  • Search bar to find product by name
+
+B) SALES SHEET (فروخت) — READ ONLY in editor
+  • Shopkeeper can VIEW all past sales in spreadsheet format
+  • Cannot edit sales (to prevent fraud/errors)
+  • Can export filtered date range to new Sheet
+
+C) CUSTOMERS SHEET (گاہک)
+Columns visible:
+  Col 1: نام (Name) — text
+  Col 2: فون (Phone) — number
+  Col 3: باقی رقم (Balance) — auto-calculated, READ ONLY (shown in red if positive)
+  Col 4: آخری خریداری (Last Purchase) — date, READ ONLY
+
+Actions:
+  • Add new customer row
+  • Edit name and phone
+  • Balance is auto-calculated from ledger — cannot be manually edited
+
+D) SUPPLIERS SHEET (سپلائر)
+Columns visible:
+  Col 1: نام (Name) — text
+  Col 2: فون (Phone) — number
+  Col 3: واجب الادا (Amount Owed) — auto-calculated from ledger, READ ONLY
+  Col 4: آخری خریداری (Last Purchase) — date, READ ONLY
+
+SYNC BEHAVIOR
+-------------
+Direction 1: App → Google Sheets (PUSH)
+  • Every save action in the in-app editor pushes to Google Sheets via API
+  • Every new sale pushes a new row to Sales sheet
+  • Every stock change updates the Products sheet stock column
+
+Direction 2: Google Sheets → App (PULL)
+  • When user taps "تازہ کریں" (Refresh), app reads all 4 sheets
+  • New rows in Sheets = new records in app
+  • Changed values in Sheets = updated records in app
+  • Deleted rows in Sheets = archived records in app
+  • Automatic background pull every 30 minutes when app is open
+
+CONFLICT RESOLUTION
+-------------------
+If the same product was edited in the app AND in Google Sheets between syncs:
+  • Show the shopkeeper a conflict card: "2 جگہ تبدیلی ہوئی" (Changed in 2 places)
+  • Show both values side by side
+  • Shopkeeper taps which value to keep
+  • Resolved value is saved to both places
+
+OFFLINE EDITING
+---------------
+  • If no internet, changes are saved locally with status "انتظار میں" (Pending)
+  • A pending badge count shows on the Sheets menu icon
+  • When internet returns, all pending changes are pushed automatically
+  • Show "X تبدیلیاں اپ لوڈ ہوئیں" (X changes uploaded) notification
+
+
+================================================================================
+SECTION 04 — BUYER (CUSTOMER) LEDGER SYSTEM
+================================================================================
+
+CONCEPT — BAHI KHATA (بہی کھاتہ) DIGITAL
+------------------------------------------
+Every traditional shopkeeper keeps a physical register called "Bahi Khata"
+where they record what each customer bought and what they paid. This app
+replaces that register with a digital ledger that is more accurate, never
+lost, and sends automatic reminders.
+
+BUYER LEDGER — ALL TRANSACTION TYPES
+--------------------------------------
+
+TYPE 1: CREDIT SALE (ادھار / اُدھار فروخت)
+  Meaning: Buyer takes goods but does NOT pay now. Money is owed TO shopkeeper.
+  Effect: Buyer's balance INCREASES (goes into debit — they owe more)
+  Entry in ledger: Date | "ادھار فروخت" | Items | Amount | DR | Running Balance
+
+TYPE 2: CASH SALE (نقد فروخت)
+  Meaning: Buyer takes goods and pays full amount in cash.
+  Effect: No change to balance (zero net effect on ledger)
+  Entry in ledger: Date | "نقد فروخت" | Items | Amount | PAID | Balance: 0
+
+TYPE 3: PARTIAL PAYMENT AT SALE (جزوی ادائیگی)
+  Meaning: Buyer pays some amount now, rest is ادھار.
+  Effect: Balance increases by (Total - Amount Paid)
+  Entry in ledger:
+    Row 1: Date | "فروخت" | Items | Full Amount | DR
+    Row 2: Date | "ادائیگی" | Cash Received | Amount Paid | CR
+    Net Balance shown below
+
+TYPE 4: PAYMENT RECEIVED (ادائیگی موصول)
+  Meaning: Buyer comes and pays off some or all of their ادھار.
+  Effect: Buyer's balance DECREASES (credit reduces the debt)
+  Entry in ledger: Date | "ادائیگی موصول" | Amount Paid | CR | Running Balance
+
+TYPE 5: RETURN / WAPSI (واپسی)
+  Meaning: Buyer returns goods. Shopkeeper reduces the balance.
+  Effect: Balance decreases
+  Entry in ledger: Date | "مال واپسی" | Items | Amount | CR | Running Balance
+
+TYPE 6: ADVANCE PAYMENT (پیشگی ادائیگی)
+  Meaning: Buyer pays in advance for future purchases.
+  Effect: Balance becomes negative (shopkeeper owes the buyer)
+  Entry in ledger: Date | "پیشگی" | Amount | CR | Balance shown in GREEN
+
+BUYER LEDGER — SCREEN DESIGN
+------------------------------
+Customer Detail Screen shows:
+
+[HEADER CARD — RED if owed, GREEN if advance paid]
+  Customer Name + Photo
+  "کل باقی: Rs. 2,500" (Total Remaining: Rs. 2,500)
+  [واٹس ایپ یاد دہانی] [ادائیگی لو] [بل دیکھو] buttons
+
+[LEDGER TABLE — scrollable timeline]
+  Date    | تفصیل          | ڈیبٹ (DR) | کریڈٹ (CR) | بیلنس
+  --------|----------------|-----------|------------|-------
+  03 Mar  | ادھار فروخت   | 1,500     |            | 1,500
+  04 Mar  | ادائیگی موصول |           | 500        | 1,000
+  05 Mar  | ادھار فروخت   | 800       |            | 1,800
+  06 Mar  | ادائیگی موصول |           | 500        | 1,300
+  07 Mar  | مال واپسی     |           | 200        | 1,100
+  ...
+
+[FOOTER]
+  Total DR: Rs. 4,300  |  Total CR: Rs. 3,200  |  Balance: Rs. 1,100
+
+ACTIONS IN BUYER LEDGER
+------------------------
+  • "+ ادائیگی لو" (Receive Payment) — record cash payment from buyer
+  • "+ ادھار فروخت" (Credit Sale) — add a manual credit sale
+  • "پی ڈی ایف بھیجو" (Send PDF) — generate ledger PDF and share on WhatsApp
+  • "واٹس ایپ یاد دہانی" — pre-written Urdu message with balance
+  • "فلٹر" — filter ledger by date range
+
+PAYMENT REMINDER VIA WHATSAPP
+-------------------------------
+When shopkeeper taps "واٹس ایپ یاد دہانی", the app opens WhatsApp with
+this pre-written message (in Urdu):
+
+  "السلام علیکم [Customer Name] صاحب،
+  آپ کے ذمے [Shop Name] کی طرف سے Rs. [Amount] باقی ہیں۔
+  براہ کرم جلد ادائیگی فرمائیں۔ شکریہ۔"
+
+BULK CUSTOMER SUMMARY
+----------------------
+All Customers screen shows:
+  • Total amount owed BY all customers combined (big red number at top)
+  • Total advance payments held (big green number)
+  • Net receivable amount
+  • List sorted by: Highest balance first (default)
+  • Filter: Only show customers with pending balance
+
+
+================================================================================
+SECTION 05 — SUPPLIER LEDGER SYSTEM
+================================================================================
+
+CONCEPT
+-------
+When a shopkeeper buys goods from a supplier, they often do not pay the full
+amount immediately. They take goods on credit and pay later. This section
+tracks the complete financial relationship between shopkeeper and each supplier.
+
+SUPPLIER LEDGER — ALL TRANSACTION TYPES
+-----------------------------------------
+
+TYPE 1: PURCHASE ON CREDIT (ادھار خریداری)
+  Meaning: Shopkeeper takes goods from supplier, will pay later.
+  Effect: Shopkeeper's payable balance INCREASES (shopkeeper owes supplier more)
+  Entry: Date | "ادھار خریداری" | Items | Amount | DR (shopkeeper's debt)
+
+TYPE 2: CASH PURCHASE (نقد خریداری)
+  Meaning: Shopkeeper buys goods and pays full amount immediately.
+  Effect: No change to outstanding balance
+  Entry: Date | "نقد خریداری" | Items | Amount | PAID
+
+TYPE 3: PAYMENT MADE TO SUPPLIER (سپلائر کو ادائیگی)
+  Meaning: Shopkeeper pays off some or all debt to supplier.
+  Effect: Shopkeeper's payable balance DECREASES
+  Entry: Date | "ادائیگی کی" | Amount Paid | CR | Running Balance
+
+TYPE 4: RETURN TO SUPPLIER (مال واپس سپلائر کو)
+  Meaning: Shopkeeper returns damaged/wrong goods to supplier.
+  Effect: Balance decreases (supplier owes the shopkeeper a credit)
+  Entry: Date | "واپسی" | Items | Amount | CR | Running Balance
+
+TYPE 5: ADVANCE PAYMENT TO SUPPLIER (پیشگی)
+  Meaning: Shopkeeper pays supplier in advance.
+  Effect: Balance becomes negative (supplier owes shopkeeper)
+  Entry: Date | "پیشگی" | Amount | CR | Balance in GREEN
+
+SUPPLIER LEDGER — SCREEN DESIGN
+---------------------------------
+Supplier Detail Screen shows:
+
+[HEADER CARD — RED if shopkeeper owes, GREEN if supplier owes back]
+  Supplier Name + Company
+  "آپ کے ذمے: Rs. 8,000" (You Owe: Rs. 8,000)
+  [ادائیگی کرو] [خریداری شامل کرو] [واٹس ایپ] buttons
+
+[PURCHASE HISTORY + PAYMENT LEDGER — scrollable]
+  Date    | تفصیل              | مال لیا (DR) | ادائیگی (CR) | بیلنس
+  --------|--------------------|-------------|--------------|-------
+  01 Mar  | ادھار خریداری     | 5,000       |              | 5,000
+  02 Mar  | نقد خریداری       | 2,000       |              | 7,000  (paid on spot)
+  03 Mar  | ادائیگی کی        |             | 3,000        | 4,000
+  04 Mar  | ادھار خریداری     | 6,000       |              | 10,000
+  05 Mar  | مال واپسی         |             | 2,000        | 8,000
+
+[FOOTER]
+  Total Purchased: Rs. 13,000  |  Total Paid: Rs. 5,000  |  Balance: Rs. 8,000
+
+ACTIONS IN SUPPLIER LEDGER
+----------------------------
+  • "+ خریداری شامل کرو" (Add Purchase) — record new purchase from this supplier
+    → Enter: items bought, total amount, payment method (cash/credit/partial)
+    → If cash: balance unchanged. If credit: balance increases.
+    → Stock auto-increases for items purchased
+  • "+ ادائیگی کرو" (Make Payment) — record payment made to supplier
+    → Enter: amount paid, payment method (cash/bank transfer)
+    → Balance decreases accordingly
+  • "واٹس ایپ" — send payment or purchase summary to supplier on WhatsApp
+  • "رسید" (Receipt) — generate purchase receipt PDF
+
+SUPPLIER PURCHASE ENTRY FLOW
+------------------------------
+When shopkeeper taps "+ خریداری شامل کرو":
+
+Screen 1: SELECT SUPPLIER
+  [Search bar] → tap supplier name → or tap "+ نیا سپلائر" (new supplier)
+
+Screen 2: ADD ITEMS
+  [Add Item button] → search product → enter quantity received → enter purchase price
+  Multiple items can be added to one purchase entry
+  [اگلا] (Next) button
+
+Screen 3: PAYMENT DETAILS
+  Total amount shown large
+  Payment Method: [نقد] [ادھار] [جزوی]
+  If partial: "ابھی کتنا دیا؟" (How much paid now?) — number field
+  [محفوظ کرو] (Save)
+
+Screen 4: CONFIRMATION
+  Summary shown:
+    Items received: X items
+    Total value: Rs. X
+    Paid now: Rs. X
+    Remaining to pay: Rs. X (red if amount owed)
+    Stock updated automatically ✓
+  [واٹس ایپ سپلائر کو بھیجو] button
+
+
+================================================================================
+SECTION 06 — MONEY FLOW DASHBOARD (نقد بہاؤ)
+================================================================================
+
+This is a new dedicated screen accessible from the main menu showing the
+complete financial picture of the shop at any moment.
+
+MONEY FLOW SCREEN — SECTIONS
+------------------------------
+
+SECTION A: مجھے ملنے والی رقم (Money I Will Receive — from Buyers)
+  Big GREEN card: "کل ادھار: Rs. 45,200"
+  Below: List of top 5 buyers with highest balance
+  [تمام گاہک دیکھو] button
+
+SECTION B: مجھے دینی والی رقم (Money I Must Pay — to Suppliers)
+  Big RED card: "کل واجب الادا: Rs. 28,500"
+  Below: List of top 5 suppliers with highest balance
+  [تمام سپلائر دیکھو] button
+
+SECTION C: خالص پوزیشن (Net Position)
+  If (Receivable > Payable): GREEN card "آپ فائدے میں ہیں: Rs. X"
+  If (Payable > Receivable): ORANGE card "آپ کو ادائیگی کرنی ہے: Rs. X"
+
+SECTION D: آج کی ادائیگیاں (Today's Payments)
+  List of all payments received today (from buyers)
+  List of all payments made today (to suppliers)
+  Net cash flow today
+
+SECTION E: AGING ANALYSIS (بقایا رقم)
+  "30 دن سے زیادہ" (30+ days old debts) — highlighted in red
+  Shows which customers have ادھار older than 30 days
+  Shows which suppliers need to be paid
+
+GOOGLE SHEETS SYNC FOR LEDGERS
+--------------------------------
+The Customers sheet in Google Sheets includes these columns (auto-updated):
+  Name | Phone | Total Purchased | Total Paid | Balance | Days Since Last Payment
+
+The Suppliers sheet includes:
+  Name | Phone | Total Purchased | Total Paid | Balance | Last Purchase Date
+
+The app auto-updates these columns after every transaction.
+The shopkeeper can SEE these values in the in-app Sheets editor (read-only
+for balance columns — balances are always calculated from transactions).
+
+
+================================================================================
+SECTION 07 — COMPLETE FUNCTIONAL REQUIREMENTS
+================================================================================
+
+7.1 AUTHENTICATION
+  • Phone number OTP login (Firebase Auth — no password)
+  • Google Sign-in (required for Sheets/Drive access)
+  • First-time setup: shop name, owner name, city, currency (PKR default)
+  • Optional 4-digit PIN or biometric lock
+  • Up to 5 shop profiles per account
+
+7.2 DASHBOARD
+  • Today's Sales (large green card)
+  • Today's Profit (large blue card)
+  • Total Udhaar receivable from customers (red)
+  • Total payable to suppliers (orange)
+  • Net position (green/red)
+  • 7-day Sales vs Profit mini chart
+  • Low Stock Alert list
+  • Quick action: New Sale, Add Product, Receive Payment, Make Payment
+
+7.3 PRODUCT & INVENTORY
+  • Add/Edit/Delete products with photo
+  • Categories with custom names
+  • Purchase price + Sale price tracking
+  • Stock quantity management with +/- adjustments
+  • Low stock alert threshold per product
+  • Barcode scan (optional)
+  • Bulk import via CSV or Google Sheets
+  • Stock history log per product
+
+7.4 BILLING / POS
+  • Product search by name (Urdu + English)
+  • Multi-item bill creation
+  • Discount (% or fixed amount)
+  • Tax (configurable rate)
+  • Payment method: Cash / Credit (Udhaar) / Partial
+  • Assign to customer
+  • PDF bill generation
+  • WhatsApp bill sharing
+  • Bluetooth printer support (58mm + 80mm)
+  • Bill history with re-print option
+
+7.5 BUYER (CUSTOMER) LEDGER
+  • Full debit/credit ledger per customer
+  • All 6 transaction types (see Section 04)
+  • Running balance always visible
+  • WhatsApp payment reminder
+  • PDF ledger generation
+  • Aging analysis (30/60/90 days)
+
+7.6 SUPPLIER LEDGER
+  • Full debit/credit ledger per supplier
+  • All 5 transaction types (see Section 05)
+  • Purchase entry with stock auto-update
+  • Payment recording
+  • WhatsApp supplier communication
+  • Purchase receipt PDF
+
+7.7 IN-APP GOOGLE SHEETS EDITOR
+  • View all 4 sheets inside the app
+  • Add/edit/delete product rows
+  • Add/edit customer and supplier info
+  • Auto-sync both ways
+  • Offline editing with pending queue
+  • Conflict resolution UI
+
+7.8 REPORTS
+  • Daily / Weekly / Monthly sales reports
+  • Profit reports (sales profit - expenses)
+  • Inventory reports (stock levels, movement)
+  • Customer ledger reports
+  • Supplier ledger reports
+  • Export: PDF, Google Sheets, CSV
+
+7.9 GOOGLE DRIVE BACKUP
+  • Automatic nightly backup as JSON
+  • Manual backup button
+  • 30-day backup history
+  • Restore from any backup file
+
+7.10 EXPENSE TRACKING
+  • Daily expense entry (rent, salary, electricity, etc.)
+  • Net profit = Sales Profit - Expenses
+  • Monthly expense summary
+
+7.11 MULTI-BUSINESS
+  • Up to 5 shop profiles
+  • Each shop has its own data and Google Sheet
+  • Switch between shops in one tap
+
+
+================================================================================
+SECTION 08 — NON-FUNCTIONAL REQUIREMENTS
+================================================================================
+
+PERFORMANCE
+  • App launch:         < 3 seconds on 2GB RAM Android phone
+  • Bill generation:    < 2 seconds
+  • Search response:    < 0.5 seconds
+  • Sheets sync:        < 5 seconds per operation
+  • Support:            10,000 products, 100,000 transactions without slowdown
+  • Offline:            All core features work with no internet
+
+USABILITY
+  • New user makes first sale within 5 minutes, no training
+  • Full Urdu UI, one-tap English toggle
+  • All text minimum 16sp, important numbers 24sp or larger
+  • Every button has icon + text label (no icon-only buttons)
+  • All delete actions require confirmation popup
+  • All errors shown in simple Urdu with next-step suggestion
+
+SECURITY
+  • Firebase Security Rules: users see only their own data
+  • Google OAuth 2.0 for Sheets/Drive (no passwords stored)
+  • SQLite encrypted with SQLCipher
+  • Optional PIN / biometric lock
+  • HTTPS only for all network calls
+
+COMPATIBILITY
+  • Android 6.0 (API 23) and above
+  • iOS 13 and above
+  • Web: Chrome 90+, Firefox 88+, Safari 14+
+  • Minimum screen: 4.5 inch
+  • Works on 2G connection for sync
+
+RELIABILITY
+  • No data loss — every action saved locally before cloud
+  • Crash-free — all exceptions caught, friendly error shown
+  • Google Sheets sync failure = silent retry, never blocks user
+  • Firebase Firestore free tier compliance (batch writes only)
+
+
+================================================================================
+SECTION 09 — GUI DESIGN GUIDE
+================================================================================
+
+DESIGN RULES (NON-NEGOTIABLE)
+  1. ICON + LABEL: Every button shows icon AND text. Never icon-only.
+  2. BIG TOUCH AREAS: Minimum 56x56dp touch target. 80dp for main actions.
+  3. COLOR CODING:
+       GREEN   = money received, profit, positive balance
+       RED     = money owed by shopkeeper, alerts, delete
+       BLUE    = information, navigation, neutral actions
+       ORANGE  = warnings, pending, partial
+       GRAY    = inactive, disabled
+  4. URDU FONTS: Use Jameel Noori Nastaleeq or Noto Nastaliq Urdu font
+  5. ONE PRIMARY ACTION PER SCREEN: One big green/blue FAB button per screen
+  6. CONFIRM BEFORE DELETE: Always show popup before any delete
+  7. UNDO: Show undo option for 5 seconds after any destructive action
+  8. NUMBER PADS: Use numeric keypad for all price/amount/quantity fields
+
+BOTTOM NAVIGATION BAR (5 tabs)
+  Tab 1: گھر     (Home)       — House icon     — Dashboard
+  Tab 2: فروخت  (Sale)       — Cart icon      — POS / Billing
+  Tab 3: مال    (Stock)      — Box icon       — Products
+  Tab 4: گاہک   (Customers)  — People icon    — Buyer Ledger
+  Tab 5: رپورٹ  (Reports)    — Chart icon     — Reports
+
+HAMBURGER MENU (secondary screens)
+  • سپلائر       (Suppliers)        — Supplier Ledger
+  • گوگل شیٹ    (Google Sheet)     — In-App Sheets Editor
+  • نقد بہاؤ    (Money Flow)       — Money Flow Dashboard
+  • اخراجات     (Expenses)         — Expense Tracking
+  • بیک اپ      (Backup)           — Google Drive Backup
+  • دکان بدلو   (Switch Shop)      — Multi-business toggle
+  • ترتیبات    (Settings)          — App settings
+  • مدد         (Help)             — Tutorial / Help
+
+DASHBOARD SCREEN LAYOUT
+  [Blue header: Shop Name + Today's Date]
+  Row 1: [آج کی فروخت — GREEN]   [آج کا منافع — BLUE]
+  Row 2: [ادھار ملنی — GREEN]     [ادھار دینی — RED]
+  Row 3: [7-day Sales vs Profit bar chart]
+  Row 4: [Low Stock Alerts list]
+  FAB: Large "نئی فروخت" (New Sale) green button bottom-right
+
+BUYER LEDGER SCREEN LAYOUT
+  [Customer list with balance shown in red/green]
+  Tap customer → Customer Detail:
+    [Balance card — RED if owed, GREEN if advance]
+    [واٹس ایپ] [ادائیگی لو] [بل دیکھو] action buttons
+    [Ledger table: Date | Description | DR | CR | Balance]
+    FAB: "+ ادائیگی" button
+
+SUPPLIER LEDGER SCREEN LAYOUT
+  [Supplier list with "you owe" amount in red]
+  Tap supplier → Supplier Detail:
+    [Balance card — RED if you owe, GREEN if they owe you]
+    [ادائیگی کرو] [خریداری] [واٹس ایپ] buttons
+    [Ledger table: Date | Description | DR | CR | Balance]
+    FAB: "+ خریداری" button
+
+IN-APP SHEETS EDITOR SCREEN LAYOUT
+  [Tab bar: مصنوعات | فروخت | گاہک | سپلائر]
+  [Search bar + Filter dropdown]
+  [Scrollable table with column headers]
+  [Each row: tap to edit, swipe left to delete]
+  [+ قطار شامل کریں] (Add Row) button at bottom
+  [Sync status indicator: cloud icon top right]
+  [تازہ کریں] (Refresh) and [محفوظ کریں] (Save) buttons
+
+
+================================================================================
+SECTION 10 — DATABASE SCHEMA
+================================================================================
+
+PRODUCTS TABLE
+  id              TEXT (UUID)   — unique ID
+  name_urdu       TEXT          — product name in Urdu
+  name_english    TEXT          — product name in English
+  category        TEXT          — category name
+  purchase_price  REAL          — cost price
+  sale_price      REAL          — selling price
+  stock_quantity  INTEGER       — current stock
+  min_stock_alert INTEGER       — alert threshold
+  barcode         TEXT          — optional barcode
+  photo_path      TEXT          — local image path
+  is_active       INTEGER       — 1=active, 0=archived
+  created_at      TEXT          — ISO timestamp
+  updated_at      TEXT          — ISO timestamp
+  sheets_row_id   INTEGER       — Google Sheets row number for update
+
+CUSTOMERS TABLE
+  id              TEXT (UUID)
+  name            TEXT
+  phone           TEXT
+  address         TEXT
+  photo_path      TEXT
+  created_at      TEXT
+  updated_at      TEXT
+  notes           TEXT
+
+CUSTOMER TRANSACTIONS TABLE  ← New ledger table
+  id              TEXT (UUID)
+  customer_id     TEXT          — FK to customers
+  date            TEXT          — ISO date
+  type            TEXT          — CREDIT_SALE / CASH_SALE / PAYMENT_RECEIVED /
+                                   RETURN / ADVANCE / PARTIAL_PAYMENT
+  description     TEXT          — human readable description in Urdu
+  debit_amount    REAL          — amount added to what customer owes (DR)
+  credit_amount   REAL          — amount subtracted from what customer owes (CR)
+  running_balance REAL          — balance after this transaction
+  sale_id         TEXT          — FK to sales table (if linked to a bill)
+  payment_method  TEXT          — CASH / BANK_TRANSFER / OTHER
+  notes           TEXT
+  created_at      TEXT
+
+SUPPLIERS TABLE
+  id              TEXT (UUID)
+  name            TEXT
+  phone           TEXT
+  address         TEXT
+  company_name    TEXT
+  created_at      TEXT
+  updated_at      TEXT
+
+SUPPLIER TRANSACTIONS TABLE  ← New ledger table
+  id              TEXT (UUID)
+  supplier_id     TEXT          — FK to suppliers
+  date            TEXT
+  type            TEXT          — CREDIT_PURCHASE / CASH_PURCHASE /
+                                   PAYMENT_MADE / RETURN_TO_SUPPLIER / ADVANCE_PAID
+  description     TEXT
+  debit_amount    REAL          — goods received (shopkeeper owes more)
+  credit_amount   REAL          — payment made (shopkeeper owes less)
+  running_balance REAL          — shopkeeper's outstanding balance to supplier
+  items_json      TEXT          — JSON array of items in this purchase
+  payment_method  TEXT
+  notes           TEXT
+  created_at      TEXT
+
+SALES TABLE
+  id              TEXT (UUID)
+  date            TEXT
+  customer_id     TEXT          — optional FK
+  subtotal        REAL
+  discount        REAL
+  tax             REAL
+  total           REAL
+  profit          REAL
+  payment_type    TEXT          — CASH / CREDIT / PARTIAL
+  amount_paid     REAL
+  balance_due     REAL
+  bill_pdf_path   TEXT
+  created_at      TEXT
+
+SALE ITEMS TABLE
+  id              TEXT (UUID)
+  sale_id         TEXT          — FK to sales
+  product_id      TEXT          — FK to products
+  product_name    TEXT          — snapshot at time of sale
+  quantity        INTEGER
+  purchase_price  REAL          — snapshot
+  sale_price      REAL          — snapshot
+  profit          REAL
+
+EXPENSES TABLE
+  id              TEXT (UUID)
+  date            TEXT
+  category        TEXT
+  description     TEXT
+  amount          REAL
+  created_at      TEXT
+
+SYNC QUEUE TABLE  ← For offline changes
+  id              TEXT (UUID)
+  action          TEXT          — INSERT / UPDATE / DELETE
+  table_name      TEXT
+  record_id       TEXT
+  data_json       TEXT
+  created_at      TEXT
+  status          TEXT          — PENDING / SYNCED / FAILED
+
+
+================================================================================
+SECTION 11 — GOOGLE SHEETS STRUCTURE
+================================================================================
+
+SHEET 1: مصنوعات (Products)
+  Row 1: Headers (frozen)
+  Columns: ID | نام | English Name | زمرہ | قیمت خرید | قیمت فروخت |
+           اسٹاک | کم از کم اسٹاک | Barcode | Active | Updated At
+
+SHEET 2: فروخت (Sales) — auto-populated from app
+  Columns: Date | Bill No | Customer | Items | Qty | Total | Paid |
+           Balance | Profit | Payment Type
+
+SHEET 3: گاہک لیجر (Customer Ledger)
+  Columns: Customer ID | Name | Phone | Total DR | Total CR |
+           Current Balance | Last Transaction Date
+
+SHEET 4: سپلائر لیجر (Supplier Ledger)
+  Columns: Supplier ID | Name | Phone | Total Purchased | Total Paid |
+           Balance | Last Purchase Date
+
+SHEET 5: اخراجات (Expenses)
+  Columns: Date | Category | Description | Amount
+
+SHEET 6: ماہانہ خلاصہ (Monthly Summary) — auto-calculated
+  Columns: Month | Total Sales | Total Profit | Total Expenses | Net Profit |
+           Customer Receivable | Supplier Payable
+
+
+================================================================================
+SECTION 12 — GOOGLE DRIVE BACKUP
+================================================================================
+
+BACKUP FILE STRUCTURE
+  Folder in Drive: "ShopApp Backup / [Shop Name]"
+  File name: "backup_YYYY-MM-DD.json"
+  File contents: Complete export of all SQLite tables as JSON
+
+BACKUP SCHEDULE
+  • Automatic: every night at 2:00 AM (workmanager background task)
+  • Manual: Settings → "ابھی بیک اپ لو" button
+  • Retention: Last 30 files kept, older deleted automatically
+
+RESTORE PROCESS
+  Settings → "بیک اپ سے بحال کرو" → Shows list of backup files →
+  Tap file → Confirm → App restores all data → Requires app restart
+
+WHAT IS BACKED UP
+  • All products (including archived)
+  • All customers and their full transaction ledger
+  • All suppliers and their full transaction ledger
+  • All sales and sale items
+  • All expenses
+  • App settings (shop name, currency, language, etc.)
+  • All Google Sheets sync state
+
+
+================================================================================
+SECTION 13 — DEVELOPMENT WORKFLOW (PHASES)
+================================================================================
+
+Phase  | Name                              | Duration | Deliverable
+-------|-----------------------------------|----------|---------------------------
+ 01    | Setup & Infrastructure            | 1 week   | Flutter, Firebase, SQLite schema
+ 02    | Auth & Onboarding                 | 3 days   | OTP + Google login, setup wizard
+ 03    | Product & Inventory               | 1 week   | Add/edit/delete, stock management
+ 04    | Billing / POS                     | 1.5 wks  | Full sale flow, PDF, WhatsApp
+ 05    | Buyer Ledger System               | 1 week   | Customer debit/credit/ledger
+ 06    | Supplier Ledger System            | 1 week   | Supplier purchase/payment/ledger
+ 07    | Money Flow Dashboard              | 3 days   | Financial overview screen
+ 08    | In-App Google Sheets Editor       | 1.5 wks  | Two-way sync, in-app editor UI
+ 09    | Google Drive Backup               | 3 days   | Auto backup + restore
+ 10    | Reports & Analytics               | 1 week   | All reports, charts, exports
+ 11    | Dashboard & UI Polish             | 4 days   | Final Urdu UI, animations
+ 12    | Web App (Flutter Web)             | 1 week   | Responsive web version
+ 13    | Testing & Bug Fixes               | 1 week   | Device matrix testing
+ 14    | App Store Submission              | 3 days   | Play Store + App Store
+                                           ---------
+                                 TOTAL:   ~12 weeks
+
+
+================================================================================
+SECTION 14 — FLUTTER PACKAGES
+================================================================================
+
+firebase_core: ^3.0.0
+firebase_auth: ^5.0.0
+cloud_firestore: ^5.0.0
+firebase_messaging: ^15.0.0
+sqflite: ^2.3.0
+sqflite_sqlcipher: ^3.0.0         ← encrypted SQLite
+path_provider: ^2.1.0
+google_sign_in: ^6.2.0
+googleapis: ^11.4.0
+extension_google_sign_in_as_googleapis_auth: ^2.0.0
+pdf: ^3.10.0
+printing: ^5.12.0
+fl_chart: ^0.68.0
+riverpod: ^2.5.0
+flutter_riverpod: ^2.5.0
+image_picker: ^1.1.0
+flutter_barcode_scanner: ^2.0.0
+share_plus: ^9.0.0
+intl: ^0.19.0
+connectivity_plus: ^6.0.0
+local_auth: ^2.2.0
+flutter_local_notifications: ^17.0.0
+cached_network_image: ^3.3.0
+uuid: ^4.4.0
+encrypt: ^5.0.3
+workmanager: ^0.5.2
+flutter_slidable: ^3.1.0         ← swipe to delete in lists
+data_table_2: ^2.5.0             ← in-app sheet editor table
+dropdown_search: ^5.0.6          ← searchable dropdowns
+fluttertoast: ^8.2.0             ← quick feedback messages
+permission_handler: ^11.3.0      ← camera/storage permissions
+
+
+================================================================================
+SECTION 15 — WEB APP REQUIREMENTS
+================================================================================
+
+• Built with Flutter Web from same codebase (90% code shared)
+• Hosted free on Firebase Hosting
+• Responsive: sidebar nav on desktop, bottom nav on mobile
+• Keyboard shortcuts: F2=New Sale, F3=Add Product, F4=Receive Payment
+• Manual product search (no barcode scanner on web)
+• Print via browser print dialog + PDF download
+• Offline via IndexedDB (sqflite_common_ffi_web package)
+
+ROUTES
+  /              → redirect to /login or /dashboard
+  /login         → Google + Phone login
+  /dashboard     → Main dashboard
+  /pos           → Point of Sale
+  /products      → Product list
+  /products/add  → Add product
+  /products/:id  → Edit product
+  /customers     → Buyer ledger list
+  /customers/:id → Customer detail + full ledger
+  /suppliers     → Supplier ledger list
+  /suppliers/:id → Supplier detail + full ledger
+  /moneyflow     → Money flow dashboard
+  /sheets        → In-app Google Sheets editor
+  /reports       → Reports home
+  /settings      → Settings + backup
+
+
+================================================================================
+SECTION 16 — TESTING REQUIREMENTS
+================================================================================
+
+CORE TESTS
+  ✓ Complete sale → bill PDF generated → WhatsApp shared
+  ✓ Credit sale → customer balance increases correctly
+  ✓ Payment received → customer balance decreases correctly
+  ✓ Supplier purchase (credit) → balance increases + stock increases
+  ✓ Payment to supplier → balance decreases correctly
+  ✓ Stock auto-decreases on every sale
+  ✓ Low stock alert fires at correct threshold
+  ✓ Product added in app → appears in Google Sheet within 30 seconds
+  ✓ Product row edited in Sheet → app shows updated value on sync
+  ✓ Row deleted in Sheet → product archived in app
+  ✓ Nightly backup file appears in Google Drive
+  ✓ Restore from backup recovers all ledger data
+  ✓ App works fully offline (no internet)
+  ✓ All offline changes sync when internet returns
+  ✓ Money Flow Dashboard totals match sum of all ledger balances
+
+DEVICE TEST MATRIX
+  Samsung Galaxy A15 (Android 13) — P1 (most common in Pakistan)
+  Infinix Hot 30    (Android 13) — P1 (entry level)
+  Samsung Galaxy A54 (Android 14) — P2 (mid-range)
+  iPhone SE 2nd Gen  (iOS 16)    — P2
+  Chrome on Windows  (Web)       — P1
+  Chrome on Android  (Web)       — P2
+
+
+================================================================================
+SECTION 17 — DEPLOYMENT
+================================================================================
+
+ANDROID (Google Play Store)
+  1. flutter build appbundle --release
+  2. Create Play Console listing (one-time $25 fee)
+  3. Add Urdu + English store listing, screenshots, description
+  4. Submit for review (1-3 days)
+
+iOS (Apple App Store)
+  1. flutter build ipa --release
+  2. Apple Developer account ($99/year)
+  3. Upload via Xcode to App Store Connect
+  4. Submit for review (1-7 days)
+
+WEB (Firebase Hosting)
+  1. flutter build web --release
+  2. firebase deploy --only hosting
+  3. Live at: https://[project-id].web.app
+  4. Custom domain configurable in Firebase console
+
+
+================================================================================
+SECTION 18 — FUTURE FEATURES (v3.0)
+================================================================================
+
+Feature                  | Description
+-------------------------|-----------------------------------------------------
+Employee Accounts        | Cashier login with limited access (sell only)
+SMS Reminders            | Automated SMS for payment due (Fast2SMS free tier)
+WhatsApp Business API    | Auto-send receipts and reminders
+Online Product Catalog   | Shareable link for WhatsApp ordering
+Loyalty Points           | Points per purchase, redeem for discount
+Auto Reorder             | WhatsApp message to supplier when stock is low
+Bank Account Tracking    | Record bank transfers, check balance
+AI Price Suggestion      | Suggest sale price based on purchase price + margin
+Profit Target Alerts     | Alert when daily profit target is reached
+Multi-Currency           | USD, AED support for import/export businesses
+
+
+================================================================================
+END OF DOCUMENT
+Super Business Shop Management App — Project Requirements v2.0 — 2026
+Confidential — For Developer Use Only
+================================================================================

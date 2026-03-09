@@ -1,0 +1,84 @@
+name: shop_app
+description: Super Business Shop Management App for Pakistani Shopkeepers
+publish_to: 'none'
+version: 2.0.0+1
+
+environment:
+  sdk: '>=3.2.0 <4.0.0'
+  flutter: '>=3.16.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^2.5.0
+  riverpod: ^2.5.0
+  riverpod_annotation: ^2.3.0
+
+  # Database
+  sqflite: ^2.3.0
+  path_provider: ^2.1.0
+  path: ^1.9.0
+
+  # Firebase
+  firebase_core: ^3.0.0
+  firebase_auth: ^5.0.0
+  cloud_firestore: ^5.0.0
+  firebase_messaging: ^15.0.0
+
+  # Google APIs
+  google_sign_in: ^6.2.0
+  googleapis: ^11.4.0
+  extension_google_sign_in_as_googleapis_auth: ^2.0.0
+
+  # PDF & Printing
+  pdf: ^3.10.0
+  printing: ^5.12.0
+
+  # Charts
+  fl_chart: ^0.68.0
+
+  # UI Components
+  flutter_slidable: ^3.1.0
+  data_table_2: ^2.5.0
+  dropdown_search: ^5.0.6
+  fluttertoast: ^8.2.0
+  cached_network_image: ^3.3.0
+  google_fonts: ^6.1.0
+
+  # Utilities
+  intl: ^0.19.0
+  uuid: ^4.4.0
+  connectivity_plus: ^6.0.0
+  share_plus: ^9.0.0
+  image_picker: ^1.1.0
+  permission_handler: ^11.3.0
+  local_auth: ^2.2.0
+  flutter_local_notifications: ^17.0.0
+  workmanager: ^0.5.2
+  url_launcher: ^6.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+  build_runner: ^2.4.0
+  riverpod_generator: ^2.4.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/fonts/
+
+  fonts:
+    - family: NotoNastaliqUrdu
+      fonts:
+        - asset: assets/fonts/NotoNastaliqUrdu-Regular.ttf
+        - asset: assets/fonts/NotoNastaliqUrdu-Bold.ttf
+          weight: 700
