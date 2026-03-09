@@ -70,15 +70,3 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/images/
-    - assets/icons/
-    - assets/fonts/
-
-  fonts:
-    - family: NotoNastaliqUrdu
-      fonts:
-        - asset: assets/fonts/NotoNastaliqUrdu-Regular.ttf
-        - asset: assets/fonts/NotoNastaliqUrdu-Bold.ttf
-          weight: 700
