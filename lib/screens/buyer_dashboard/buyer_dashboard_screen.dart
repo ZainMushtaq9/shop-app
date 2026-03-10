@@ -355,7 +355,7 @@ class _BuyerDashboardScreenState extends ConsumerState<BuyerDashboardScreen> {
                               return ListTile(
                                 dense: true,
                                 title: Text(tx.description, style: AppTextStyles.urduBody.copyWith(fontSize: 14)),
-                                subtitle: Text(AppFormatters.date(DateTime.parse(tx.date)), style: AppTextStyles.caption),
+                                subtitle: Text(AppFormatters.date(tx.date), style: AppTextStyles.caption),
                                 trailing: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   crossAxisAlignment: CrossAxisAlignment.end,

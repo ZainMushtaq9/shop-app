@@ -82,7 +82,7 @@ class PdfExportService {
               // Data rows
               ...transactions.map((tx) => pw.TableRow(
                     children: [
-                      _tableCell(AppFormatters.dateShort(DateTime.parse(tx.date))),
+                      _tableCell(AppFormatters.dateShort(tx.date)),
                       _tableCell(tx.description),
                       _tableCell(tx.debitAmount > 0 ? 'Rs. ${AppFormatters.number(tx.debitAmount)}' : '-'),
                       _tableCell(tx.creditAmount > 0 ? 'Rs. ${AppFormatters.number(tx.creditAmount)}' : '-'),
