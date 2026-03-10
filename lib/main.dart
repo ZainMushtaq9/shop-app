@@ -4,8 +4,20 @@ import 'theme/app_theme.dart';
 import 'l10n/app_strings.dart';
 import 'screens/app_shell.dart';
 
+import 'package:flutter/foundation.dart';
+import 'dart:io' as io;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'screens/auth/login_screen.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize desktop SQLite compatibility
+  if (!kIsWeb && (io.Platform.isWindows || io.Platform.isLinux || io.Platform.isMacOS)) {
+    sqfliteFfiInit();
+    databaseFactory = databaseFactoryFfi;
+  }
+
   runApp(
     const ProviderScope(
       child: ShopApp(),
@@ -22,7 +34,7 @@ class ShopApp extends StatelessWidget {
       title: 'Super Business Shop',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      home: const AppShell(),
+      home: const LoginScreen(),
       // Directionality for Urdu (RTL) support
       builder: (context, child) {
         return Directionality(

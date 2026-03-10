@@ -20,9 +20,9 @@ class AppStrings {
   static String get appName => _isUrdu ? 'سپر بزنس شاپ' : 'Super Business Shop';
 
   // ─── Navigation ───
-  static String get home => _isUrdu ? 'گھر' : 'Home';
+  static String get home => _isUrdu ? 'ہوم' : 'Home';
   static String get sale => _isUrdu ? 'فروخت' : 'Sale';
-  static String get stock => _isUrdu ? 'مال' : 'Stock';
+  static String get stock => _isUrdu ? 'اسٹاک' : 'Stock';
   static String get customers => _isUrdu ? 'گاہک' : 'Customers';
   static String get reports => _isUrdu ? 'رپورٹ' : 'Reports';
   static String get suppliers => _isUrdu ? 'سپلائر' : 'Suppliers';

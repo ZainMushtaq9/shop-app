@@ -1,6 +1,8 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
 import '../models/models.dart';
 import '../utils/constants.dart';
 
@@ -22,6 +24,18 @@ class DatabaseService {
 
   /// Initialize SQLite database with all tables
   Future<Database> _initDatabase() async {
+    if (kIsWeb) {
+      final factory = databaseFactoryFfiWeb;
+      return await factory.openDatabase(
+        AppConstants.dbName,
+        options: OpenDatabaseOptions(
+          version: AppConstants.dbVersion,
+          onCreate: _createTables,
+          onUpgrade: _upgradeTables,
+        ),
+      );
+    }
+
     final dir = await getApplicationDocumentsDirectory();
     final path = join(dir.path, AppConstants.dbName);
 

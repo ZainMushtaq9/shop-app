@@ -259,22 +259,34 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
               // ── Category ──
               _buildLabel(AppStrings.category),
               const SizedBox(height: 8),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                items: AppConstants.defaultCategories
-                    .map((cat) => DropdownMenuItem(
-                          value: cat,
-                          child: Text(cat, style: AppTextStyles.urduBody),
-                        ))
-                    .toList(),
-                onChanged: (value) {
-                  if (value != null) {
-                    setState(() => _selectedCategory = value);
+              Autocomplete<String>(
+                initialValue: TextEditingValue(text: _selectedCategory),
+                optionsBuilder: (TextEditingValue textEditingValue) {
+                  if (textEditingValue.text.isEmpty) {
+                    return AppConstants.defaultCategories;
                   }
+                  return AppConstants.defaultCategories.where((String option) {
+                    return option.toLowerCase().contains(textEditingValue.text.toLowerCase());
+                  });
                 },
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.category_rounded),
-                ),
+                onSelected: (String selection) {
+                  _selectedCategory = selection;
+                },
+                fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                  controller.addListener(() {
+                    _selectedCategory = controller.text;
+                  });
+                  return TextFormField(
+                    controller: controller,
+                    focusNode: focusNode,
+                    style: AppTextStyles.urduBody,
+                    decoration: InputDecoration(
+                      prefixIcon: const Icon(Icons.category_rounded),
+                      hintText: AppStrings.isUrdu ? 'منتخب کریں یا نیا درج کریں' : 'Select or type custom category',
+                      hintStyle: AppTextStyles.urduCaption,
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: AppDimens.spacingMD),
 

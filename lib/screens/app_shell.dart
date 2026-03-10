@@ -21,6 +21,7 @@ class AppShell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currentTab = ref.watch(currentTabProvider);
+    final isUrdu = ref.watch(isUrduProvider);
 
     // Main content screens for bottom nav tabs
     final screens = [
@@ -32,9 +33,30 @@ class AppShell extends ConsumerWidget {
     ];
 
     return Scaffold(
-      body: IndexedStack(
-        index: currentTab,
-        children: screens,
+      key: ValueKey(isUrdu),
+      body: Column(
+        children: [
+          Expanded(
+            child: IndexedStack(
+              index: currentTab,
+              children: screens,
+            ),
+          ),
+          // ── App Banner Placeholder for Future Use ──
+          Container(
+            width: double.infinity,
+            height: 50,
+            color: AppColors.surfaceVariant,
+            alignment: Alignment.center,
+            child: Text(
+              AppStrings.isUrdu ? 'اشتہار کی جگہ (Ad Space)' : 'Ad Banner Space',
+              style: AppTextStyles.caption.copyWith(
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.5,
+              ),
+            ),
+          ),
+        ],
       ),
       bottomNavigationBar: _buildBottomNav(context, ref, currentTab),
       drawer: _buildDrawer(context, ref),

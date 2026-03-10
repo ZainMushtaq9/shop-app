@@ -10,54 +10,56 @@ import 'package:google_fonts/google_fonts.dart';
 class AppColors {
   AppColors._();
 
-  // Primary palette
-  static const Color primary = Color(0xFF1565C0);        // Deep Blue
-  static const Color primaryLight = Color(0xFF42A5F5);
-  static const Color primaryDark = Color(0xFF0D47A1);
+  // 10% Accent Palette (Stark Black for modern contrast)
+  static const Color primary = Color(0xFF000000);        // Pure Black
+  static const Color primaryLight = Color(0xFF333333);
+  static const Color primaryDark = Color(0xFF000000);
 
-  // Semantic colors
-  static const Color moneyReceived = Color(0xFF2E7D32);  // Green — profit, received
-  static const Color moneyReceivedLight = Color(0xFF66BB6A);
-  static const Color moneyOwed = Color(0xFFC62828);      // Red — owed, negative
-  static const Color moneyOwedLight = Color(0xFFEF5350);
-  static const Color info = Color(0xFF1565C0);           // Blue — info
-  static const Color infoLight = Color(0xFF64B5F6);
-  static const Color warning = Color(0xFFE65100);        // Orange — warning, pending
-  static const Color warningLight = Color(0xFFFF9800);
+  // Semantic colors (High contrast, professional)
+  static const Color moneyReceived = Color(0xFF198754);  // Bold Green
+  static const Color moneyReceivedLight = Color(0xFF28A745);
+  static const Color moneyOwed = Color(0xFFDC3545);      // Crimson Red
+  static const Color moneyOwedLight = Color(0xFFE35D6A);
+  static const Color info = Color(0xFF0D6EFD);           // Bold Blue
+  static const Color infoLight = Color(0xFF3B82F6);
+  static const Color warning = Color(0xFFFD7E14);        // Orange
+  static const Color warningLight = Color(0xFFFFA94D);
 
-  // Neutral
-  static const Color background = Color(0xFFF5F5F5);
-  static const Color surface = Colors.white;
-  static const Color surfaceVariant = Color(0xFFFAFAFA);
-  static const Color disabled = Color(0xFF9E9E9E);
-  static const Color divider = Color(0xFFE0E0E0);
-  static const Color textPrimary = Color(0xFF212121);
-  static const Color textSecondary = Color(0xFF757575);
+  // 60% Dominant (Whites & Off-whites) & 30% Secondary (Greys / Near Black)
+  static const Color background = Color(0xFFF8F9FA); // 60% Light Background
+  static const Color surface = Colors.white;         // 60% Clear White Cards
+  static const Color surfaceVariant = Color(0xFFE9ECEF);
+  static const Color disabled = Color(0xFFCED4DA);
+  static const Color divider = Color(0xFFDEE2E6);
+  
+  static const Color textPrimary = Color(0xFF212529); // 30% Dark Grey (Highly readable)
+  static const Color textSecondary = Color(0xFF6C757D); // 30% Medium Grey
+  
   static const Color textOnPrimary = Colors.white;
   static const Color textOnGreen = Colors.white;
   static const Color textOnRed = Colors.white;
 
-  // Card gradients
+  // Modern Card gradients (Subtle, sleek)
   static const LinearGradient salesGradient = LinearGradient(
-    colors: [Color(0xFF2E7D32), Color(0xFF43A047)],
+    colors: [Color(0xFF212529), Color(0xFF343A40)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient profitGradient = LinearGradient(
-    colors: [Color(0xFF1565C0), Color(0xFF1E88E5)],
+    colors: [Color(0xFF000000), Color(0xFF212529)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient receivableGradient = LinearGradient(
-    colors: [Color(0xFF388E3C), Color(0xFF66BB6A)],
+    colors: [Color(0xFF198754), Color(0xFF20C997)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const LinearGradient payableGradient = LinearGradient(
-    colors: [Color(0xFFC62828), Color(0xFFEF5350)],
+    colors: [Color(0xFFDC3545), Color(0xFFE8596A)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -90,51 +92,52 @@ class AppTextStyles {
     color: AppColors.textSecondary,
   );
 
-  // English / Number styles
-  static const TextStyle amountLarge = TextStyle(
+  // English / Number styles (Using Inter for modern professional look)
+  static TextStyle amountLarge = GoogleFonts.inter(
     fontSize: 28,
     fontWeight: FontWeight.bold,
-    fontFamily: 'Roboto',
     letterSpacing: 0.5,
   );
 
-  static const TextStyle amountMedium = TextStyle(
+  static TextStyle amountMedium = GoogleFonts.inter(
     fontSize: 22,
     fontWeight: FontWeight.bold,
-    fontFamily: 'Roboto',
   );
 
-  static const TextStyle amountSmall = TextStyle(
+  static TextStyle amountSmall = GoogleFonts.inter(
     fontSize: 18,
     fontWeight: FontWeight.w600,
-    fontFamily: 'Roboto',
   );
 
-  static const TextStyle heading = TextStyle(
+  static TextStyle heading = GoogleFonts.inter(
     fontSize: 24,
     fontWeight: FontWeight.bold,
+    color: AppColors.textPrimary,
   );
 
-  static const TextStyle title = TextStyle(
+  static TextStyle title = GoogleFonts.inter(
     fontSize: 20,
     fontWeight: FontWeight.w600,
+    color: AppColors.textPrimary,
   );
 
-  static const TextStyle subtitle = TextStyle(
+  static TextStyle subtitle = GoogleFonts.inter(
     fontSize: 16,
     fontWeight: FontWeight.w500,
+    color: AppColors.textPrimary,
   );
 
-  static const TextStyle body = TextStyle(
+  static TextStyle body = GoogleFonts.inter(
     fontSize: 16,
+    color: AppColors.textPrimary,
   );
 
-  static const TextStyle caption = TextStyle(
+  static TextStyle caption = GoogleFonts.inter(
     fontSize: 14,
     color: AppColors.textSecondary,
   );
 
-  static const TextStyle label = TextStyle(
+  static TextStyle label = GoogleFonts.inter(
     fontSize: 12,
     fontWeight: FontWeight.w500,
     color: AppColors.textSecondary,
