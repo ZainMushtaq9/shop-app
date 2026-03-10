@@ -1,3 +1,8 @@
+databases:
+  - name: super-business-db
+    databaseName: super_business
+    user: admin
+
 services:
   - type: web
     name: super-business-backend
