@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/foundation.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../models/models.dart';
 import '../../providers/app_providers.dart';
+import '../../services/pdf_export_service.dart';
 
 /// Point of Sale (POS) / Billing screen.
 /// Multi-item cart, discount, tax, payment method selection.
@@ -54,17 +60,59 @@ class _PosScreenState extends ConsumerState<PosScreen> {
             flex: 3,
             child: Column(
               children: [
-                // Search bar
+                // Autocomplete search bar
                 Padding(
                   padding: const EdgeInsets.all(AppDimens.spacingSM),
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: AppStrings.searchProducts,
-                      hintStyle: AppTextStyles.urduCaption,
-                      prefixIcon: const Icon(Icons.search_rounded),
-                      isDense: true,
-                    ),
-                    onChanged: (v) => setState(() => _searchQuery = v),
+                  child: Autocomplete<Product>(
+                    optionsBuilder: (textEditingValue) async {
+                      final query = textEditingValue.text.trim();
+                      if (query.isEmpty) return const Iterable<Product>.empty();
+                      final db = ref.read(databaseProvider);
+                      return await db.searchProducts(query);
+                    },
+                    displayStringForOption: (product) => product.displayName,
+                    onSelected: (product) => _addToCart(product),
+                    fieldViewBuilder: (context, controller, focusNode, onFieldSubmitted) {
+                      return TextField(
+                        controller: controller,
+                        focusNode: focusNode,
+                        decoration: InputDecoration(
+                          hintText: AppStrings.isUrdu ? 'پہلا حرف لکھیں...' : 'Type to search...',
+                          hintStyle: AppTextStyles.urduCaption,
+                          prefixIcon: const Icon(Icons.search_rounded),
+                          isDense: true,
+                        ),
+                        onChanged: (v) => setState(() => _searchQuery = v),
+                      );
+                    },
+                    optionsViewBuilder: (context, onSelected, options) {
+                      return Align(
+                        alignment: Alignment.topLeft,
+                        child: Material(
+                          elevation: 4,
+                          borderRadius: BorderRadius.circular(12),
+                          child: ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 250),
+                            child: ListView.builder(
+                              padding: EdgeInsets.zero,
+                              shrinkWrap: true,
+                              itemCount: options.length,
+                              itemBuilder: (context, index) {
+                                final product = options.elementAt(index);
+                                return ListTile(
+                                  dense: true,
+                                  leading: Icon(Icons.inventory_2_rounded, color: AppColors.primary, size: 20),
+                                  title: Text(product.displayName, style: AppTextStyles.urduBody.copyWith(fontSize: 14)),
+                                  subtitle: Text('${AppFormatters.currency(product.salePrice)} | Stock: ${product.stockQuantity}',
+                                      style: const TextStyle(fontSize: 11)),
+                                  onTap: () => onSelected(product),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -260,6 +308,15 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     if (_cart.isEmpty) return;
 
     final db = ref.read(databaseProvider);
+    final totalAmount = _total;
+    final saleItemsCopy = _cart.map((item) => SaleItem(
+      saleId: '',
+      productId: item.product.id,
+      productName: item.product.displayName,
+      quantity: item.quantity,
+      purchasePrice: item.product.purchasePrice,
+      salePrice: item.product.salePrice,
+    )).toList();
 
     final sale = Sale(
       subtotal: _subtotal,
@@ -291,6 +348,11 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     ref.invalidate(lowStockProductsProvider);
     ref.invalidate(totalReceivableProvider);
 
+    final savedDiscount = _discount;
+    final savedTaxAmount = _taxAmount;
+    final savedSubtotal = _subtotal;
+    final savedPaymentType = _paymentType;
+
     setState(() {
       _cart.clear();
       _discount = 0;
@@ -299,18 +361,152 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     });
 
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppStrings.isUrdu
-                ? 'بل کامیابی سے بنا دیا گیا! ${AppFormatters.currency(_total)}'
-                : 'Bill created! ${AppFormatters.currency(_total)}',
-          ),
-          backgroundColor: AppColors.moneyReceived,
-          duration: const Duration(seconds: 3),
-        ),
+      _showBillOptionsDialog(
+        sale: sale,
+        items: saleItems,
+        subtotal: savedSubtotal,
+        discount: savedDiscount,
+        taxAmount: savedTaxAmount,
+        total: totalAmount,
+        paymentType: savedPaymentType,
       );
     }
+  }
+
+  void _showBillOptionsDialog({
+    required Sale sale,
+    required List<SaleItem> items,
+    required double subtotal,
+    required double discount,
+    required double taxAmount,
+    required double total,
+    required String paymentType,
+  }) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            const Icon(Icons.check_circle, color: AppColors.moneyReceived, size: 28),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                AppStrings.isUrdu ? 'بل بن گیا! ${AppFormatters.currency(total)}' : 'Bill Created! ${AppFormatters.currency(total)}',
+                style: AppTextStyles.urduTitle.copyWith(fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Print option
+            _BillOptionTile(
+              icon: Icons.print_rounded,
+              color: AppColors.primary,
+              title: AppStrings.isUrdu ? 'پرنٹ کریں' : 'Print Bill',
+              subtitle: AppStrings.isUrdu ? 'منسلک پرنٹر سے' : 'Via attached printer',
+              onTap: () async {
+                Navigator.pop(ctx);
+                try {
+                  final pdfBytes = await _generateBillPdf(sale, items, subtotal, discount, taxAmount, total, paymentType);
+                  await Printing.layoutPdf(onLayout: (_) => pdfBytes);
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Print error: $e'), backgroundColor: AppColors.moneyOwed),
+                    );
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 8),
+
+            // PDF Export option
+            _BillOptionTile(
+              icon: Icons.picture_as_pdf_rounded,
+              color: AppColors.moneyOwed,
+              title: AppStrings.isUrdu ? 'PDF محفوظ کریں' : 'Save as PDF',
+              subtitle: AppStrings.isUrdu ? 'ڈاؤن لوڈ / محفوظ' : 'Download / save',
+              onTap: () async {
+                Navigator.pop(ctx);
+                try {
+                  final pdfBytes = await _generateBillPdf(sale, items, subtotal, discount, taxAmount, total, paymentType);
+                  await Printing.sharePdf(bytes: pdfBytes, filename: 'bill_${sale.id.substring(0, 8)}.pdf');
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('PDF error: $e'), backgroundColor: AppColors.moneyOwed),
+                    );
+                  }
+                }
+              },
+            ),
+            const SizedBox(height: 8),
+
+            // Share via social media
+            _BillOptionTile(
+              icon: Icons.share_rounded,
+              color: AppColors.info,
+              title: AppStrings.isUrdu ? 'شیئر کریں' : 'Share Bill',
+              subtitle: AppStrings.isUrdu ? 'واٹس ایپ / سوشل میڈیا' : 'WhatsApp / Social Media',
+              onTap: () async {
+                Navigator.pop(ctx);
+                try {
+                  final pdfBytes = await _generateBillPdf(sale, items, subtotal, discount, taxAmount, total, paymentType);
+                  if (!kIsWeb) {
+                    final dir = await getTemporaryDirectory();
+                    final file = File('${dir.path}/bill_${sale.id.substring(0, 8)}.pdf');
+                    await file.writeAsBytes(pdfBytes);
+                    await Share.shareXFiles([XFile(file.path)], text: AppStrings.isUrdu ? 'بل — ${AppFormatters.currency(total)}' : 'Bill — ${AppFormatters.currency(total)}');
+                  } else {
+                    await Printing.sharePdf(bytes: pdfBytes, filename: 'bill_${sale.id.substring(0, 8)}.pdf');
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Share error: $e'), backgroundColor: AppColors.moneyOwed),
+                    );
+                  }
+                }
+              },
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppStrings.isUrdu ? 'بعد میں' : 'Later'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<Uint8List> _generateBillPdf(
+    Sale sale,
+    List<SaleItem> items,
+    double subtotal,
+    double discount,
+    double taxAmount,
+    double total,
+    String paymentType,
+  ) async {
+    return await PdfExportService.generateBill(
+      shopName: 'Super Business Shop',
+      billNo: sale.id.substring(0, 8).toUpperCase(),
+      customerName: '-',
+      items: items,
+      subtotal: subtotal,
+      discount: discount,
+      tax: taxAmount,
+      total: total,
+      amountPaid: sale.amountPaid,
+      balanceDue: sale.balanceDue,
+      paymentType: paymentType,
+      date: DateTime.now(),
+    );
   }
 }
 
@@ -461,6 +657,54 @@ class _TotalRow extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _BillOptionTile extends StatelessWidget {
+  final IconData icon;
+  final Color color;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  const _BillOptionTile({
+    required this.icon,
+    required this.color,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 28),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: AppTextStyles.urduBody.copyWith(fontWeight: FontWeight.bold, fontSize: 14)),
+                  Text(subtitle, style: TextStyle(fontSize: 11, color: AppColors.textSecondary)),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right, color: color),
+          ],
+        ),
       ),
     );
   }

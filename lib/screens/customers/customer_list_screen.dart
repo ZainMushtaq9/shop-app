@@ -194,10 +194,12 @@ class CustomerListScreen extends ConsumerWidget {
             TextField(
               controller: phoneController,
               keyboardType: TextInputType.phone,
+              maxLength: 11,
               decoration: InputDecoration(
-                labelText: AppStrings.phone,
+                labelText: AppStrings.isUrdu ? 'فون (03...)' : 'Phone (03...)',
                 labelStyle: AppTextStyles.urduCaption,
                 prefixIcon: const Icon(Icons.phone_rounded),
+                counterText: '',
               ),
             ),
           ],
@@ -209,16 +211,50 @@ class CustomerListScreen extends ConsumerWidget {
           ),
           ElevatedButton(
             onPressed: () async {
-              if (nameController.text.trim().isEmpty) return;
-              final db = ref.read(databaseProvider);
-              final customer = Customer(
-                name: nameController.text.trim(),
-                phone: phoneController.text.trim(),
-              );
-              await db.insertCustomer(customer);
-              ref.invalidate(customersWithBalanceProvider);
-              ref.invalidate(customersProvider);
-              if (ctx.mounted) Navigator.pop(ctx);
+              final name = nameController.text.trim();
+              if (name.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppStrings.isUrdu ? 'نام درج کریں' : 'Enter name'),
+                    backgroundColor: AppColors.moneyOwed,
+                  ),
+                );
+                return;
+              }
+              final phone = phoneController.text.trim();
+              if (phone.isNotEmpty && (phone.length != 11 || !phone.startsWith('03'))) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppStrings.isUrdu ? 'فون نمبر غلط ہے (11 ہندسے، 03 سے شروع)' : 'Invalid phone (11 digits, starts with 03)'),
+                    backgroundColor: AppColors.moneyOwed,
+                  ),
+                );
+                return;
+              }
+              try {
+                final db = ref.read(databaseProvider);
+                final customer = Customer(
+                  name: name,
+                  phone: phone,
+                );
+                await db.insertCustomer(customer);
+                ref.invalidate(customersWithBalanceProvider);
+                ref.invalidate(customersProvider);
+                if (ctx.mounted) Navigator.pop(ctx);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppStrings.isUrdu ? 'گاہک شامل ہو گیا' : 'Customer added'),
+                    backgroundColor: AppColors.moneyReceived,
+                  ),
+                );
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(AppStrings.isUrdu ? 'خرابی: $e' : 'Error: $e'),
+                    backgroundColor: AppColors.moneyOwed,
+                  ),
+                );
+              }
             },
             child: Text(AppStrings.save),
           ),

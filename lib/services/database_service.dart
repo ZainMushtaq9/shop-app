@@ -214,6 +214,42 @@ class DatabaseService {
         'CREATE INDEX idx_expenses_date ON ${AppConstants.tableExpenses}(date)');
     await db.execute(
         'CREATE INDEX idx_sync_status ON ${AppConstants.tableSyncQueue}(status)');
+
+    // Users table (for auth)
+    await db.execute('''
+      CREATE TABLE ${AppConstants.tableUsers} (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL UNIQUE,
+        email TEXT DEFAULT '',
+        pin TEXT NOT NULL,
+        role TEXT NOT NULL DEFAULT 'shopkeeper',
+        shop_name TEXT DEFAULT '',
+        created_at TEXT NOT NULL
+      )
+    ''');
+    await db.execute(
+        'CREATE UNIQUE INDEX idx_users_phone ON ${AppConstants.tableUsers}(phone)');
+
+    // Installments table
+    await db.execute('''
+      CREATE TABLE ${AppConstants.tableInstallments} (
+        id TEXT PRIMARY KEY,
+        customer_transaction_id TEXT,
+        customer_id TEXT NOT NULL,
+        total_amount REAL NOT NULL DEFAULT 0,
+        paid_amount REAL NOT NULL DEFAULT 0,
+        remaining REAL NOT NULL DEFAULT 0,
+        installment_number INTEGER NOT NULL DEFAULT 1,
+        date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'PENDING',
+        notes TEXT DEFAULT '',
+        created_at TEXT NOT NULL,
+        FOREIGN KEY (customer_id) REFERENCES ${AppConstants.tableCustomers}(id)
+      )
+    ''');
+    await db.execute(
+        'CREATE INDEX idx_installments_customer ON ${AppConstants.tableInstallments}(customer_id)');
   }
 
   Future<void> _upgradeTables(Database db, int oldVersion, int newVersion) async {
@@ -798,6 +834,87 @@ class DatabaseService {
         }
       }
     });
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  USERS (Auth)
+  // ═══════════════════════════════════════════════════════════
+
+  Future<void> insertUser(Map<String, dynamic> userData) async {
+    final db = await database;
+    await db.insert(AppConstants.tableUsers, userData,
+        conflictAlgorithm: ConflictAlgorithm.abort);
+  }
+
+  Future<Map<String, dynamic>?> getUserByPhone(String phone) async {
+    final db = await database;
+    final maps = await db.query(
+      AppConstants.tableUsers,
+      where: 'phone = ?',
+      whereArgs: [phone],
+    );
+    if (maps.isEmpty) return null;
+    return maps.first;
+  }
+
+  Future<Map<String, dynamic>?> getUserByEmail(String email) async {
+    final db = await database;
+    final maps = await db.query(
+      AppConstants.tableUsers,
+      where: 'email = ?',
+      whereArgs: [email],
+    );
+    if (maps.isEmpty) return null;
+    return maps.first;
+  }
+
+  Future<bool> isPhoneRegistered(String phone) async {
+    final user = await getUserByPhone(phone);
+    return user != null;
+  }
+
+  Future<void> updateUserPin(String phone, String newPin) async {
+    final db = await database;
+    await db.update(
+      AppConstants.tableUsers,
+      {'pin': newPin},
+      where: 'phone = ?',
+      whereArgs: [phone],
+    );
+  }
+
+  // ═══════════════════════════════════════════════════════════
+  //  INSTALLMENTS
+  // ═══════════════════════════════════════════════════════════
+
+  Future<void> insertInstallment(Map<String, dynamic> data) async {
+    final db = await database;
+    await db.insert(AppConstants.tableInstallments, data,
+        conflictAlgorithm: ConflictAlgorithm.replace);
+  }
+
+  Future<List<Map<String, dynamic>>> getInstallments(String customerId) async {
+    final db = await database;
+    return await db.query(
+      AppConstants.tableInstallments,
+      where: 'customer_id = ?',
+      whereArgs: [customerId],
+      orderBy: 'date DESC',
+    );
+  }
+
+  Future<void> updateInstallmentPayment(String installmentId, double paidAmount, double remaining) async {
+    final db = await database;
+    await db.update(
+      AppConstants.tableInstallments,
+      {
+        'paid_amount': paidAmount,
+        'remaining': remaining,
+        'status': remaining <= 0 ? 'CLEARED' : 'PENDING',
+      },
+      where: 'id = ?',
+      whereArgs: [installmentId],
+    );
   }
 
   /// Close the database

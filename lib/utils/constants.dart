@@ -61,8 +61,8 @@ class AppConstants {
   AppConstants._();
 
   // Database
-  static const String dbName = 'shop_app.db';
-  static const int dbVersion = 1;
+  static const String dbName = 'shop_app_v2.db';
+  static const int dbVersion = 2;
 
   // Tables
   static const String tableProducts = 'products';
@@ -74,6 +74,8 @@ class AppConstants {
   static const String tableSaleItems = 'sale_items';
   static const String tableExpenses = 'expenses';
   static const String tableSyncQueue = 'sync_queue';
+  static const String tableUsers = 'users';
+  static const String tableInstallments = 'installments';
 
   // Transaction types — Buyer
   static const String txCreditSale = 'CREDIT_SALE';
