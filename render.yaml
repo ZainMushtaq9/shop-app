@@ -12,7 +12,7 @@ services:
   - type: web
     name: super-business-flutter-web
     env: static
-    buildCommand: "git clone https://github.com/flutter/flutter.git -b stable && export PATH=\"$PATH:$(pwd)/flutter/bin\" && flutter config --enable-web && flutter build web --release"
+    buildCommand: "git clone https://github.com/flutter/flutter.git -b stable --depth 1 && export PATH=\"$PATH:$(pwd)/flutter/bin\" && flutter config --enable-web && flutter build web --release"
     staticPublishPath: "./build/web"
     envVars:
       - key: FLUTTER_VERSION
