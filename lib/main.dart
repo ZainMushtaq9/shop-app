@@ -17,7 +17,7 @@ void main() async {
   // Initialize Supabase Backend
   await Supabase.initialize(
     url: 'https://wzypjlnexfmkghwmhyrf.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3N1ZXIiOiJzdXBhYmFzZSIsInJlZiI6Ind6eXBqbG5leGZta2dod21oeXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3Njc3NzgsImV4cCI6MjA1NzM0Mzc3OH0.aZJ1yT3XzjJc7H4N6mP_J2O1e991iN66K8K-B0E3s6E', // Used the key user provided starting with eyJhb
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6eXBqbG5leGZta2dod21oeXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMDQ5MTEsImV4cCI6MjA4ODg4MDkxMX0.iM1faqxzH6sA-JhvweKHWDNqDxLqvsDaHpaFRi1LdEM',
   );
 
   // Initialize desktop SQLite compatibility
