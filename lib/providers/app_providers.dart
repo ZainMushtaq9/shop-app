@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../services/database_service.dart';
@@ -167,3 +168,6 @@ final selectedCategoryProvider = StateProvider<String?>((ref) => null);
 
 /// Search query for products
 final productSearchQueryProvider = StateProvider<String>((ref) => '');
+
+/// Theme mode toggle (light / dark / system)
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);

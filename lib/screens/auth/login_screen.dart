@@ -293,11 +293,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         labelText: AppStrings.isUrdu ? 'موبائل نمبر' : 'Mobile Number',
                         prefixIcon: const Icon(Icons.phone_outlined),
                         counterText: '',
-                        filled: true,
-                        fillColor: AppColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
                         ),
                       ),
                     ),
@@ -314,11 +311,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       decoration: InputDecoration(
                         labelText: AppStrings.isUrdu ? 'پن کوڈ' : 'PIN Code',
                         counterText: '',
-                        filled: true,
-                        fillColor: AppColors.background,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
                         ),
                       ),
                     ),
@@ -340,6 +334,55 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 AppStrings.isUrdu ? 'لاگ ان' : 'Login',
                                 style: AppTextStyles.urduTitle.copyWith(color: Colors.white),
                               ),
+                      ),
+                    ),
+
+                    const SizedBox(height: AppDimens.spacingMD),
+
+                    // OR divider
+                    Row(
+                      children: [
+                        Expanded(child: Divider(color: AppColors.disabled.withOpacity(0.5))),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            AppStrings.isUrdu ? 'یا' : 'OR',
+                            style: TextStyle(color: AppColors.disabled, fontSize: 13),
+                          ),
+                        ),
+                        Expanded(child: Divider(color: AppColors.disabled.withOpacity(0.5))),
+                      ],
+                    ),
+                    const SizedBox(height: AppDimens.spacingMD),
+
+                    // Google Sign-In Button
+                    SizedBox(
+                      width: double.infinity,
+                      height: 52,
+                      child: OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: AppColors.disabled.withOpacity(0.3)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        ),
+                        icon: Image.network(
+                          'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                          height: 22,
+                          width: 22,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata_rounded, size: 28, color: Colors.red),
+                        ),
+                        label: Text(
+                          AppStrings.isUrdu ? 'گوگل سے لاگ ان' : 'Sign in with Google',
+                          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(AppStrings.isUrdu
+                                  ? 'گوگل سائن ان جلد آ رہا ہے — موبائل نمبر سے لنک ہو گا'
+                                  : 'Google Sign-In coming soon — will link to mobile number'),
+                            ),
+                          );
+                        },
                       ),
                     ),
 

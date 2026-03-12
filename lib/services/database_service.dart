@@ -25,7 +25,7 @@ class DatabaseService {
   /// Initialize SQLite database with all tables
   Future<Database> _initDatabase() async {
     if (kIsWeb) {
-      final factory = databaseFactoryFfiWeb;
+      final factory = databaseFactoryFfiWebNoWebWorker;
       return await factory.openDatabase(
         AppConstants.dbName,
         options: OpenDatabaseOptions(
@@ -142,6 +142,7 @@ class DatabaseService {
         customer_id TEXT,
         subtotal REAL NOT NULL DEFAULT 0,
         discount REAL DEFAULT 0,
+        discount_percentage REAL DEFAULT 0,
         tax REAL DEFAULT 0,
         total REAL NOT NULL DEFAULT 0,
         profit REAL DEFAULT 0,
@@ -161,7 +162,7 @@ class DatabaseService {
         sale_id TEXT NOT NULL,
         product_id TEXT NOT NULL,
         product_name TEXT NOT NULL DEFAULT '',
-        quantity INTEGER NOT NULL DEFAULT 0,
+        quantity REAL NOT NULL DEFAULT 0,
         purchase_price REAL DEFAULT 0,
         sale_price REAL DEFAULT 0,
         profit REAL DEFAULT 0,
@@ -225,6 +226,7 @@ class DatabaseService {
         pin TEXT NOT NULL,
         role TEXT NOT NULL DEFAULT 'shopkeeper',
         shop_name TEXT DEFAULT '',
+        google_id TEXT DEFAULT '',
         created_at TEXT NOT NULL
       )
     ''');
@@ -594,6 +596,110 @@ class DatabaseService {
               ? AppConstants.txCreditSale
               : AppConstants.txPartialPayment,
           description: sale.paymentType == 'CREDIT' ? 'ادھار فروخت' : 'جزوی ادائیگی',
+          debitAmount: sale.total,
+          creditAmount: sale.amountPaid,
+          runningBalance: balance + sale.total - sale.amountPaid,
+          saleId: sale.id,
+          paymentMethod: sale.paymentType,
+        );
+        await txn.insert(AppConstants.tableCustomerTransactions, customerTx.toMap());
+      }
+    });
+  }
+
+  /// Delete a sale and reverse its effects (stock, customer ledger)
+  Future<void> deleteSale(String saleId) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // Get sale items to reverse stock
+      final itemMaps = await txn.query(
+        AppConstants.tableSaleItems,
+        where: 'sale_id = ?',
+        whereArgs: [saleId],
+      );
+
+      // Restore stock for each product
+      for (final itemMap in itemMaps) {
+        final qty = (itemMap['quantity'] as num?)?.toDouble() ?? 0;
+        final productId = itemMap['product_id'] as String;
+        await txn.rawUpdate('''
+          UPDATE ${AppConstants.tableProducts}
+          SET stock_quantity = stock_quantity + ?,
+              updated_at = ?
+          WHERE id = ?
+        ''', [qty, DateTime.now().toIso8601String(), productId]);
+      }
+
+      // Delete linked customer transactions
+      await txn.delete(
+        AppConstants.tableCustomerTransactions,
+        where: 'sale_id = ?',
+        whereArgs: [saleId],
+      );
+
+      // Delete sale items
+      await txn.delete(
+        AppConstants.tableSaleItems,
+        where: 'sale_id = ?',
+        whereArgs: [saleId],
+      );
+
+      // Delete sale header
+      await txn.delete(
+        AppConstants.tableSales,
+        where: 'id = ?',
+        whereArgs: [saleId],
+      );
+    });
+  }
+
+  /// Update a sale (replace header and items)
+  Future<void> updateSale(Sale sale, List<SaleItem> newItems) async {
+    final db = await database;
+    await db.transaction((txn) async {
+      // Get old items to reverse their stock changes
+      final oldItemMaps = await txn.query(
+        AppConstants.tableSaleItems,
+        where: 'sale_id = ?',
+        whereArgs: [sale.id],
+      );
+      for (final oldItem in oldItemMaps) {
+        final qty = (oldItem['quantity'] as num?)?.toDouble() ?? 0;
+        final productId = oldItem['product_id'] as String;
+        await txn.rawUpdate('''
+          UPDATE ${AppConstants.tableProducts}
+          SET stock_quantity = stock_quantity + ?,
+              updated_at = ?
+          WHERE id = ?
+        ''', [qty, DateTime.now().toIso8601String(), productId]);
+      }
+
+      // Delete old sale items
+      await txn.delete(AppConstants.tableSaleItems, where: 'sale_id = ?', whereArgs: [sale.id]);
+
+      // Update sale header
+      await txn.update(AppConstants.tableSales, sale.toMap(), where: 'id = ?', whereArgs: [sale.id]);
+
+      // Insert new items and deduct stock
+      for (final item in newItems) {
+        await txn.insert(AppConstants.tableSaleItems, item.toMap());
+        await txn.rawUpdate('''
+          UPDATE ${AppConstants.tableProducts}
+          SET stock_quantity = stock_quantity - ?,
+              updated_at = ?
+          WHERE id = ?
+        ''', [item.quantity, DateTime.now().toIso8601String(), item.productId]);
+      }
+
+      // Update customer transaction if exists
+      await txn.delete(AppConstants.tableCustomerTransactions, where: 'sale_id = ?', whereArgs: [sale.id]);
+      if (sale.customerId != null && sale.balanceDue > 0) {
+        final balance = await _getCustomerBalanceInTxn(txn, sale.customerId!);
+        final customerTx = CustomerTransaction(
+          customerId: sale.customerId!,
+          date: sale.date,
+          type: sale.paymentType == 'CREDIT' ? AppConstants.txCreditSale : AppConstants.txPartialPayment,
+          description: 'بل تبدیلی',
           debitAmount: sale.total,
           creditAmount: sale.amountPaid,
           runningBalance: balance + sale.total - sale.amountPaid,

@@ -255,7 +255,7 @@ class _QuickActions extends StatelessWidget {
             _QuickActionButton(
               icon: Icons.payments_rounded,
               label: AppStrings.receivePayment,
-              color: AppColors.moneyReceivedLight,
+              color: AppColors.moneyReceived,
               onTap: () {},
             ),
             const SizedBox(width: AppDimens.spacingSM),

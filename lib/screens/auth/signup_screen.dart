@@ -298,6 +298,55 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
         ),
 
         const SizedBox(height: AppDimens.spacingMD),
+
+        // OR divider
+        Row(
+          children: [
+            Expanded(child: Divider(color: AppColors.disabled.withOpacity(0.5))),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                AppStrings.isUrdu ? 'یا' : 'OR',
+                style: TextStyle(color: AppColors.disabled, fontSize: 13),
+              ),
+            ),
+            Expanded(child: Divider(color: AppColors.disabled.withOpacity(0.5))),
+          ],
+        ),
+        const SizedBox(height: AppDimens.spacingMD),
+
+        // Google Sign-Up Button
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              side: BorderSide(color: AppColors.disabled.withOpacity(0.3)),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            icon: Image.network(
+              'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+              height: 22,
+              width: 22,
+              errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata_rounded, size: 28, color: Colors.red),
+            ),
+            label: Text(
+              AppStrings.isUrdu ? 'گوگل سے سائن اپ' : 'Sign up with Google',
+              style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
+            ),
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(AppStrings.isUrdu
+                      ? 'گوگل سائن اپ جلد آ رہا ہے — بعد میں موبائل نمبر لنک کریں'
+                      : 'Google Sign-Up coming soon — link mobile number later'),
+                ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: AppDimens.spacingMD),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -365,9 +414,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           decoration: InputDecoration(
             counterText: '',
             hintText: '• • • •',
-            filled: true,
-            fillColor: AppColors.background,
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
         const SizedBox(height: AppDimens.spacingLG),

@@ -102,11 +102,13 @@ class PdfExportService {
   /// Generate a bill PDF
   static Future<Uint8List> generateBill({
     required String shopName,
+    String? shopPhone,
     required String billNo,
     required String customerName,
     required List<SaleItem> items,
     required double subtotal,
     required double discount,
+    required double discountPercentage,
     required double tax,
     required double total,
     required double amountPaid,
@@ -128,6 +130,10 @@ class PdfExportService {
               child: pw.Column(
                 children: [
                   pw.Text(shopName, style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold)),
+                  if (shopPhone != null && shopPhone.isNotEmpty) ...[
+                    pw.SizedBox(height: 2),
+                    pw.Text('Phone: $shopPhone', style: const pw.TextStyle(fontSize: 12, color: PdfColors.grey700)),
+                  ],
                   pw.SizedBox(height: 4),
                   pw.Text('Bill No: $billNo', style: const pw.TextStyle(fontSize: 14, color: PdfColors.grey700)),
                   pw.Text('Date: ${AppFormatters.dateTime(date)}', style: const pw.TextStyle(fontSize: 12)),
@@ -186,7 +192,7 @@ class PdfExportService {
                 child: pw.Column(
                   children: [
                     _totalRow('Subtotal', subtotal),
-                    if (discount > 0) _totalRow('Discount', -discount),
+                    if (discount > 0) _totalRow('Discount ${discountPercentage > 0 ? "(${AppFormatters.percentage(discountPercentage)})" : ""}', -discount),
                     if (tax > 0) _totalRow('Tax', tax),
                     pw.Divider(),
                     _totalRow('Total', total, bold: true),

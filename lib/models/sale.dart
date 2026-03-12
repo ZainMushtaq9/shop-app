@@ -7,6 +7,7 @@ class Sale {
   final String? customerId;
   final double subtotal;
   final double discount;
+  final double discountPercentage;
   final double tax;
   final double total;
   final double profit;
@@ -22,6 +23,7 @@ class Sale {
     this.customerId,
     required this.subtotal,
     this.discount = 0.0,
+    this.discountPercentage = 0.0,
     this.tax = 0.0,
     required this.total,
     required this.profit,
@@ -47,6 +49,7 @@ class Sale {
       'customer_id': customerId,
       'subtotal': subtotal,
       'discount': discount,
+      'discount_percentage': discountPercentage,
       'tax': tax,
       'total': total,
       'profit': profit,
@@ -65,6 +68,7 @@ class Sale {
       customerId: map['customer_id'] as String?,
       subtotal: (map['subtotal'] as num?)?.toDouble() ?? 0.0,
       discount: (map['discount'] as num?)?.toDouble() ?? 0.0,
+      discountPercentage: (map['discount_percentage'] as num?)?.toDouble() ?? 0.0,
       tax: (map['tax'] as num?)?.toDouble() ?? 0.0,
       total: (map['total'] as num?)?.toDouble() ?? 0.0,
       profit: (map['profit'] as num?)?.toDouble() ?? 0.0,
@@ -83,7 +87,7 @@ class SaleItem {
   final String saleId;
   final String productId;
   final String productName; // Snapshot at time of sale
-  final int quantity;
+  final double quantity;
   final double purchasePrice; // Snapshot
   final double salePrice;    // Snapshot
   final double profit;
@@ -125,7 +129,7 @@ class SaleItem {
       saleId: map['sale_id'] as String,
       productId: map['product_id'] as String,
       productName: map['product_name'] as String? ?? '',
-      quantity: map['quantity'] as int? ?? 0,
+      quantity: (map['quantity'] as num?)?.toDouble() ?? 0.0,
       purchasePrice: (map['purchase_price'] as num?)?.toDouble() ?? 0.0,
       salePrice: (map['sale_price'] as num?)?.toDouble() ?? 0.0,
       profit: (map['profit'] as num?)?.toDouble() ?? 0.0,

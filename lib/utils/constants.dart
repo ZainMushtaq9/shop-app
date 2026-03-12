@@ -51,8 +51,11 @@ class AppFormatters {
   }
 
   // ─── Quantity ───
-  static String quantity(int qty) {
-    return _currencyFormat.format(qty);
+  static String quantity(double qty) {
+    if (qty == qty.toInt()) {
+      return _currencyFormat.format(qty.toInt());
+    }
+    return qty.toString();
   }
 }
 
@@ -61,8 +64,8 @@ class AppConstants {
   AppConstants._();
 
   // Database
-  static const String dbName = 'shop_app_v2.db';
-  static const int dbVersion = 2;
+  static const String dbName = 'shop_app_v4.db';
+  static const int dbVersion = 4;
 
   // Tables
   static const String tableProducts = 'products';

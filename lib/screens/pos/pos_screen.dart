@@ -24,7 +24,6 @@ class PosScreen extends ConsumerStatefulWidget {
 
 class _PosScreenState extends ConsumerState<PosScreen> {
   final List<_CartItem> _cart = [];
-  double _discount = 0;
   double _taxRate = 0;
   String _paymentType = 'CASH';
   String? _selectedCustomerId;
@@ -32,7 +31,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
 
   double get _subtotal => _cart.fold(0, (sum, item) => sum + (item.product.salePrice * item.quantity));
   double get _taxAmount => _subtotal * (_taxRate / 100);
-  double get _total => _subtotal - _discount + _taxAmount;
   double get _totalProfit =>
       _cart.fold(0, (sum, item) => sum + (item.product.unitProfit * item.quantity));
 
@@ -216,10 +214,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     child: Column(
                       children: [
                         _TotalRow(AppStrings.subtotal, _subtotal),
-                        if (_discount > 0) _TotalRow(AppStrings.discount, -_discount, color: AppColors.moneyReceived),
                         if (_taxAmount > 0) _TotalRow(AppStrings.tax, _taxAmount),
                         const Divider(),
-                        _TotalRow(AppStrings.total, _total, isBold: true, fontSize: 20),
+                        _TotalRow(AppStrings.total, _subtotal + _taxAmount, isBold: true, fontSize: 20),
                         const SizedBox(height: 8),
                         // Payment type selector
                         Row(
@@ -237,7 +234,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                           width: double.infinity,
                           height: AppDimens.minTouchTarget,
                           child: ElevatedButton.icon(
-                            onPressed: _checkout,
+                            onPressed: () => _showCheckoutSummaryDialog(context),
                             icon: const Icon(Icons.check_circle_rounded),
                             label: Text(
                               AppStrings.generateBill,
@@ -304,12 +301,128 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     });
   }
 
-  Future<void> _checkout() async {
+  void _showCheckoutSummaryDialog(BuildContext context) {
     if (_cart.isEmpty) return;
+    
+    // Dialog state
+    double discountAmount = 0;
+    double discountPercentage = 0;
+    bool isPercentage = false;
+    DateTime selectedDate = DateTime.now();
+    bool isWalkIn = _selectedCustomerId == null;
+    final totalWithoutDiscount = _subtotal + _taxAmount;
+    
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setStateBuilder) {
+            double currentTotal = totalWithoutDiscount - discountAmount;
+            if (currentTotal < 0) currentTotal = 0;
 
+            return AlertDialog(
+              title: Text('Checkout Summary', style: AppTextStyles.title),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Walk-in Toggle
+                    SwitchListTile(
+                      title: Text('Walk-in Customer (No Phone)', style: AppTextStyles.body),
+                      value: isWalkIn,
+                      onChanged: (val) => setStateBuilder(() => isWalkIn = val),
+                    ),
+                    const Divider(),
+                    // Date picker
+                    ListTile(
+                      title: Text('Date: ${AppFormatters.date(selectedDate)}'),
+                      trailing: const Icon(Icons.calendar_today),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: selectedDate,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime(2030),
+                        );
+                        if (picked != null) setStateBuilder(() => selectedDate = picked);
+                      },
+                    ),
+                    const Divider(),
+                    // Discount section
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SwitchListTile(
+                            contentPadding: EdgeInsets.zero,
+                            title: Text('Discount in %', style: AppTextStyles.body),
+                            value: isPercentage,
+                            onChanged: (val) {
+                              setStateBuilder(() {
+                                isPercentage = val;
+                                discountAmount = 0;
+                                discountPercentage = 0;
+                              });
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    TextField(
+                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                      decoration: InputDecoration(
+                        labelText: isPercentage ? 'Discount Percentage (%)' : 'Discount Amount (Rs)',
+                        prefixIcon: Icon(isPercentage ? Icons.percent : Icons.money_off),
+                      ),
+                      onChanged: (val) {
+                        final numValue = double.tryParse(val) ?? 0;
+                        setStateBuilder(() {
+                          if (isPercentage) {
+                            discountPercentage = numValue.clamp(0, 100);
+                            discountAmount = _subtotal * (discountPercentage / 100);
+                          } else {
+                            discountAmount = numValue;
+                            discountPercentage = (_subtotal > 0) ? (discountAmount / _subtotal) * 100 : 0;
+                          }
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    // Final Total
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(color: AppColors.surfaceVariant, borderRadius: BorderRadius.circular(8)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Final Total:', style: AppTextStyles.title),
+                          Text(AppFormatters.currency(currentTotal), style: AppTextStyles.amountMedium.copyWith(color: AppColors.primary)),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.cancel)),
+                ElevatedButton(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    if (isWalkIn) _selectedCustomerId = null;
+                    _finalizeSale(selectedDate, discountAmount, discountPercentage, currentTotal);
+                  },
+                  child: Text('Confirm Sale'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<void> _finalizeSale(DateTime date, double discountAmount, double discountPercentage, double finalTotal) async {
     final db = ref.read(databaseProvider);
-    final totalAmount = _total;
-    final saleItemsCopy = _cart.map((item) => SaleItem(
+    final saleItems = _cart.map((item) => SaleItem(
       saleId: '',
       productId: item.product.id,
       productName: item.product.displayName,
@@ -319,27 +432,34 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     )).toList();
 
     final sale = Sale(
+      date: date,
       subtotal: _subtotal,
-      discount: _discount,
+      discount: discountAmount,
+      discountPercentage: discountPercentage,
       tax: _taxAmount,
-      total: _total,
-      profit: _totalProfit,
+      total: finalTotal,
+      profit: _totalProfit - discountAmount, // Profit reduces with discount
       paymentType: _paymentType,
-      amountPaid: _paymentType == 'CASH' ? _total : 0,
-      balanceDue: _paymentType == 'CASH' ? 0 : _total,
+      amountPaid: _paymentType == 'CASH' ? finalTotal : 0,
+      balanceDue: _paymentType == 'CASH' ? 0 : finalTotal,
       customerId: _selectedCustomerId,
     );
 
-    final saleItems = _cart.map((item) => SaleItem(
+    // Update the fake saleId with the generated one
+    for (var i = 0; i < saleItems.length; i++) {
+       // Cannot modify final saleId natively, but database insert handles children properly if we do it normally.
+       // The DB service needs items to have the parent ID.
+    }
+    final linkedItems = saleItems.map((item) => SaleItem(
       saleId: sale.id,
-      productId: item.product.id,
-      productName: item.product.displayName,
+      productId: item.productId,
+      productName: item.productName,
       quantity: item.quantity,
-      purchasePrice: item.product.purchasePrice,
-      salePrice: item.product.salePrice,
+      purchasePrice: item.purchasePrice,
+      salePrice: item.salePrice,
     )).toList();
 
-    await db.insertSale(sale, saleItems);
+    await db.insertSale(sale, linkedItems);
 
     // Invalidate providers
     ref.invalidate(todaySalesProvider);
@@ -348,14 +468,12 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     ref.invalidate(lowStockProductsProvider);
     ref.invalidate(totalReceivableProvider);
 
-    final savedDiscount = _discount;
     final savedTaxAmount = _taxAmount;
     final savedSubtotal = _subtotal;
     final savedPaymentType = _paymentType;
 
     setState(() {
       _cart.clear();
-      _discount = 0;
       _paymentType = 'CASH';
       _selectedCustomerId = null;
     });
@@ -363,12 +481,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     if (mounted) {
       _showBillOptionsDialog(
         sale: sale,
-        items: saleItems,
+        items: linkedItems,
         subtotal: savedSubtotal,
-        discount: savedDiscount,
+        discount: discountAmount,
         taxAmount: savedTaxAmount,
-        total: totalAmount,
+        total: finalTotal,
         paymentType: savedPaymentType,
+        selectedDate: date,
       );
     }
   }
@@ -381,6 +500,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     required double taxAmount,
     required double total,
     required String paymentType,
+    required DateTime selectedDate,
   }) {
     showDialog(
       context: context,
@@ -410,7 +530,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               onTap: () async {
                 Navigator.pop(ctx);
                 try {
-                  final pdfBytes = await _generateBillPdf(sale, items, subtotal, discount, taxAmount, total, paymentType);
+                  final pdfBytes = await _generateBillPdf(sale, items, subtotal, discount, sale.discountPercentage, taxAmount, total, paymentType, selectedDate);
                   await Printing.layoutPdf(onLayout: (_) => pdfBytes);
                 } catch (e) {
                   if (mounted) {
@@ -432,7 +552,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               onTap: () async {
                 Navigator.pop(ctx);
                 try {
-                  final pdfBytes = await _generateBillPdf(sale, items, subtotal, discount, taxAmount, total, paymentType);
+                  final pdfBytes = await _generateBillPdf(sale, items, subtotal, discount, sale.discountPercentage, taxAmount, total, paymentType, selectedDate);
                   await Printing.sharePdf(bytes: pdfBytes, filename: 'bill_${sale.id.substring(0, 8)}.pdf');
                 } catch (e) {
                   if (mounted) {
@@ -454,7 +574,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
               onTap: () async {
                 Navigator.pop(ctx);
                 try {
-                  final pdfBytes = await _generateBillPdf(sale, items, subtotal, discount, taxAmount, total, paymentType);
+                  final pdfBytes = await _generateBillPdf(sale, items, subtotal, discount, sale.discountPercentage, taxAmount, total, paymentType, selectedDate);
                   if (!kIsWeb) {
                     final dir = await getTemporaryDirectory();
                     final file = File('${dir.path}/bill_${sale.id.substring(0, 8)}.pdf');
@@ -489,30 +609,34 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     List<SaleItem> items,
     double subtotal,
     double discount,
+    double discountPercentage,
     double taxAmount,
     double total,
     String paymentType,
+    DateTime selectedDate,
   ) async {
     return await PdfExportService.generateBill(
       shopName: 'Super Business Shop',
+      shopPhone: '',
       billNo: sale.id.substring(0, 8).toUpperCase(),
-      customerName: '-',
+      customerName: sale.customerId != null ? 'Customer' : 'Walk-in Customer',
       items: items,
       subtotal: subtotal,
       discount: discount,
+      discountPercentage: discountPercentage,
       tax: taxAmount,
       total: total,
       amountPaid: sale.amountPaid,
       balanceDue: sale.balanceDue,
       paymentType: paymentType,
-      date: DateTime.now(),
+      date: selectedDate,
     );
   }
 }
 
 class _CartItem {
   final Product product;
-  final int quantity;
+  final double quantity;
 
   _CartItem(this.product, this.quantity);
 }
@@ -565,7 +689,7 @@ class _ProductCard extends StatelessWidget {
 
 class _CartItemTile extends StatelessWidget {
   final _CartItem item;
-  final Function(int) onQuantityChanged;
+  final Function(double) onQuantityChanged;
   final VoidCallback onRemove;
 
   const _CartItemTile({required this.item, required this.onQuantityChanged, required this.onRemove});
@@ -589,9 +713,41 @@ class _CartItemTile extends StatelessWidget {
           Row(
             children: [
               _QtyButton(Icons.remove, () => onQuantityChanged(item.quantity - 1)),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Text('${item.quantity}', style: AppTextStyles.amountSmall.copyWith(fontSize: 14)),
+              InkWell(
+                onTap: () {
+                  showDialog(
+                    context: context,
+                    builder: (ctx) {
+                      String qtyStr = item.quantity.toString();
+                      return AlertDialog(
+                        title: const Text('Custom Quantity'),
+                        content: TextField(
+                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                          autofocus: true,
+                          onChanged: (v) => qtyStr = v,
+                          decoration: const InputDecoration(hintText: 'e.g., 1.5'),
+                        ),
+                        actions: [
+                          TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.cancel)),
+                          ElevatedButton(
+                            onPressed: () {
+                              final numValue = double.tryParse(qtyStr);
+                              if (numValue != null && numValue > 0) {
+                                onQuantityChanged(numValue);
+                              }
+                              Navigator.pop(ctx);
+                            },
+                            child: const Text('Save'),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  child: Text(AppFormatters.quantity(item.quantity), style: AppTextStyles.amountSmall.copyWith(fontSize: 14)),
+                ),
               ),
               _QtyButton(Icons.add, () => onQuantityChanged(item.quantity + 1)),
             ],

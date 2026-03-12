@@ -33,27 +33,56 @@ class AppShell extends ConsumerWidget {
     ];
 
     return Scaffold(
-      key: ValueKey(isUrdu),
+      key: ValueKey('$isUrdu-${ref.watch(themeModeProvider)}'),
+      appBar: AppBar(
+        title: Text(AppStrings.appName),
+        leading: Builder(
+          builder: (ctx) => IconButton(
+            icon: const Icon(Icons.menu_rounded),
+            onPressed: () => Scaffold.of(ctx).openDrawer(),
+          ),
+        ),
+        actions: [
+          // Dark / Light mode toggle
+          IconButton(
+            icon: Icon(
+              Theme.of(context).brightness == Brightness.dark
+                  ? Icons.light_mode_rounded
+                  : Icons.dark_mode_rounded,
+            ),
+            tooltip: isUrdu ? 'تھیم تبدیل کریں' : 'Toggle Theme',
+            onPressed: () {
+              final current = ref.read(themeModeProvider);
+              ref.read(themeModeProvider.notifier).state =
+                  current == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
+            },
+          ),
+          // Language toggle: Urdu ↔ English
+          TextButton.icon(
+            icon: Icon(Icons.translate_rounded,
+                size: 18,
+                color: Theme.of(context).colorScheme.onSurface),
+            label: Text(
+              isUrdu ? 'EN' : 'اردو',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
+            ),
+            onPressed: () {
+              ref.read(isUrduProvider.notifier).state = !isUrdu;
+              AppStrings.toggleLanguage();
+            },
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
             child: IndexedStack(
               index: currentTab,
               children: screens,
-            ),
-          ),
-          // ── App Banner Placeholder for Future Use ──
-          Container(
-            width: double.infinity,
-            height: 50,
-            color: AppColors.surfaceVariant,
-            alignment: Alignment.center,
-            child: Text(
-              AppStrings.isUrdu ? 'اشتہار کی جگہ (Ad Space)' : 'Ad Banner Space',
-              style: AppTextStyles.caption.copyWith(
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.5,
-              ),
             ),
           ),
         ],
