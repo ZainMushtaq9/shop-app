@@ -11,7 +11,7 @@ class AppColors {
   AppColors._();
 
   // Gold Accent (consistent in both modes)
-  static const Color primary = Color(0xFFC9A227);        
+  static const Color primary = Color(0xFFB8931F);        
   static const Color primaryLight = Color(0xFFE2C460);
   static const Color primaryDark = Color(0xFFA68218);
 
@@ -30,10 +30,10 @@ class AppColors {
 
   // ── Night / Dark Mode ──
   static const Color darkBackground  = Color(0xFF1F2933);
-  static const Color darkSurface     = Color(0xFF2A3440);
+  static const Color darkSurface     = Color(0xFFFFFFFF);
   static const Color darkTextPrimary = Color(0xFFF9FAFB);
   static const Color darkTextSecondary = Color(0xFF9CA3AF);
-  static const Color darkDivider     = Color(0xFF374151);
+  static const Color darkDivider     = Color(0xFFE5E7EB);
 
   // Common
   static const Color textOnPrimary = Color(0xFF111827); // Dark text on gold buttons
