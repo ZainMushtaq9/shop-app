@@ -49,6 +49,14 @@ class AuthService {
     );
   }
 
+  /// Resend OTP
+  Future<void> resendOtp(String email) async {
+    await _supabase.auth.resend(
+      type: OtpType.signup,
+      email: email,
+    );
+  }
+
   /// Login with Email and Password
   Future<AuthResponse> login(String email, String password) async {
     final response = await _supabase.auth.signInWithPassword(

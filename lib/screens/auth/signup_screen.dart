@@ -298,11 +298,11 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           controller: _otpController,
           keyboardType: TextInputType.number,
           textAlign: TextAlign.center,
-          maxLength: 6,
+          maxLength: 8,
           style: const TextStyle(fontSize: 28, letterSpacing: 8),
           decoration: InputDecoration(
             counterText: '',
-            hintText: '......',
+            hintText: '........',
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
@@ -324,17 +324,75 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             label: Text(AppStrings.isUrdu ? 'تصدیق کریں' : 'Verify', style: AppTextStyles.urduBody.copyWith(color: Colors.white)),
           ),
         ),
+        const SizedBox(height: AppDimens.spacingMD),
+        TextButton(
+          onPressed: _isLoading ? null : () async {
+            setState(() => _isLoading = true);
+            try {
+              final authService = ref.read(authServiceProvider);
+              await authService.resendOtp(_emailController.text.trim());
+              if (!mounted) return;
+              setState(() => _isLoading = false);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(AppStrings.isUrdu ? 'نیا کوڈ بھیج دیا گیا ہے' : 'New OTP sent to email'),
+                  backgroundColor: AppColors.info,
+                ),
+              );
+            } catch (e) {
+              setState(() => _isLoading = false);
+              _showError(e.toString());
+            }
+          },
+          child: Text(
+            AppStrings.isUrdu ? 'کوڈ نہیں ملا؟ دوبارہ بھیجیں' : 'Didn\'t receive OTP? Resend',
+            style: AppTextStyles.urduBody.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
+          ),
+        ),
       ],
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    // Watch language changes so the entire screen rebuilds
+    final isUrdu = ref.watch(isUrduProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(AppStrings.isUrdu ? 'نیا اکاؤنٹ' : 'Create Account'),
         backgroundColor: AppColors.primary,
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 16),
+            child: InkWell(
+              onTap: () {
+                AppStrings.setUrdu(!isUrdu);
+                ref.read(isUrduProvider.notifier).state = !isUrdu;
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.language, size: 16, color: Colors.white),
+                    const SizedBox(width: 4),
+                    Text(
+                      isUrdu ? 'EN' : 'اردو',
+                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: SafeArea(
         child: Center(

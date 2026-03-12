@@ -165,6 +165,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Watch language changes so the entire screen rebuilds
+    ref.watch(isUrduProvider);
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -187,6 +190,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           final isUrdu = ref.watch(isUrduProvider);
                           return InkWell(
                             onTap: () {
+                              AppStrings.setUrdu(!isUrdu);
                               ref.read(isUrduProvider.notifier).state = !isUrdu;
                             },
                             child: Container(
