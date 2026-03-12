@@ -9,6 +9,7 @@ import '../../models/models.dart';
 import '../../services/pdf_export_service.dart';
 import '../../utils/constants.dart';
 import '../auth/login_screen.dart';
+import '../../services/auth_service.dart';
 
 class BuyerDashboardScreen extends ConsumerStatefulWidget {
   const BuyerDashboardScreen({super.key});
@@ -38,7 +39,11 @@ class _BuyerDashboardScreenState extends ConsumerState<BuyerDashboardScreen> {
     });
   }
 
-  void _logout() {
+  void _logout() async {
+    final authService = ref.read(authServiceProvider);
+    await authService.logout();
+
+    if (!mounted) return;
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const LoginScreen()),
     );

@@ -12,6 +12,8 @@ import 'suppliers/supplier_list_screen.dart';
 import 'money_flow/money_flow_screen.dart';
 import 'expenses/expense_list_screen.dart';
 import 'settings/settings_screen.dart';
+import '../services/auth_service.dart';
+import 'auth/login_screen.dart';
 
 /// Main app shell with bottom navigation (5 tabs) and drawer menu.
 /// Follows the GUI Design Guide from Section 09 of requirements.
@@ -230,6 +232,22 @@ class AppShell extends ConsumerWidget {
                   label: AppStrings.help,
                   onTap: () {
                     Navigator.pop(context);
+                  },
+                ),
+                const Divider(),
+                _DrawerItem(
+                  icon: Icons.logout_rounded,
+                  label: AppStrings.isUrdu ? 'لاگ آؤٹ' : 'Logout',
+                  onTap: () async {
+                    Navigator.pop(context); // close drawer
+                    final authService = ref.read(authServiceProvider);
+                    await authService.logout();
+                    
+                    if (!context.mounted) return;
+                    Navigator.of(context).pushAndRemoveUntil(
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      (route) => false,
+                    );
                   },
                 ),
               ],

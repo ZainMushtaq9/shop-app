@@ -3,10 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/app_providers.dart';
+import '../../services/auth_service.dart';
 import '../app_shell.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'signup_screen.dart';
 import '../buyer_dashboard/buyer_dashboard_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -16,49 +17,51 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _phoneController = TextEditingController();
-  final _pinController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
 
-  void _login() async {
-    final phone = _phoneController.text.trim();
-    final pin = _pinController.text.trim();
+  void _showError(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.moneyOwed),
+    );
+  }
 
-    if (phone.isEmpty || pin.isEmpty) {
-      _showError(AppStrings.isUrdu ? 'فون نمبر اور پن درج کریں' : 'Enter phone and PIN');
+  void _login() async {
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showError(AppStrings.isUrdu ? 'ای میل اور پاس ورڈ درج کریں' : 'Enter email and password');
       return;
     }
 
     setState(() => _isLoading = true);
 
     try {
-      final db = ref.read(databaseProvider);
-      final user = await db.getUserByPhone(phone);
+      final authService = ref.read(authServiceProvider);
+      final response = await authService.login(email, password);
 
       if (!mounted) return;
 
-      if (user == null) {
+      if (response.user == null) {
         setState(() => _isLoading = false);
-        _showError(AppStrings.isUrdu ? 'یہ نمبر رجسٹرڈ نہیں ہے' : 'This number is not registered');
+        _showError(AppStrings.isUrdu ? 'لاگ ان ناکام رہا' : 'Login failed');
         return;
       }
 
-      if (user['pin'] != pin) {
+      // Check device session validity across login (enforces single active mobile device)
+      final isValidSession = await authService.validateCurrentDeviceSession();
+      if (!isValidSession) {
         setState(() => _isLoading = false);
-        _showError(AppStrings.isUrdu ? 'غلط پن کوڈ' : 'Invalid PIN');
+        _showError(AppStrings.isUrdu ? 'یہ اکاؤنٹ کسی اور ڈیوائس پر لاگ ان ہے' : 'Account active on another device');
+        await authService.logout();
         return;
       }
 
-      // Save current session
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('user_phone', phone);
-      await prefs.setString('user_name', user['name'] as String);
-      await prefs.setString('user_role', user['role'] as String);
-      await prefs.setString('user_id', user['id'] as String);
-
-      if (!mounted) return;
-
-      final role = user['role'] as String;
+      // Route based on role from metadata
+      final role = response.user!.userMetadata?['role'] ?? 'shopkeeper';
+      
       if (role == 'shopkeeper') {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AppShell()),
@@ -68,18 +71,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           MaterialPageRoute(builder: (_) => const BuyerDashboardScreen()),
         );
       }
+    } on AuthException catch (e) {
+      setState(() => _isLoading = false);
+      _showError(e.message);
     } catch (e) {
       setState(() => _isLoading = false);
       _showError(AppStrings.isUrdu ? 'لاگ ان میں خرابی' : 'Login error');
     }
   }
 
-  void _forgotPin() {
-    final forgotPhoneController = TextEditingController();
-    final forgotOtpController = TextEditingController();
-    final forgotNewPinController = TextEditingController();
-    String generatedOtp = '';
-    int step = 0;
+  void _forgotPassword() {
+    final forgotEmailController = TextEditingController();
+    bool isResetting = false;
 
     showDialog(
       context: context,
@@ -88,160 +91,71 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
-              Icon(
-                step == 0 ? Icons.phone : step == 1 ? Icons.sms : Icons.lock_reset,
-                color: AppColors.primary,
-              ),
+              const Icon(Icons.lock_reset, color: AppColors.primary),
               const SizedBox(width: 8),
-              Text(
-                step == 0
-                    ? (AppStrings.isUrdu ? 'فون نمبر درج کریں' : 'Enter Phone')
-                    : step == 1
-                        ? (AppStrings.isUrdu ? 'OTP درج کریں' : 'Enter OTP')
-                        : (AppStrings.isUrdu ? 'نیا پن' : 'New PIN'),
-                style: AppTextStyles.urduTitle.copyWith(fontSize: 18),
-              ),
+              Text(AppStrings.isUrdu ? 'پاس ورڈ بھول گئے؟' : 'Forgot Password?'),
             ],
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (step == 0) ...[
-                Text(
-                  AppStrings.isUrdu
-                      ? 'اپنا رجسٹرڈ فون نمبر درج کریں'
-                      : 'Enter your registered phone number',
-                  style: AppTextStyles.urduCaption,
+              Text(
+                AppStrings.isUrdu
+                    ? 'اپنا ای میل درج کریں، ہم آپ کو پاس ورڈ تبدیل کرنے کا لنک بھیجیں گے۔'
+                    : 'Enter your email, we will send you a password reset link.',
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: forgotEmailController,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  labelText: AppStrings.isUrdu ? 'ای میل' : 'Email',
+                  prefixIcon: const Icon(Icons.email_outlined),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                 ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: forgotPhoneController,
-                  keyboardType: TextInputType.phone,
-                  maxLength: 11,
-                  decoration: InputDecoration(
-                    labelText: AppStrings.isUrdu ? 'فون نمبر' : 'Phone Number',
-                    prefixIcon: const Icon(Icons.phone),
-                    counterText: '',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ],
-              if (step == 1) ...[
-                Text(
-                  AppStrings.isUrdu
-                      ? '${forgotPhoneController.text} پر بھیجا گیا OTP درج کریں'
-                      : 'Enter OTP sent to ${forgotPhoneController.text}',
-                  style: AppTextStyles.urduCaption,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: forgotOtpController,
-                  keyboardType: TextInputType.number,
-                  maxLength: 4,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 24, letterSpacing: 8),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ],
-              if (step == 2) ...[
-                Text(
-                  AppStrings.isUrdu ? 'نیا 4 ہندسوں کا پن درج کریں' : 'Enter new 4-digit PIN',
-                  style: AppTextStyles.urduCaption,
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: forgotNewPinController,
-                  keyboardType: TextInputType.number,
-                  obscureText: true,
-                  maxLength: 4,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 24, letterSpacing: 8),
-                  decoration: InputDecoration(
-                    counterText: '',
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                ),
-              ],
+              ),
             ],
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: Text(AppStrings.cancel),
+              onPressed: isResetting ? null : () => Navigator.of(ctx).pop(),
+              child: Text(AppStrings.isUrdu ? 'منسوخ' : 'Cancel', style: const TextStyle(color: AppColors.textSecondary)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: () async {
-                if (step == 0) {
-                  // Verify phone exists
-                  final db = ref.read(databaseProvider);
-                  final user = await db.getUserByPhone(forgotPhoneController.text.trim());
-                  if (user == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(AppStrings.isUrdu ? 'یہ نمبر رجسٹرڈ نہیں ہے' : 'Number not registered'),
-                        backgroundColor: AppColors.moneyOwed,
-                      ),
-                    );
-                    return;
-                  }
-                  generatedOtp = forgotPhoneController.text.trim().substring(
-                      forgotPhoneController.text.trim().length - 4);
-                  setDialogState(() => step = 1);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(AppStrings.isUrdu
-                          ? 'OTP بھیج دیا: $generatedOtp (ڈیمو)'
-                          : 'OTP sent: $generatedOtp (demo)'),
-                      backgroundColor: AppColors.info,
-                    ),
-                  );
-                } else if (step == 1) {
-                  if (forgotOtpController.text.trim() != generatedOtp) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(AppStrings.isUrdu ? 'غلط OTP' : 'Invalid OTP'),
-                        backgroundColor: AppColors.moneyOwed,
-                      ),
-                    );
-                    return;
-                  }
-                  setDialogState(() => step = 2);
-                } else if (step == 2) {
-                  if (forgotNewPinController.text.trim().length != 4) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(AppStrings.isUrdu ? '4 ہندسے درکار' : '4 digits required'),
-                        backgroundColor: AppColors.moneyOwed,
-                      ),
-                    );
-                    return;
-                  }
-                  final db = ref.read(databaseProvider);
-                  await db.updateUserPin(
-                    forgotPhoneController.text.trim(),
-                    forgotNewPinController.text.trim(),
-                  );
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(AppStrings.isUrdu ? 'پن تبدیل ہو گیا!' : 'PIN updated!'),
-                      backgroundColor: AppColors.moneyReceived,
-                    ),
-                  );
-                }
-              },
-              child: Text(
-                step == 2
-                    ? (AppStrings.isUrdu ? 'محفوظ کریں' : 'Save')
-                    : (AppStrings.isUrdu ? 'اگلا' : 'Next'),
-              ),
+              onPressed: isResetting
+                  ? null
+                  : () async {
+                      if (forgotEmailController.text.trim().isEmpty) return;
+                      setDialogState(() => isResetting = true);
+                      
+                      try {
+                        final authService = ref.read(authServiceProvider);
+                        await authService.requestPasswordReset(forgotEmailController.text.trim());
+                        
+                        if (!mounted) return;
+                        Navigator.of(ctx).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(AppStrings.isUrdu 
+                                ? 'ری سیٹ لنک ای میل کر دیا گیا ہے' 
+                                : 'Reset link emailed successfully'),
+                            backgroundColor: AppColors.moneyReceived,
+                          ),
+                        );
+                      } catch (e) {
+                        setDialogState(() => isResetting = false);
+                        _showError(AppStrings.isUrdu ? 'خرابی' : 'Error sending reset link');
+                      }
+                    },
+              child: isResetting
+                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : Text(AppStrings.isUrdu ? 'بھیجیں' : 'Send Link'),
             ),
           ],
         ),
@@ -249,16 +163,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), backgroundColor: AppColors.moneyOwed),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -271,133 +179,132 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.storefront_rounded, size: 64, color: AppColors.primary),
-                    const SizedBox(height: AppDimens.spacingMD),
-                    Text(
-                      AppStrings.appName,
-                      style: AppTextStyles.urduHeading.copyWith(color: AppColors.primary),
+                    // Language Toggle
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Consumer(builder: (context, ref, _) {
+                          final isUrdu = ref.watch(isUrduProvider);
+                          return InkWell(
+                            onTap: () {
+                              ref.read(isUrduProvider.notifier).state = !isUrdu;
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.surface,
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: AppColors.primary),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.language, size: 16, color: AppColors.primary),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isUrdu ? 'EN' : 'اردو',
+                                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        }),
+                      ],
+                    ),
+
+                    const SizedBox(height: AppDimens.spacingLG),
+                    // Logo Header
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(Icons.storefront, size: 64, color: AppColors.primary),
                     ),
                     const SizedBox(height: AppDimens.spacingSM),
                     Text(
-                      AppStrings.isUrdu ? 'دکان میں لاگ ان کریں' : 'Login to Shop',
-                      style: AppTextStyles.urduCaption,
+                      AppStrings.isUrdu ? 'سپر بزنس میں خوش آمدید' : 'Welcome to Super Business',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.urduHeading.copyWith(fontSize: 22, color: AppColors.textPrimary),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppStrings.isUrdu ? 'لاگ ان کریں اور اپنا کاروبار سنبھالیں' : 'Login to manage your shop',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.urduCaption.copyWith(fontSize: 14),
                     ),
                     const SizedBox(height: AppDimens.spacingXL),
 
-                    // Phone number field
+                    // Login Form
                     TextField(
-                      controller: _phoneController,
-                      keyboardType: TextInputType.phone,
-                      maxLength: 11,
+                      controller: _emailController,
+                      keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(
-                        labelText: AppStrings.isUrdu ? 'موبائل نمبر' : 'Mobile Number',
-                        prefixIcon: const Icon(Icons.phone_outlined),
-                        counterText: '',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                        labelText: AppStrings.isUrdu ? 'ای میل' : 'Email Address',
+                        prefixIcon: const Icon(Icons.email_outlined),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                     ),
                     const SizedBox(height: AppDimens.spacingMD),
 
-                    // PIN field
                     TextField(
-                      controller: _pinController,
-                      keyboardType: TextInputType.number,
+                      controller: _passwordController,
                       obscureText: true,
-                      textAlign: TextAlign.center,
-                      maxLength: 4,
-                      style: const TextStyle(fontSize: 24, letterSpacing: 8),
                       decoration: InputDecoration(
-                        labelText: AppStrings.isUrdu ? 'پن کوڈ' : 'PIN Code',
-                        counterText: '',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
+                        labelText: AppStrings.isUrdu ? 'پاس ورڈ' : 'Password',
+                        prefixIcon: const Icon(Icons.lock_outline),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
+                    ),
+                    const SizedBox(height: AppDimens.spacingSM),
+
+                    // Forgot Password
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: _forgotPassword,
+                        child: Text(
+                          AppStrings.isUrdu ? 'پاس ورڈ بھول گئے؟' : 'Forgot Password?',
+                          style: TextStyle(color: AppColors.info, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppDimens.spacingLG),
-
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                        ),
-                        onPressed: _isLoading ? null : _login,
-                        child: _isLoading
-                            ? const CircularProgressIndicator(color: Colors.white)
-                            : Text(
-                                AppStrings.isUrdu ? 'لاگ ان' : 'Login',
-                                style: AppTextStyles.urduTitle.copyWith(color: Colors.white),
-                              ),
-                      ),
-                    ),
-
                     const SizedBox(height: AppDimens.spacingMD),
 
-                    // OR divider
-                    Row(
-                      children: [
-                        Expanded(child: Divider(color: AppColors.disabled.withOpacity(0.5))),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Text(
-                            AppStrings.isUrdu ? 'یا' : 'OR',
-                            style: TextStyle(color: AppColors.disabled, fontSize: 13),
-                          ),
-                        ),
-                        Expanded(child: Divider(color: AppColors.disabled.withOpacity(0.5))),
-                      ],
-                    ),
-                    const SizedBox(height: AppDimens.spacingMD),
-
-                    // Google Sign-In Button
+                    // Login Button
                     SizedBox(
                       width: double.infinity,
                       height: 52,
-                      child: OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: AppColors.disabled.withOpacity(0.3)),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          elevation: 2,
                         ),
-                        icon: Image.network(
-                          'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-                          height: 22,
-                          width: 22,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.g_mobiledata_rounded, size: 28, color: Colors.red),
-                        ),
+                        onPressed: _isLoading ? null : _login,
+                        icon: _isLoading
+                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Icon(Icons.login),
                         label: Text(
-                          AppStrings.isUrdu ? 'گوگل سے لاگ ان' : 'Sign in with Google',
-                          style: AppTextStyles.body.copyWith(fontWeight: FontWeight.w600),
+                          AppStrings.isUrdu ? 'لاگ ان کریں' : 'Login',
+                          style: AppTextStyles.urduHeading.copyWith(color: Colors.white, fontSize: 16),
                         ),
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(AppStrings.isUrdu
-                                  ? 'گوگل سائن ان جلد آ رہا ہے — موبائل نمبر سے لنک ہو گا'
-                                  : 'Google Sign-In coming soon — will link to mobile number'),
-                            ),
-                          );
-                        },
                       ),
                     ),
 
-                    const SizedBox(height: AppDimens.spacingMD),
+                    const SizedBox(height: AppDimens.spacingXL),
+
+                    // Sign up Switch
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        TextButton(
-                          onPressed: _forgotPin,
-                          child: Text(
-                            AppStrings.isUrdu ? 'پن بھول گئے؟' : 'Forgot PIN?',
-                            style: AppTextStyles.urduBody.copyWith(color: AppColors.moneyOwed),
-                          ),
+                        Text(
+                          AppStrings.isUrdu ? 'اکاؤنٹ نہیں ہے؟ ' : 'Don\'t have an account? ',
+                          style: AppTextStyles.urduBody.copyWith(color: AppColors.textSecondary),
                         ),
-                        const Spacer(),
                         TextButton(
                           onPressed: () {
                             Navigator.of(context).push(
@@ -405,11 +312,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             );
                           },
                           child: Text(
-                            AppStrings.isUrdu ? 'اکاؤنٹ بنائیں' : 'Create Account',
-                            style: AppTextStyles.urduBody.copyWith(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            AppStrings.isUrdu ? 'نیا اکاؤنٹ بنائیں' : 'Sign Up Here',
+                            style: AppTextStyles.urduBody.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],

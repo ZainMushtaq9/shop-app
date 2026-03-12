@@ -1,354 +1,125 @@
-import 'package:sqflite/sqflite.dart';
-import 'package:path/path.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:flutter/foundation.dart';
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
 import '../utils/constants.dart';
 
-/// SQLite database service with all table schemas and CRUD operations.
-/// Handles local storage for offline-first architecture.
+/// Supabase-backed database service. All CRUD operations hit the live
+/// Supabase PostgreSQL backend via REST. No local SQLite used.
 class DatabaseService {
-  static Database? _database;
   static final DatabaseService _instance = DatabaseService._internal();
-
   factory DatabaseService() => _instance;
   DatabaseService._internal();
 
-  /// Get or initialize the database
-  Future<Database> get database async {
-    if (_database != null) return _database!;
-    _database = await _initDatabase();
-    return _database!;
-  }
-
-  /// Initialize SQLite database with all tables
-  Future<Database> _initDatabase() async {
-    if (kIsWeb) {
-      final factory = databaseFactoryFfiWebNoWebWorker;
-      return await factory.openDatabase(
-        AppConstants.dbName,
-        options: OpenDatabaseOptions(
-          version: AppConstants.dbVersion,
-          onCreate: _createTables,
-          onUpgrade: _upgradeTables,
-        ),
-      );
-    }
-
-    final dir = await getApplicationDocumentsDirectory();
-    final path = join(dir.path, AppConstants.dbName);
-
-    return await openDatabase(
-      path,
-      version: AppConstants.dbVersion,
-      onCreate: _createTables,
-      onUpgrade: _upgradeTables,
-    );
-  }
-
-  /// Create all tables matching Section 10 schema
-  Future<void> _createTables(Database db, int version) async {
-    // Products table
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableProducts} (
-        id TEXT PRIMARY KEY,
-        name_urdu TEXT NOT NULL,
-        name_english TEXT DEFAULT '',
-        category TEXT DEFAULT 'عام',
-        purchase_price REAL NOT NULL DEFAULT 0,
-        sale_price REAL NOT NULL DEFAULT 0,
-        stock_quantity INTEGER DEFAULT 0,
-        min_stock_alert INTEGER DEFAULT 5,
-        barcode TEXT,
-        photo_path TEXT,
-        is_active INTEGER DEFAULT 1,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL,
-        sheets_row_id INTEGER
-      )
-    ''');
-
-    // Customers table
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableCustomers} (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        phone TEXT DEFAULT '',
-        address TEXT,
-        photo_path TEXT,
-        notes TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-      )
-    ''');
-
-    // Customer transactions table (Bahi Khata)
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableCustomerTransactions} (
-        id TEXT PRIMARY KEY,
-        customer_id TEXT NOT NULL,
-        date TEXT NOT NULL,
-        type TEXT NOT NULL,
-        description TEXT NOT NULL DEFAULT '',
-        debit_amount REAL DEFAULT 0,
-        credit_amount REAL DEFAULT 0,
-        running_balance REAL DEFAULT 0,
-        sale_id TEXT,
-        payment_method TEXT,
-        notes TEXT,
-        created_at TEXT NOT NULL,
-        FOREIGN KEY (customer_id) REFERENCES ${AppConstants.tableCustomers}(id)
-      )
-    ''');
-
-    // Suppliers table
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableSuppliers} (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        phone TEXT DEFAULT '',
-        address TEXT,
-        company_name TEXT,
-        created_at TEXT NOT NULL,
-        updated_at TEXT NOT NULL
-      )
-    ''');
-
-    // Supplier transactions table
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableSupplierTransactions} (
-        id TEXT PRIMARY KEY,
-        supplier_id TEXT NOT NULL,
-        date TEXT NOT NULL,
-        type TEXT NOT NULL,
-        description TEXT NOT NULL DEFAULT '',
-        debit_amount REAL DEFAULT 0,
-        credit_amount REAL DEFAULT 0,
-        running_balance REAL DEFAULT 0,
-        items_json TEXT,
-        payment_method TEXT,
-        notes TEXT,
-        created_at TEXT NOT NULL,
-        FOREIGN KEY (supplier_id) REFERENCES ${AppConstants.tableSuppliers}(id)
-      )
-    ''');
-
-    // Sales table
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableSales} (
-        id TEXT PRIMARY KEY,
-        date TEXT NOT NULL,
-        customer_id TEXT,
-        subtotal REAL NOT NULL DEFAULT 0,
-        discount REAL DEFAULT 0,
-        discount_percentage REAL DEFAULT 0,
-        tax REAL DEFAULT 0,
-        total REAL NOT NULL DEFAULT 0,
-        profit REAL DEFAULT 0,
-        payment_type TEXT NOT NULL DEFAULT 'CASH',
-        amount_paid REAL DEFAULT 0,
-        balance_due REAL DEFAULT 0,
-        bill_pdf_path TEXT,
-        created_at TEXT NOT NULL,
-        FOREIGN KEY (customer_id) REFERENCES ${AppConstants.tableCustomers}(id)
-      )
-    ''');
-
-    // Sale items table
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableSaleItems} (
-        id TEXT PRIMARY KEY,
-        sale_id TEXT NOT NULL,
-        product_id TEXT NOT NULL,
-        product_name TEXT NOT NULL DEFAULT '',
-        quantity REAL NOT NULL DEFAULT 0,
-        purchase_price REAL DEFAULT 0,
-        sale_price REAL DEFAULT 0,
-        profit REAL DEFAULT 0,
-        FOREIGN KEY (sale_id) REFERENCES ${AppConstants.tableSales}(id),
-        FOREIGN KEY (product_id) REFERENCES ${AppConstants.tableProducts}(id)
-      )
-    ''');
-
-    // Expenses table
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableExpenses} (
-        id TEXT PRIMARY KEY,
-        date TEXT NOT NULL,
-        category TEXT NOT NULL DEFAULT 'دیگر',
-        description TEXT NOT NULL DEFAULT '',
-        amount REAL NOT NULL DEFAULT 0,
-        created_at TEXT NOT NULL
-      )
-    ''');
-
-    // Sync queue table
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableSyncQueue} (
-        id TEXT PRIMARY KEY,
-        action TEXT NOT NULL,
-        table_name TEXT NOT NULL,
-        record_id TEXT NOT NULL,
-        data_json TEXT NOT NULL,
-        created_at TEXT NOT NULL,
-        status TEXT DEFAULT 'PENDING'
-      )
-    ''');
-
-    // Create indexes for performance
-    await db.execute(
-        'CREATE INDEX idx_customer_tx_customer ON ${AppConstants.tableCustomerTransactions}(customer_id)');
-    await db.execute(
-        'CREATE INDEX idx_customer_tx_date ON ${AppConstants.tableCustomerTransactions}(date)');
-    await db.execute(
-        'CREATE INDEX idx_supplier_tx_supplier ON ${AppConstants.tableSupplierTransactions}(supplier_id)');
-    await db.execute(
-        'CREATE INDEX idx_supplier_tx_date ON ${AppConstants.tableSupplierTransactions}(date)');
-    await db.execute(
-        'CREATE INDEX idx_sales_date ON ${AppConstants.tableSales}(date)');
-    await db.execute(
-        'CREATE INDEX idx_sale_items_sale ON ${AppConstants.tableSaleItems}(sale_id)');
-    await db.execute(
-        'CREATE INDEX idx_products_active ON ${AppConstants.tableProducts}(is_active)');
-    await db.execute(
-        'CREATE INDEX idx_expenses_date ON ${AppConstants.tableExpenses}(date)');
-    await db.execute(
-        'CREATE INDEX idx_sync_status ON ${AppConstants.tableSyncQueue}(status)');
-
-    // Users table (for auth)
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableUsers} (
-        id TEXT PRIMARY KEY,
-        name TEXT NOT NULL,
-        phone TEXT NOT NULL UNIQUE,
-        email TEXT DEFAULT '',
-        pin TEXT NOT NULL,
-        role TEXT NOT NULL DEFAULT 'shopkeeper',
-        shop_name TEXT DEFAULT '',
-        google_id TEXT DEFAULT '',
-        created_at TEXT NOT NULL
-      )
-    ''');
-    await db.execute(
-        'CREATE UNIQUE INDEX idx_users_phone ON ${AppConstants.tableUsers}(phone)');
-
-    // Installments table
-    await db.execute('''
-      CREATE TABLE ${AppConstants.tableInstallments} (
-        id TEXT PRIMARY KEY,
-        customer_transaction_id TEXT,
-        customer_id TEXT NOT NULL,
-        total_amount REAL NOT NULL DEFAULT 0,
-        paid_amount REAL NOT NULL DEFAULT 0,
-        remaining REAL NOT NULL DEFAULT 0,
-        installment_number INTEGER NOT NULL DEFAULT 1,
-        date TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'PENDING',
-        notes TEXT DEFAULT '',
-        created_at TEXT NOT NULL,
-        FOREIGN KEY (customer_id) REFERENCES ${AppConstants.tableCustomers}(id)
-      )
-    ''');
-    await db.execute(
-        'CREATE INDEX idx_installments_customer ON ${AppConstants.tableInstallments}(customer_id)');
-  }
-
-  Future<void> _upgradeTables(Database db, int oldVersion, int newVersion) async {
-    // Future migrations go here
-  }
+  SupabaseClient get _db => Supabase.instance.client;
+  String? get _userId => _db.auth.currentUser?.id;
 
   // ═══════════════════════════════════════════════════════════
   //  PRODUCTS CRUD
   // ═══════════════════════════════════════════════════════════
 
   Future<void> insertProduct(Product product) async {
-    final db = await database;
-    await db.insert(AppConstants.tableProducts, product.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final map = product.toMap();
+    map['user_id'] = _userId;
+    // Map local field names to Supabase column names
+    await _db.from('products').insert({
+      'id': map['id'],
+      'user_id': _userId,
+      'barcode': map['barcode'] ?? '',
+      'name': map['name_urdu'] ?? map['name_english'] ?? '',
+      'cost_price': map['purchase_price'] ?? 0,
+      'sale_price': map['sale_price'] ?? 0,
+      'stock': map['stock_quantity'] ?? 0,
+      'category': map['category'] ?? 'عام',
+      'last_updated': DateTime.now().toIso8601String(),
+    });
   }
 
   Future<void> updateProduct(Product product) async {
-    final db = await database;
-    await db.update(
-      AppConstants.tableProducts,
-      product.toMap(),
-      where: 'id = ?',
-      whereArgs: [product.id],
-    );
+    final map = product.toMap();
+    await _db.from('products').update({
+      'name': map['name_urdu'] ?? map['name_english'] ?? '',
+      'barcode': map['barcode'] ?? '',
+      'cost_price': map['purchase_price'] ?? 0,
+      'sale_price': map['sale_price'] ?? 0,
+      'stock': map['stock_quantity'] ?? 0,
+      'category': map['category'] ?? 'عام',
+      'last_updated': DateTime.now().toIso8601String(),
+    }).eq('id', product.id);
   }
 
   Future<void> deleteProduct(String id) async {
-    final db = await database;
-    // Soft delete — set is_active to 0
-    await db.update(
-      AppConstants.tableProducts,
-      {'is_active': 0, 'updated_at': DateTime.now().toIso8601String()},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
+    // Soft delete: could also just delete the row
+    await _db.from('products').delete().eq('id', id);
   }
 
   Future<List<Product>> getActiveProducts() async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableProducts,
-      where: 'is_active = 1',
-      orderBy: 'name_urdu ASC',
-    );
-    return maps.map((m) => Product.fromMap(m)).toList();
+    final data = await _db
+        .from('products')
+        .select()
+        .eq('user_id', _userId!)
+        .order('name', ascending: true);
+    return (data as List).map((m) => _mapSupabaseToProduct(m)).toList();
   }
 
   Future<List<Product>> searchProducts(String query) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableProducts,
-      where: 'is_active = 1 AND (name_urdu LIKE ? OR name_english LIKE ? OR barcode LIKE ?)',
-      whereArgs: ['%$query%', '%$query%', '%$query%'],
-    );
-    return maps.map((m) => Product.fromMap(m)).toList();
+    final data = await _db
+        .from('products')
+        .select()
+        .eq('user_id', _userId!)
+        .or('name.ilike.%$query%,barcode.ilike.%$query%')
+        .order('name', ascending: true);
+    return (data as List).map((m) => _mapSupabaseToProduct(m)).toList();
   }
 
   Future<List<Product>> getProductsByCategory(String category) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableProducts,
-      where: 'is_active = 1 AND category = ?',
-      whereArgs: [category],
-      orderBy: 'name_urdu ASC',
-    );
-    return maps.map((m) => Product.fromMap(m)).toList();
+    final data = await _db
+        .from('products')
+        .select()
+        .eq('user_id', _userId!)
+        .eq('category', category)
+        .order('name', ascending: true);
+    return (data as List).map((m) => _mapSupabaseToProduct(m)).toList();
   }
 
   Future<List<Product>> getLowStockProducts() async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableProducts,
-      where: 'is_active = 1 AND stock_quantity <= min_stock_alert',
-      orderBy: 'stock_quantity ASC',
-    );
-    return maps.map((m) => Product.fromMap(m)).toList();
+    final data = await _db
+        .from('products')
+        .select()
+        .eq('user_id', _userId!)
+        .lte('stock', 5)
+        .order('stock', ascending: true);
+    return (data as List).map((m) => _mapSupabaseToProduct(m)).toList();
   }
 
   Future<Product?> getProductById(String id) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableProducts,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (maps.isEmpty) return null;
-    return Product.fromMap(maps.first);
+    final data = await _db.from('products').select().eq('id', id).maybeSingle();
+    if (data == null) return null;
+    return _mapSupabaseToProduct(data);
   }
 
   Future<void> updateStock(String productId, int quantityChange) async {
-    final db = await database;
-    await db.rawUpdate('''
-      UPDATE ${AppConstants.tableProducts}
-      SET stock_quantity = stock_quantity + ?,
-          updated_at = ?
-      WHERE id = ?
-    ''', [quantityChange, DateTime.now().toIso8601String(), productId]);
+    // Fetch current stock, update
+    final current = await _db.from('products').select('stock').eq('id', productId).single();
+    final newStock = ((current['stock'] as num?)?.toInt() ?? 0) + quantityChange;
+    await _db.from('products').update({'stock': newStock, 'last_updated': DateTime.now().toIso8601String()}).eq('id', productId);
+  }
+
+  /// Map Supabase row to local Product model
+  Product _mapSupabaseToProduct(Map<String, dynamic> m) {
+    return Product.fromMap({
+      'id': m['id'],
+      'name_urdu': m['name'] ?? '',
+      'name_english': m['name'] ?? '',
+      'category': m['category'] ?? 'عام',
+      'purchase_price': m['cost_price'] ?? 0,
+      'sale_price': m['sale_price'] ?? 0,
+      'stock_quantity': m['stock'] ?? 0,
+      'min_stock_alert': 5,
+      'barcode': m['barcode'] ?? '',
+      'photo_path': '',
+      'is_active': 1,
+      'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+      'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+    });
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -356,110 +127,168 @@ class DatabaseService {
   // ═══════════════════════════════════════════════════════════
 
   Future<void> insertCustomer(Customer customer) async {
-    final db = await database;
-    await db.insert(AppConstants.tableCustomers, customer.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final map = customer.toMap();
+    await _db.from('customers').insert({
+      'id': map['id'],
+      'shopkeeper_id': _userId,
+      'name': map['name'],
+      'phone': map['phone'] ?? '',
+      'balance': 0.0,
+    });
   }
 
   Future<void> updateCustomer(Customer customer) async {
-    final db = await database;
-    await db.update(
-      AppConstants.tableCustomers,
-      customer.toMap(),
-      where: 'id = ?',
-      whereArgs: [customer.id],
-    );
+    await _db.from('customers').update({
+      'name': customer.name,
+      'phone': customer.phone,
+    }).eq('id', customer.id);
   }
 
   Future<void> deleteCustomer(String id) async {
-    final db = await database;
-    await db.delete(AppConstants.tableCustomers, where: 'id = ?', whereArgs: [id]);
+    await _db.from('customers').delete().eq('id', id);
   }
 
   Future<List<Customer>> getAllCustomers() async {
-    final db = await database;
-    final maps = await db.query(AppConstants.tableCustomers, orderBy: 'name ASC');
-    return maps.map((m) => Customer.fromMap(m)).toList();
+    final data = await _db
+        .from('customers')
+        .select()
+        .eq('shopkeeper_id', _userId!)
+        .order('name', ascending: true);
+    return (data as List).map((m) => Customer.fromMap({
+      'id': m['id'],
+      'name': m['name'] ?? '',
+      'phone': m['phone'] ?? '',
+      'address': '',
+      'photo_path': '',
+      'notes': '',
+      'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+      'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+    })).toList();
   }
 
   Future<Customer?> getCustomerById(String id) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableCustomers,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (maps.isEmpty) return null;
-    return Customer.fromMap(maps.first);
+    final m = await _db.from('customers').select().eq('id', id).maybeSingle();
+    if (m == null) return null;
+    return Customer.fromMap({
+      'id': m['id'],
+      'name': m['name'] ?? '',
+      'phone': m['phone'] ?? '',
+      'address': '',
+      'photo_path': '',
+      'notes': '',
+      'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+      'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+    });
   }
 
   // ═══════════════════════════════════════════════════════════
   //  CUSTOMER TRANSACTIONS (Buyer Ledger)
+  //  Using Supabase RPC or client-side calculation
   // ═══════════════════════════════════════════════════════════
 
   Future<void> insertCustomerTransaction(CustomerTransaction tx) async {
-    final db = await database;
-    await db.insert(AppConstants.tableCustomerTransactions, tx.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final map = tx.toMap();
+    // We store transactions in the installments table as a general ledger
+    await _db.from('installments').insert({
+      'id': map['id'],
+      'shopkeeper_id': _userId,
+      'customer_id': map['customer_id'],
+      'date': map['date'],
+      'amount': (map['debit_amount'] ?? 0) - (map['credit_amount'] ?? 0),
+      'description': map['description'] ?? '',
+    });
+    // Also update the customer's balance
+    final currentBalance = await getCustomerBalance(tx.customerId);
+    final newBalance = currentBalance + (tx.debitAmount - tx.creditAmount);
+    await _db.from('customers').update({'balance': newBalance}).eq('id', tx.customerId);
   }
 
   Future<List<CustomerTransaction>> getCustomerTransactions(String customerId) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableCustomerTransactions,
-      where: 'customer_id = ?',
-      whereArgs: [customerId],
-      orderBy: 'date DESC, created_at DESC',
-    );
-    return maps.map((m) => CustomerTransaction.fromMap(m)).toList();
+    final data = await _db
+        .from('installments')
+        .select()
+        .eq('customer_id', customerId)
+        .order('date', ascending: false);
+    return (data as List).map((m) {
+      final amount = (m['amount'] as num?)?.toDouble() ?? 0;
+      return CustomerTransaction.fromMap({
+        'id': m['id'],
+        'customer_id': m['customer_id'],
+        'date': m['date'] ?? DateTime.now().toIso8601String(),
+        'type': amount >= 0 ? 'DEBIT' : 'CREDIT',
+        'description': m['description'] ?? '',
+        'debit_amount': amount >= 0 ? amount : 0,
+        'credit_amount': amount < 0 ? amount.abs() : 0,
+        'running_balance': 0,
+        'sale_id': '',
+        'payment_method': '',
+        'notes': '',
+        'created_at': m['date'] ?? DateTime.now().toIso8601String(),
+      });
+    }).toList();
   }
 
   Future<List<CustomerTransaction>> getCustomerTransactionsByDateRange(
       String customerId, DateTime start, DateTime end) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableCustomerTransactions,
-      where: 'customer_id = ? AND date >= ? AND date <= ?',
-      whereArgs: [customerId, start.toIso8601String(), end.toIso8601String()],
-      orderBy: 'date ASC, created_at ASC',
-    );
-    return maps.map((m) => CustomerTransaction.fromMap(m)).toList();
+    final data = await _db
+        .from('installments')
+        .select()
+        .eq('customer_id', customerId)
+        .gte('date', start.toIso8601String())
+        .lte('date', end.toIso8601String())
+        .order('date', ascending: true);
+    return (data as List).map((m) {
+      final amount = (m['amount'] as num?)?.toDouble() ?? 0;
+      return CustomerTransaction.fromMap({
+        'id': m['id'],
+        'customer_id': m['customer_id'],
+        'date': m['date'] ?? DateTime.now().toIso8601String(),
+        'type': amount >= 0 ? 'DEBIT' : 'CREDIT',
+        'description': m['description'] ?? '',
+        'debit_amount': amount >= 0 ? amount : 0,
+        'credit_amount': amount < 0 ? amount.abs() : 0,
+        'running_balance': 0,
+        'sale_id': '',
+        'payment_method': '',
+        'notes': '',
+        'created_at': m['date'] ?? DateTime.now().toIso8601String(),
+      });
+    }).toList();
   }
 
-  /// Get the current balance for a customer (sum of debits - sum of credits)
   Future<double> getCustomerBalance(String customerId) async {
-    final db = await database;
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(debit_amount), 0) - COALESCE(SUM(credit_amount), 0) as balance
-      FROM ${AppConstants.tableCustomerTransactions}
-      WHERE customer_id = ?
-    ''', [customerId]);
-    return (result.first['balance'] as num?)?.toDouble() ?? 0.0;
+    final data = await _db.from('customers').select('balance').eq('id', customerId).maybeSingle();
+    return (data?['balance'] as num?)?.toDouble() ?? 0.0;
   }
 
-  /// Get total receivable from all customers
   Future<double> getTotalReceivable() async {
-    final db = await database;
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(debit_amount), 0) - COALESCE(SUM(credit_amount), 0) as total
-      FROM ${AppConstants.tableCustomerTransactions}
-    ''');
-    final total = (result.first['total'] as num?)?.toDouble() ?? 0.0;
-    return total > 0 ? total : 0.0;
+    final data = await _db.from('customers').select('balance').eq('shopkeeper_id', _userId!);
+    double total = 0;
+    for (final row in (data as List)) {
+      final b = (row['balance'] as num?)?.toDouble() ?? 0;
+      if (b > 0) total += b;
+    }
+    return total;
   }
 
-  /// Get customers with outstanding balance, sorted by highest first
   Future<List<Map<String, dynamic>>> getCustomersWithBalance() async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT c.*,
-        COALESCE(SUM(ct.debit_amount), 0) - COALESCE(SUM(ct.credit_amount), 0) as balance,
-        MAX(ct.date) as last_transaction_date
-      FROM ${AppConstants.tableCustomers} c
-      LEFT JOIN ${AppConstants.tableCustomerTransactions} ct ON c.id = ct.customer_id
-      GROUP BY c.id
-      ORDER BY balance DESC
-    ''');
+    final data = await _db
+        .from('customers')
+        .select()
+        .eq('shopkeeper_id', _userId!)
+        .order('balance', ascending: false);
+    return (data as List).map((m) => {
+      'id': m['id'],
+      'name': m['name'] ?? '',
+      'phone': m['phone'] ?? '',
+      'address': '',
+      'photo_path': '',
+      'notes': '',
+      'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+      'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+      'balance': (m['balance'] as num?)?.toDouble() ?? 0.0,
+      'last_transaction_date': m['last_updated'],
+    }).toList();
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -467,329 +296,296 @@ class DatabaseService {
   // ═══════════════════════════════════════════════════════════
 
   Future<void> insertSupplier(Supplier supplier) async {
-    final db = await database;
-    await db.insert(AppConstants.tableSuppliers, supplier.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final map = supplier.toMap();
+    await _db.from('customers').insert({
+      'id': map['id'],
+      'shopkeeper_id': _userId,
+      'name': 'SUPPLIER:${map['name']}',
+      'phone': map['phone'] ?? '',
+      'balance': 0.0,
+    });
   }
 
   Future<void> updateSupplier(Supplier supplier) async {
-    final db = await database;
-    await db.update(
-      AppConstants.tableSuppliers,
-      supplier.toMap(),
-      where: 'id = ?',
-      whereArgs: [supplier.id],
-    );
+    await _db.from('customers').update({
+      'name': 'SUPPLIER:${supplier.name}',
+      'phone': supplier.phone,
+    }).eq('id', supplier.id);
   }
 
   Future<void> deleteSupplier(String id) async {
-    final db = await database;
-    await db.delete(AppConstants.tableSuppliers, where: 'id = ?', whereArgs: [id]);
+    await _db.from('customers').delete().eq('id', id);
   }
 
   Future<List<Supplier>> getAllSuppliers() async {
-    final db = await database;
-    final maps = await db.query(AppConstants.tableSuppliers, orderBy: 'name ASC');
-    return maps.map((m) => Supplier.fromMap(m)).toList();
+    final data = await _db
+        .from('customers')
+        .select()
+        .eq('shopkeeper_id', _userId!)
+        .like('name', 'SUPPLIER:%')
+        .order('name', ascending: true);
+    return (data as List).map((m) => Supplier.fromMap({
+      'id': m['id'],
+      'name': (m['name'] as String).replaceFirst('SUPPLIER:', ''),
+      'phone': m['phone'] ?? '',
+      'address': '',
+      'company_name': '',
+      'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+      'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+    })).toList();
   }
 
   Future<Supplier?> getSupplierById(String id) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableSuppliers,
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-    if (maps.isEmpty) return null;
-    return Supplier.fromMap(maps.first);
+    final m = await _db.from('customers').select().eq('id', id).maybeSingle();
+    if (m == null) return null;
+    return Supplier.fromMap({
+      'id': m['id'],
+      'name': (m['name'] as String).replaceFirst('SUPPLIER:', ''),
+      'phone': m['phone'] ?? '',
+      'address': '',
+      'company_name': '',
+      'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+      'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+    });
   }
 
   // ═══════════════════════════════════════════════════════════
-  //  SUPPLIER TRANSACTIONS (Supplier Ledger)
+  //  SUPPLIER TRANSACTIONS
   // ═══════════════════════════════════════════════════════════
 
   Future<void> insertSupplierTransaction(SupplierTransaction tx) async {
-    final db = await database;
-    await db.insert(AppConstants.tableSupplierTransactions, tx.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final map = tx.toMap();
+    await _db.from('installments').insert({
+      'id': map['id'],
+      'shopkeeper_id': _userId,
+      'customer_id': map['supplier_id'],
+      'date': map['date'],
+      'amount': (map['debit_amount'] ?? 0) - (map['credit_amount'] ?? 0),
+      'description': map['description'] ?? '',
+    });
+    final currentBalance = await getSupplierBalance(tx.supplierId);
+    final newBalance = currentBalance + (tx.debitAmount - tx.creditAmount);
+    await _db.from('customers').update({'balance': newBalance}).eq('id', tx.supplierId);
   }
 
   Future<List<SupplierTransaction>> getSupplierTransactions(String supplierId) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableSupplierTransactions,
-      where: 'supplier_id = ?',
-      whereArgs: [supplierId],
-      orderBy: 'date DESC, created_at DESC',
-    );
-    return maps.map((m) => SupplierTransaction.fromMap(m)).toList();
+    final data = await _db
+        .from('installments')
+        .select()
+        .eq('customer_id', supplierId)
+        .order('date', ascending: false);
+    return (data as List).map((m) {
+      final amount = (m['amount'] as num?)?.toDouble() ?? 0;
+      return SupplierTransaction.fromMap({
+        'id': m['id'],
+        'supplier_id': m['customer_id'],
+        'date': m['date'] ?? DateTime.now().toIso8601String(),
+        'type': amount >= 0 ? 'DEBIT' : 'CREDIT',
+        'description': m['description'] ?? '',
+        'debit_amount': amount >= 0 ? amount : 0,
+        'credit_amount': amount < 0 ? amount.abs() : 0,
+        'running_balance': 0,
+        'items_json': '',
+        'payment_method': '',
+        'notes': '',
+        'created_at': m['date'] ?? DateTime.now().toIso8601String(),
+      });
+    }).toList();
   }
 
-  /// Get the current balance owed to a supplier
   Future<double> getSupplierBalance(String supplierId) async {
-    final db = await database;
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(debit_amount), 0) - COALESCE(SUM(credit_amount), 0) as balance
-      FROM ${AppConstants.tableSupplierTransactions}
-      WHERE supplier_id = ?
-    ''', [supplierId]);
-    return (result.first['balance'] as num?)?.toDouble() ?? 0.0;
+    final data = await _db.from('customers').select('balance').eq('id', supplierId).maybeSingle();
+    return (data?['balance'] as num?)?.toDouble() ?? 0.0;
   }
 
-  /// Get total payable to all suppliers
   Future<double> getTotalPayable() async {
-    final db = await database;
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(debit_amount), 0) - COALESCE(SUM(credit_amount), 0) as total
-      FROM ${AppConstants.tableSupplierTransactions}
-    ''');
-    final total = (result.first['total'] as num?)?.toDouble() ?? 0.0;
-    return total > 0 ? total : 0.0;
+    final data = await _db.from('customers')
+        .select('balance')
+        .eq('shopkeeper_id', _userId!)
+        .like('name', 'SUPPLIER:%');
+    double total = 0;
+    for (final row in (data as List)) {
+      final b = (row['balance'] as num?)?.toDouble() ?? 0;
+      if (b > 0) total += b;
+    }
+    return total;
   }
 
-  /// Get suppliers with outstanding balance, sorted by highest first
   Future<List<Map<String, dynamic>>> getSuppliersWithBalance() async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT s.*,
-        COALESCE(SUM(st.debit_amount), 0) - COALESCE(SUM(st.credit_amount), 0) as balance,
-        MAX(st.date) as last_transaction_date
-      FROM ${AppConstants.tableSuppliers} s
-      LEFT JOIN ${AppConstants.tableSupplierTransactions} st ON s.id = st.supplier_id
-      GROUP BY s.id
-      ORDER BY balance DESC
-    ''');
+    final data = await _db
+        .from('customers')
+        .select()
+        .eq('shopkeeper_id', _userId!)
+        .like('name', 'SUPPLIER:%')
+        .order('balance', ascending: false);
+    return (data as List).map((m) => {
+      'id': m['id'],
+      'name': (m['name'] as String).replaceFirst('SUPPLIER:', ''),
+      'phone': m['phone'] ?? '',
+      'address': '',
+      'company_name': '',
+      'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+      'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
+      'balance': (m['balance'] as num?)?.toDouble() ?? 0.0,
+      'last_transaction_date': m['last_updated'],
+    }).toList();
   }
 
   // ═══════════════════════════════════════════════════════════
   //  SALES CRUD
   // ═══════════════════════════════════════════════════════════
 
-  /// Insert a complete sale (header + items) in a single transaction
   Future<void> insertSale(Sale sale, List<SaleItem> items) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      // Insert sale header
-      await txn.insert(AppConstants.tableSales, sale.toMap());
-
-      // Insert all sale items
-      for (final item in items) {
-        await txn.insert(AppConstants.tableSaleItems, item.toMap());
-
-        // Decrease stock for each product
-        await txn.rawUpdate('''
-          UPDATE ${AppConstants.tableProducts}
-          SET stock_quantity = stock_quantity - ?,
-              updated_at = ?
-          WHERE id = ?
-        ''', [item.quantity, DateTime.now().toIso8601String(), item.productId]);
-      }
-
-      // If credit sale or partial, create a customer transaction
-      if (sale.customerId != null && sale.balanceDue > 0) {
-        final balance = await _getCustomerBalanceInTxn(txn, sale.customerId!);
-
-        final customerTx = CustomerTransaction(
-          customerId: sale.customerId!,
-          date: sale.date,
-          type: sale.paymentType == 'CREDIT'
-              ? AppConstants.txCreditSale
-              : AppConstants.txPartialPayment,
-          description: sale.paymentType == 'CREDIT' ? 'ادھار فروخت' : 'جزوی ادائیگی',
-          debitAmount: sale.total,
-          creditAmount: sale.amountPaid,
-          runningBalance: balance + sale.total - sale.amountPaid,
-          saleId: sale.id,
-          paymentMethod: sale.paymentType,
-        );
-        await txn.insert(AppConstants.tableCustomerTransactions, customerTx.toMap());
-      }
+    final saleMap = sale.toMap();
+    // Insert sale header
+    await _db.from('sales').insert({
+      'id': saleMap['id'],
+      'shopkeeper_id': _userId,
+      'customer_id': saleMap['customer_id'],
+      'date': saleMap['date'],
+      'total_amount': saleMap['subtotal'] ?? saleMap['total'] ?? 0,
+      'discount_amount': saleMap['discount'] ?? 0,
+      'discount_percentage': saleMap['discount_percentage'] ?? 0,
+      'final_amount': saleMap['total'] ?? 0,
+      'amount_paid': saleMap['amount_paid'] ?? 0,
     });
+
+    // Insert sale items
+    for (final item in items) {
+      final itemMap = item.toMap();
+      await _db.from('sale_items').insert({
+        'id': itemMap['id'],
+        'sale_id': saleMap['id'],
+        'product_id': itemMap['product_id'],
+        'quantity': itemMap['quantity'],
+        'unit_price': itemMap['sale_price'] ?? 0,
+        'subtotal': (itemMap['quantity'] as num) * ((itemMap['sale_price'] as num?) ?? 0),
+      });
+      // Decrease stock
+      await updateStock(item.productId, -(item.quantity.toInt()));
+    }
+
+    // If credit sale, update customer balance
+    if (sale.customerId != null && sale.balanceDue > 0) {
+      final currentBalance = await getCustomerBalance(sale.customerId!);
+      final newBalance = currentBalance + sale.balanceDue;
+      await _db.from('customers').update({'balance': newBalance}).eq('id', sale.customerId!);
+    }
   }
 
-  /// Delete a sale and reverse its effects (stock, customer ledger)
   Future<void> deleteSale(String saleId) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      // Get sale items to reverse stock
-      final itemMaps = await txn.query(
-        AppConstants.tableSaleItems,
-        where: 'sale_id = ?',
-        whereArgs: [saleId],
-      );
-
-      // Restore stock for each product
-      for (final itemMap in itemMaps) {
-        final qty = (itemMap['quantity'] as num?)?.toDouble() ?? 0;
-        final productId = itemMap['product_id'] as String;
-        await txn.rawUpdate('''
-          UPDATE ${AppConstants.tableProducts}
-          SET stock_quantity = stock_quantity + ?,
-              updated_at = ?
-          WHERE id = ?
-        ''', [qty, DateTime.now().toIso8601String(), productId]);
-      }
-
-      // Delete linked customer transactions
-      await txn.delete(
-        AppConstants.tableCustomerTransactions,
-        where: 'sale_id = ?',
-        whereArgs: [saleId],
-      );
-
-      // Delete sale items
-      await txn.delete(
-        AppConstants.tableSaleItems,
-        where: 'sale_id = ?',
-        whereArgs: [saleId],
-      );
-
-      // Delete sale header
-      await txn.delete(
-        AppConstants.tableSales,
-        where: 'id = ?',
-        whereArgs: [saleId],
-      );
-    });
+    // Get sale items first to restore stock
+    final itemData = await _db.from('sale_items').select().eq('sale_id', saleId);
+    for (final item in (itemData as List)) {
+      final qty = (item['quantity'] as num?)?.toDouble() ?? 0;
+      final productId = item['product_id'] as String;
+      await updateStock(productId, qty.toInt());
+    }
+    await _db.from('sale_items').delete().eq('sale_id', saleId);
+    await _db.from('sales').delete().eq('id', saleId);
   }
 
-  /// Update a sale (replace header and items)
   Future<void> updateSale(Sale sale, List<SaleItem> newItems) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      // Get old items to reverse their stock changes
-      final oldItemMaps = await txn.query(
-        AppConstants.tableSaleItems,
-        where: 'sale_id = ?',
-        whereArgs: [sale.id],
-      );
-      for (final oldItem in oldItemMaps) {
-        final qty = (oldItem['quantity'] as num?)?.toDouble() ?? 0;
-        final productId = oldItem['product_id'] as String;
-        await txn.rawUpdate('''
-          UPDATE ${AppConstants.tableProducts}
-          SET stock_quantity = stock_quantity + ?,
-              updated_at = ?
-          WHERE id = ?
-        ''', [qty, DateTime.now().toIso8601String(), productId]);
-      }
-
-      // Delete old sale items
-      await txn.delete(AppConstants.tableSaleItems, where: 'sale_id = ?', whereArgs: [sale.id]);
-
-      // Update sale header
-      await txn.update(AppConstants.tableSales, sale.toMap(), where: 'id = ?', whereArgs: [sale.id]);
-
-      // Insert new items and deduct stock
-      for (final item in newItems) {
-        await txn.insert(AppConstants.tableSaleItems, item.toMap());
-        await txn.rawUpdate('''
-          UPDATE ${AppConstants.tableProducts}
-          SET stock_quantity = stock_quantity - ?,
-              updated_at = ?
-          WHERE id = ?
-        ''', [item.quantity, DateTime.now().toIso8601String(), item.productId]);
-      }
-
-      // Update customer transaction if exists
-      await txn.delete(AppConstants.tableCustomerTransactions, where: 'sale_id = ?', whereArgs: [sale.id]);
-      if (sale.customerId != null && sale.balanceDue > 0) {
-        final balance = await _getCustomerBalanceInTxn(txn, sale.customerId!);
-        final customerTx = CustomerTransaction(
-          customerId: sale.customerId!,
-          date: sale.date,
-          type: sale.paymentType == 'CREDIT' ? AppConstants.txCreditSale : AppConstants.txPartialPayment,
-          description: 'بل تبدیلی',
-          debitAmount: sale.total,
-          creditAmount: sale.amountPaid,
-          runningBalance: balance + sale.total - sale.amountPaid,
-          saleId: sale.id,
-          paymentMethod: sale.paymentType,
-        );
-        await txn.insert(AppConstants.tableCustomerTransactions, customerTx.toMap());
-      }
-    });
-  }
-
-  Future<double> _getCustomerBalanceInTxn(Transaction txn, String customerId) async {
-    final result = await txn.rawQuery('''
-      SELECT COALESCE(SUM(debit_amount), 0) - COALESCE(SUM(credit_amount), 0) as balance
-      FROM ${AppConstants.tableCustomerTransactions}
-      WHERE customer_id = ?
-    ''', [customerId]);
-    return (result.first['balance'] as num?)?.toDouble() ?? 0.0;
+    // Delete old sale and reinsert
+    await deleteSale(sale.id);
+    await insertSale(sale, newItems);
   }
 
   Future<List<Sale>> getSalesByDate(DateTime date) async {
-    final db = await database;
     final dateStr = AppFormatters.dateISO(date);
-    final maps = await db.query(
-      AppConstants.tableSales,
-      where: 'date LIKE ?',
-      whereArgs: ['$dateStr%'],
-      orderBy: 'created_at DESC',
-    );
-    return maps.map((m) => Sale.fromMap(m)).toList();
+    final data = await _db
+        .from('sales')
+        .select()
+        .eq('shopkeeper_id', _userId!)
+        .gte('date', '${dateStr}T00:00:00')
+        .lte('date', '${dateStr}T23:59:59')
+        .order('date', ascending: false);
+    return (data as List).map((m) => _mapSupabaseToSale(m)).toList();
   }
 
   Future<List<Sale>> getSalesByDateRange(DateTime start, DateTime end) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableSales,
-      where: 'date >= ? AND date <= ?',
-      whereArgs: [start.toIso8601String(), end.toIso8601String()],
-      orderBy: 'date DESC',
-    );
-    return maps.map((m) => Sale.fromMap(m)).toList();
+    final data = await _db
+        .from('sales')
+        .select()
+        .eq('shopkeeper_id', _userId!)
+        .gte('date', start.toIso8601String())
+        .lte('date', end.toIso8601String())
+        .order('date', ascending: false);
+    return (data as List).map((m) => _mapSupabaseToSale(m)).toList();
   }
 
   Future<List<SaleItem>> getSaleItems(String saleId) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableSaleItems,
-      where: 'sale_id = ?',
-      whereArgs: [saleId],
-    );
-    return maps.map((m) => SaleItem.fromMap(m)).toList();
+    final data = await _db.from('sale_items').select().eq('sale_id', saleId);
+    return (data as List).map((m) => SaleItem.fromMap({
+      'id': m['id'],
+      'sale_id': m['sale_id'],
+      'product_id': m['product_id'] ?? '',
+      'product_name': '',
+      'quantity': m['quantity'] ?? 0,
+      'purchase_price': 0,
+      'sale_price': m['unit_price'] ?? 0,
+      'profit': 0,
+    })).toList();
   }
 
-  /// Get today's total sales amount
   Future<double> getTodaySales() async {
-    final db = await database;
     final today = AppFormatters.dateISO(DateTime.now());
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(total), 0) as total_sales
-      FROM ${AppConstants.tableSales}
-      WHERE date LIKE ?
-    ''', ['$today%']);
-    return (result.first['total_sales'] as num?)?.toDouble() ?? 0.0;
+    final data = await _db
+        .from('sales')
+        .select('final_amount')
+        .eq('shopkeeper_id', _userId!)
+        .gte('date', '${today}T00:00:00')
+        .lte('date', '${today}T23:59:59');
+    double total = 0;
+    for (final row in (data as List)) {
+      total += (row['final_amount'] as num?)?.toDouble() ?? 0;
+    }
+    return total;
   }
 
-  /// Get today's total profit
   Future<double> getTodayProfit() async {
-    final db = await database;
-    final today = AppFormatters.dateISO(DateTime.now());
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(profit), 0) as total_profit
-      FROM ${AppConstants.tableSales}
-      WHERE date LIKE ?
-    ''', ['$today%']);
-    return (result.first['total_profit'] as num?)?.toDouble() ?? 0.0;
+    // Profit requires item-level cost vs sale price; approximate from final_amount for now
+    return await getTodaySales() * 0.15; // placeholder until we track cost better
   }
 
-  /// Get last 7 days sales and profit for dashboard chart
   Future<List<Map<String, dynamic>>> getWeeklySalesProfit() async {
-    final db = await database;
-    return await db.rawQuery('''
-      SELECT 
-        substr(date, 1, 10) as day,
-        COALESCE(SUM(total), 0) as total_sales,
-        COALESCE(SUM(profit), 0) as total_profit
-      FROM ${AppConstants.tableSales}
-      WHERE date >= date('now', '-7 days')
-      GROUP BY substr(date, 1, 10)
-      ORDER BY day ASC
-    ''');
+    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+    final data = await _db
+        .from('sales')
+        .select('date, final_amount')
+        .eq('shopkeeper_id', _userId!)
+        .gte('date', sevenDaysAgo.toIso8601String())
+        .order('date', ascending: true);
+
+    final Map<String, double> salesByDay = {};
+    for (final row in (data as List)) {
+      final day = (row['date'] as String).substring(0, 10);
+      salesByDay[day] = (salesByDay[day] ?? 0) + ((row['final_amount'] as num?)?.toDouble() ?? 0);
+    }
+    return salesByDay.entries.map((e) => {
+      'day': e.key,
+      'total_sales': e.value,
+      'total_profit': e.value * 0.15,
+    }).toList();
+  }
+
+  Sale _mapSupabaseToSale(Map<String, dynamic> m) {
+    return Sale.fromMap({
+      'id': m['id'],
+      'date': m['date'] ?? DateTime.now().toIso8601String(),
+      'customer_id': m['customer_id'],
+      'subtotal': m['total_amount'] ?? 0,
+      'discount': m['discount_amount'] ?? 0,
+      'discount_percentage': m['discount_percentage'] ?? 0,
+      'tax': 0,
+      'total': m['final_amount'] ?? 0,
+      'profit': 0,
+      'payment_type': 'CASH',
+      'amount_paid': m['amount_paid'] ?? 0,
+      'balance_due': ((m['final_amount'] as num?)?.toDouble() ?? 0) - ((m['amount_paid'] as num?)?.toDouble() ?? 0),
+      'bill_pdf_path': '',
+      'created_at': m['date'] ?? DateTime.now().toIso8601String(),
+    });
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -797,196 +593,126 @@ class DatabaseService {
   // ═══════════════════════════════════════════════════════════
 
   Future<void> insertExpense(Expense expense) async {
-    final db = await database;
-    await db.insert(AppConstants.tableExpenses, expense.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    final map = expense.toMap();
+    await _db.from('expenses').insert({
+      'id': map['id'],
+      'shopkeeper_id': _userId,
+      'date': map['date'],
+      'amount': map['amount'] ?? 0,
+      'description': '${map['category'] ?? ''}: ${map['description'] ?? ''}',
+    });
   }
 
   Future<void> deleteExpense(String id) async {
-    final db = await database;
-    await db.delete(AppConstants.tableExpenses, where: 'id = ?', whereArgs: [id]);
+    await _db.from('expenses').delete().eq('id', id);
   }
 
   Future<List<Expense>> getExpensesByDate(DateTime date) async {
-    final db = await database;
     final dateStr = AppFormatters.dateISO(date);
-    final maps = await db.query(
-      AppConstants.tableExpenses,
-      where: 'date LIKE ?',
-      whereArgs: ['$dateStr%'],
-      orderBy: 'created_at DESC',
-    );
-    return maps.map((m) => Expense.fromMap(m)).toList();
+    final data = await _db
+        .from('expenses')
+        .select()
+        .eq('shopkeeper_id', _userId!)
+        .gte('date', '${dateStr}T00:00:00')
+        .lte('date', '${dateStr}T23:59:59')
+        .order('date', ascending: false);
+    return (data as List).map((m) => Expense.fromMap({
+      'id': m['id'],
+      'date': m['date'] ?? DateTime.now().toIso8601String(),
+      'category': 'دیگر',
+      'description': m['description'] ?? '',
+      'amount': m['amount'] ?? 0,
+      'created_at': m['date'] ?? DateTime.now().toIso8601String(),
+    })).toList();
   }
 
   Future<double> getTodayExpenses() async {
-    final db = await database;
     final today = AppFormatters.dateISO(DateTime.now());
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(amount), 0) as total
-      FROM ${AppConstants.tableExpenses}
-      WHERE date LIKE ?
-    ''', ['$today%']);
-    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
+    final data = await _db
+        .from('expenses')
+        .select('amount')
+        .eq('shopkeeper_id', _userId!)
+        .gte('date', '${today}T00:00:00')
+        .lte('date', '${today}T23:59:59');
+    double total = 0;
+    for (final row in (data as List)) {
+      total += (row['amount'] as num?)?.toDouble() ?? 0;
+    }
+    return total;
   }
 
   Future<double> getMonthlyExpenses(int year, int month) async {
-    final db = await database;
     final monthStr = month.toString().padLeft(2, '0');
-    final result = await db.rawQuery('''
-      SELECT COALESCE(SUM(amount), 0) as total
-      FROM ${AppConstants.tableExpenses}
-      WHERE date LIKE ?
-    ''', ['$year-$monthStr%']);
-    return (result.first['total'] as num?)?.toDouble() ?? 0.0;
+    final startDate = '$year-$monthStr-01T00:00:00';
+    final endDate = '$year-$monthStr-31T23:59:59';
+    final data = await _db
+        .from('expenses')
+        .select('amount')
+        .eq('shopkeeper_id', _userId!)
+        .gte('date', startDate)
+        .lte('date', endDate);
+    double total = 0;
+    for (final row in (data as List)) {
+      total += (row['amount'] as num?)?.toDouble() ?? 0;
+    }
+    return total;
   }
 
   // ═══════════════════════════════════════════════════════════
-  //  SYNC QUEUE
+  //  SYNC QUEUE (No longer needed with live Supabase, but keep stubs)
   // ═══════════════════════════════════════════════════════════
 
   Future<void> addToSyncQueue(SyncQueueEntry entry) async {
-    final db = await database;
-    await db.insert(AppConstants.tableSyncQueue, entry.toMap());
+    // No-op: all writes go directly to Supabase now
   }
 
   Future<List<SyncQueueEntry>> getPendingSyncEntries() async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableSyncQueue,
-      where: 'status = ?',
-      whereArgs: [AppConstants.syncPending],
-      orderBy: 'created_at ASC',
-    );
-    return maps.map((m) => SyncQueueEntry.fromMap(m)).toList();
+    return []; // No sync queue needed
   }
 
-  Future<void> markSynced(String id) async {
-    final db = await database;
-    await db.update(
-      AppConstants.tableSyncQueue,
-      {'status': AppConstants.syncSynced},
-      where: 'id = ?',
-      whereArgs: [id],
-    );
-  }
+  Future<void> markSynced(String id) async {}
 
-  Future<int> getPendingSyncCount() async {
-    final db = await database;
-    final result = await db.rawQuery('''
-      SELECT COUNT(*) as count FROM ${AppConstants.tableSyncQueue}
-      WHERE status = ?
-    ''', [AppConstants.syncPending]);
-    return (result.first['count'] as int?) ?? 0;
-  }
+  Future<int> getPendingSyncCount() async => 0;
 
   // ═══════════════════════════════════════════════════════════
-  //  BACKUP / EXPORT
+  //  BACKUP / EXPORT (reads from Supabase)
   // ═══════════════════════════════════════════════════════════
 
-  /// Export all data as a Map for JSON backup
   Future<Map<String, dynamic>> exportAllData() async {
-    final db = await database;
     return {
-      'products': await db.query(AppConstants.tableProducts),
-      'customers': await db.query(AppConstants.tableCustomers),
-      'customer_transactions': await db.query(AppConstants.tableCustomerTransactions),
-      'suppliers': await db.query(AppConstants.tableSuppliers),
-      'supplier_transactions': await db.query(AppConstants.tableSupplierTransactions),
-      'sales': await db.query(AppConstants.tableSales),
-      'sale_items': await db.query(AppConstants.tableSaleItems),
-      'expenses': await db.query(AppConstants.tableExpenses),
+      'products': await _db.from('products').select().eq('user_id', _userId!),
+      'customers': await _db.from('customers').select().eq('shopkeeper_id', _userId!),
+      'sales': await _db.from('sales').select().eq('shopkeeper_id', _userId!),
+      'expenses': await _db.from('expenses').select().eq('shopkeeper_id', _userId!),
+      'installments': await _db.from('installments').select().eq('shopkeeper_id', _userId!),
       'exported_at': DateTime.now().toIso8601String(),
     };
   }
 
-  /// Import data from a backup map — replaces all existing data
   Future<void> importAllData(Map<String, dynamic> data) async {
-    final db = await database;
-    await db.transaction((txn) async {
-      // Clear all tables
-      for (final table in [
-        AppConstants.tableSaleItems,
-        AppConstants.tableSales,
-        AppConstants.tableCustomerTransactions,
-        AppConstants.tableSupplierTransactions,
-        AppConstants.tableExpenses,
-        AppConstants.tableProducts,
-        AppConstants.tableCustomers,
-        AppConstants.tableSuppliers,
-        AppConstants.tableSyncQueue,
-      ]) {
-        await txn.delete(table);
-      }
-
-      // Insert all data
-      final tables = {
-        'products': AppConstants.tableProducts,
-        'customers': AppConstants.tableCustomers,
-        'customer_transactions': AppConstants.tableCustomerTransactions,
-        'suppliers': AppConstants.tableSuppliers,
-        'supplier_transactions': AppConstants.tableSupplierTransactions,
-        'sales': AppConstants.tableSales,
-        'sale_items': AppConstants.tableSaleItems,
-        'expenses': AppConstants.tableExpenses,
-      };
-
-      for (final entry in tables.entries) {
-        final rows = data[entry.key] as List<dynamic>?;
-        if (rows != null) {
-          for (final row in rows) {
-            await txn.insert(entry.value, Map<String, dynamic>.from(row as Map));
-          }
-        }
-      }
-    });
+    // Not implemented for Supabase migration; data lives on server
   }
 
   // ═══════════════════════════════════════════════════════════
-  //  USERS (Auth)
+  //  USERS (Auth) - Now handled by Supabase Auth, keep stubs
   // ═══════════════════════════════════════════════════════════
 
   Future<void> insertUser(Map<String, dynamic> userData) async {
-    final db = await database;
-    await db.insert(AppConstants.tableUsers, userData,
-        conflictAlgorithm: ConflictAlgorithm.abort);
+    // Handled by Supabase Auth signUp
   }
 
   Future<Map<String, dynamic>?> getUserByPhone(String phone) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableUsers,
-      where: 'phone = ?',
-      whereArgs: [phone],
-    );
-    if (maps.isEmpty) return null;
-    return maps.first;
+    return null; // Handled by Supabase Auth
   }
 
   Future<Map<String, dynamic>?> getUserByEmail(String email) async {
-    final db = await database;
-    final maps = await db.query(
-      AppConstants.tableUsers,
-      where: 'email = ?',
-      whereArgs: [email],
-    );
-    if (maps.isEmpty) return null;
-    return maps.first;
+    return null; // Handled by Supabase Auth
   }
 
-  Future<bool> isPhoneRegistered(String phone) async {
-    final user = await getUserByPhone(phone);
-    return user != null;
-  }
+  Future<bool> isPhoneRegistered(String phone) async => false;
 
   Future<void> updateUserPin(String phone, String newPin) async {
-    final db = await database;
-    await db.update(
-      AppConstants.tableUsers,
-      {'pin': newPin},
-      where: 'phone = ?',
-      whereArgs: [phone],
-    );
+    // Handled by Supabase Auth password reset
   }
 
   // ═══════════════════════════════════════════════════════════
@@ -994,39 +720,43 @@ class DatabaseService {
   // ═══════════════════════════════════════════════════════════
 
   Future<void> insertInstallment(Map<String, dynamic> data) async {
-    final db = await database;
-    await db.insert(AppConstants.tableInstallments, data,
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await _db.from('installments').insert({
+      'id': data['id'],
+      'shopkeeper_id': _userId,
+      'customer_id': data['customer_id'],
+      'date': data['date'],
+      'amount': data['total_amount'] ?? data['amount'] ?? 0,
+      'description': data['notes'] ?? '',
+    });
   }
 
   Future<List<Map<String, dynamic>>> getInstallments(String customerId) async {
-    final db = await database;
-    return await db.query(
-      AppConstants.tableInstallments,
-      where: 'customer_id = ?',
-      whereArgs: [customerId],
-      orderBy: 'date DESC',
-    );
+    final data = await _db
+        .from('installments')
+        .select()
+        .eq('customer_id', customerId)
+        .order('date', ascending: false);
+    return (data as List).map((m) => {
+      'id': m['id'],
+      'customer_id': m['customer_id'],
+      'total_amount': m['amount'] ?? 0,
+      'paid_amount': m['amount'] ?? 0,
+      'remaining': 0,
+      'installment_number': 1,
+      'date': m['date'] ?? DateTime.now().toIso8601String(),
+      'status': 'CLEARED',
+      'notes': m['description'] ?? '',
+      'created_at': m['date'] ?? DateTime.now().toIso8601String(),
+    }).toList();
   }
 
   Future<void> updateInstallmentPayment(String installmentId, double paidAmount, double remaining) async {
-    final db = await database;
-    await db.update(
-      AppConstants.tableInstallments,
-      {
-        'paid_amount': paidAmount,
-        'remaining': remaining,
-        'status': remaining <= 0 ? 'CLEARED' : 'PENDING',
-      },
-      where: 'id = ?',
-      whereArgs: [installmentId],
-    );
+    await _db.from('installments').update({
+      'amount': paidAmount,
+      'description': remaining <= 0 ? 'CLEARED' : 'PENDING',
+    }).eq('id', installmentId);
   }
 
-  /// Close the database
-  Future<void> close() async {
-    final db = await database;
-    await db.close();
-    _database = null;
-  }
+  /// Close — no-op for Supabase
+  Future<void> close() async {}
 }
