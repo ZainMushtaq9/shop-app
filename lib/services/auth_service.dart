@@ -171,4 +171,17 @@ class AuthService {
       return true; // Fail open if DB is unreachable to avoid accidental logouts
     }
   }
+  /// Get all active device sessions for the current user
+  Future<List<Map<String, dynamic>>> getDeviceSessions() async {
+    if (currentUser == null) return [];
+    try {
+      final data = await _supabase
+          .from('device_sessions')
+          .select()
+          .eq('user_id', currentUser!.id);
+      return List<Map<String, dynamic>>.from(data);
+    } catch (e) {
+      return [];
+    }
+  }
 }
