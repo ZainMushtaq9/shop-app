@@ -9,8 +9,16 @@ import 'dart:io' as io;
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'screens/auth/login_screen.dart';
 
-void main() {
+import 'package:supabase_flutter/supabase_flutter.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Supabase Backend
+  await Supabase.initialize(
+    url: 'https://wzypjlnexfmkghwmhyrf.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3N1ZXIiOiJzdXBhYmFzZSIsInJlZiI6Ind6eXBqbG5leGZta2dod21oeXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDE3Njc3NzgsImV4cCI6MjA1NzM0Mzc3OH0.aZJ1yT3XzjJc7H4N6mP_J2O1e991iN66K8K-B0E3s6E', // Used the key user provided starting with eyJhb
+  );
 
   // Initialize desktop SQLite compatibility
   if (!kIsWeb && (io.Platform.isWindows || io.Platform.isLinux || io.Platform.isMacOS)) {
