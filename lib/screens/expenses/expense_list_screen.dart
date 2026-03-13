@@ -79,7 +79,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
   Future<List<Map<String, dynamic>>> _fetchExpenses(db) async {
     try {
       final data = await db.supabase.from('expenses').select().order('date', ascending: false);
-      return (data as List).map((e) => {
+      return (data as List).map((e) => <String, dynamic>{
         'id': e['id'],
         'category': e['category'],
         'amount': (e['amount'] as num).toDouble(),
