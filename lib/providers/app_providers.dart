@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/models.dart';
 import '../services/database_service.dart';
+import '../utils/constants.dart';
 
 // ═══════════════════════════════════════════════════════════
 //  DATABASE PROVIDER
