@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/constants.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/global_app_bar.dart';
 import '../../services/auth_service.dart';
 import '../app_shell.dart';
 import '../buyer_dashboard/buyer_dashboard_screen.dart';
@@ -360,34 +362,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(AppStrings.isUrdu ? 'نیا اکاؤنٹ' : 'Create Account'),
-        backgroundColor: AppColors.primary,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16),
-            child: InkWell(
-              onTap: () {
-                AppStrings.setUrdu(!isUrdu);
-                ref.read(isUrduProvider.notifier).state = !isUrdu;
-              },
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.language, size: 16, color: Colors.white),
-                    const SizedBox(width: 4),
-                    Text(
-                      isUrdu ? 'EN' : 'اردو',
-                      style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
-                  ],
                 ),
               ),
             ),

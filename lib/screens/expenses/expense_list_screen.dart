@@ -3,52 +3,67 @@ import 'package:flutter/services.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
+import '../../providers/app_providers.dart';
+import '../../widgets/global_app_bar.dart';
 
 /// Expense tracking screen for shop operations (rent, bills, tea/food, staff).
-class ExpenseListScreen extends StatefulWidget {
+class ExpenseListScreen extends ConsumerStatefulWidget {
   const ExpenseListScreen({super.key});
 
   @override
-  State<ExpenseListScreen> createState() => _ExpenseListScreenState();
+  ConsumerState<ExpenseListScreen> createState() => _ExpenseListScreenState();
 }
 
-class _ExpenseListScreenState extends State<ExpenseListScreen> {
-  // Mock data for UI demonstration
-  final List<Map<String, dynamic>> _mockExpenses = [
-    {'date': DateTime.now(), 'category': 'بجلی/گیس بل', 'amount': 15000, 'note': 'Electricity Bill'},
-    {'date': DateTime.now(), 'category': 'چائے/کھانا', 'amount': 800, 'note': 'Guests tea'},
-    {'date': DateTime.now().subtract(const Duration(days: 1)), 'category': 'ملازم کی تنخواہ', 'amount': 5000, 'note': 'Advance to staff'},
-  ];
-
+class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
   @override
   Widget build(BuildContext context) {
+    // Watch actual expenses from the database provider (we need to ensure expensesProvider exists)
+    // If it doesn't exist, we'll watch the database provider directly and FutureBuilder.
+    final db = ref.watch(databaseProvider);
+    
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.expenses),
+      appBar: GlobalAppBar(
+        title: AppStrings.expenses,
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(AppDimens.spacingMD),
-        itemCount: _mockExpenses.length,
-        itemBuilder: (context, index) {
-          final expense = _mockExpenses[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: AppDimens.spacingSM),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: AppColors.warning.withOpacity(0.1),
-                child: const Icon(Icons.receipt_long_rounded, color: AppColors.warning),
-              ),
-              title: Text(expense['category'], style: AppTextStyles.urduBody.copyWith(fontWeight: FontWeight.bold)),
-              subtitle: Text(expense['note']),
-              trailing: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(AppFormatters.currency(expense['amount'] as double), style: AppTextStyles.amountSmall.copyWith(color: AppColors.warning)),
-                  Text(AppFormatters.dateShort(expense['date'] as DateTime), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
-                ],
-              ),
-            ),
+      body: FutureBuilder<List<Map<String, dynamic>>>(
+        future: _fetchExpenses(db),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+          final expenses = snapshot.data ?? [];
+          if (expenses.isEmpty) {
+            return Center(child: Text(AppStrings.isUrdu ? 'کوئی خرچہ نہیں' : 'No expenses recorded'));
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(AppDimens.spacingMD),
+            itemCount: expenses.length,
+            itemBuilder: (context, index) {
+              final expense = expenses[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: AppDimens.spacingSM),
+                child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: AppColors.warning.withOpacity(0.1),
+                    child: const Icon(Icons.receipt_long_rounded, color: AppColors.warning),
+                  ),
+                  title: Text(expense['category'], style: AppTextStyles.urduBody.copyWith(fontWeight: FontWeight.bold)),
+                  subtitle: Text(expense['note']),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(AppFormatters.currency(expense['amount'] as double), style: AppTextStyles.amountSmall.copyWith(color: AppColors.warning)),
+                      Text(AppFormatters.dateShort(expense['date'] as DateTime), style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
+                    ],
+                  ),
+                ),
+              );
+            },
           );
         },
       ),
@@ -58,6 +73,21 @@ class _ExpenseListScreenState extends State<ExpenseListScreen> {
         child: const Icon(Icons.add_rounded, color: Colors.white),
       ),
     );
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchExpenses(db) async {
+    try {
+      final data = await db.supabase.from('expenses').select().order('date', ascending: false);
+      return (data as List).map((e) => {
+        'id': e['id'],
+        'category': e['category'],
+        'amount': (e['amount'] as num).toDouble(),
+        'note': e['note'] ?? '',
+        'date': DateTime.parse(e['date']),
+      }).toList();
+    } catch (e) {
+      return [];
+    }
   }
 
   void _addExpenseDialog() {
@@ -96,10 +126,30 @@ class _ExpenseListScreenState extends State<ExpenseListScreen> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.cancel)),
-          ElevatedButton(
-            onPressed: () {
-              // Add to DB then pop
-              Navigator.pop(ctx);
+            ElevatedButton(
+            onPressed: () async {
+              final amt = double.tryParse(amountController.text.trim()) ?? 0.0;
+              if (amt <= 0) return;
+
+              final db = ref.read(databaseProvider);
+              try {
+                await db.supabase.from('expenses').insert({
+                  'id': DateTime.now().millisecondsSinceEpoch.toString(),
+                  'category': category,
+                  'amount': amt,
+                  'note': noteController.text.trim(),
+                  'date': DateTime.now().toIso8601String(),
+                  'created_at': DateTime.now().toIso8601String(),
+                });
+                if (mounted) {
+                  setState(() {}); // refresh future builder
+                  Navigator.pop(ctx);
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+                }
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.warning, foregroundColor: Colors.white),
             child: Text(AppStrings.save),

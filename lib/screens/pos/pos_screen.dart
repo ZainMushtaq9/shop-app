@@ -41,16 +41,6 @@ class _PosScreenState extends ConsumerState<PosScreen> {
         : ref.watch(productsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.newSale),
-        actions: [
-          if (_cart.isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.delete_sweep_rounded),
-              onPressed: () => setState(() => _cart.clear()),
-            ),
-        ],
-      ),
       body: Row(
         children: [
           // ── Left: Product Selection ──
@@ -168,10 +158,19 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     children: [
                       const Icon(Icons.shopping_cart_rounded, color: AppColors.primary),
                       const SizedBox(width: 8),
-                      Text(
-                        '${AppStrings.isUrdu ? "ٹوکری" : "Cart"} (${_cart.length})',
-                        style: AppTextStyles.urduBody.copyWith(fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Text(
+                          '${AppStrings.isUrdu ? "ٹوکری" : "Cart"} (${_cart.length})',
+                          style: AppTextStyles.urduBody.copyWith(fontWeight: FontWeight.bold),
+                        ),
                       ),
+                      if (_cart.isNotEmpty)
+                        IconButton(
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(Icons.delete_sweep_rounded, size: 20, color: AppColors.moneyOwed),
+                          onPressed: () => setState(() => _cart.clear()),
+                        ),
                     ],
                   ),
                 ),
@@ -718,26 +717,59 @@ class _CartItemTile extends StatelessWidget {
                   showDialog(
                     context: context,
                     builder: (ctx) {
-                      String qtyStr = item.quantity.toString();
+                      final qtyCtrl = TextEditingController(text: item.quantity.toString());
+                      final priceCtrl = TextEditingController(text: (item.quantity * item.product.salePrice).toStringAsFixed(2));
+
                       return AlertDialog(
-                        title: const Text('Custom Quantity'),
-                        content: TextField(
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                          autofocus: true,
-                          onChanged: (v) => qtyStr = v,
-                          decoration: const InputDecoration(hintText: 'e.g., 1.5'),
+                        title: Text(AppStrings.isUrdu ? 'مقدار یا رقم درج کریں' : 'Enter Quantity or Price'),
+                        content: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextField(
+                              controller: qtyCtrl,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: InputDecoration(
+                                labelText: AppStrings.isUrdu ? 'مقدار' : 'Quantity',
+                                prefixIcon: const Icon(Icons.scale),
+                              ),
+                              onChanged: (val) {
+                                final q = double.tryParse(val) ?? 0;
+                                priceCtrl.text = (q * item.product.salePrice).toStringAsFixed(2);
+                              },
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.symmetric(vertical: 12),
+                              child: Text('OR / یا', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                            ),
+                            TextField(
+                              controller: priceCtrl,
+                              keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                              decoration: InputDecoration(
+                                labelText: AppStrings.isUrdu ? 'کل رقم' : 'Total Price',
+                                prefixIcon: const Icon(Icons.attach_money),
+                                prefixText: 'Rs. ',
+                              ),
+                              onChanged: (val) {
+                                final p = double.tryParse(val) ?? 0;
+                                if (item.product.salePrice > 0) {
+                                  qtyCtrl.text = (p / item.product.salePrice).toStringAsFixed(3);
+                                }
+                              },
+                            ),
+                          ],
                         ),
                         actions: [
                           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.cancel)),
                           ElevatedButton(
                             onPressed: () {
-                              final numValue = double.tryParse(qtyStr);
+                              final numValue = double.tryParse(qtyCtrl.text);
                               if (numValue != null && numValue > 0) {
                                 onQuantityChanged(numValue);
                               }
                               Navigator.pop(ctx);
                             },
-                            child: const Text('Save'),
+                            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+                            child: Text(AppStrings.save),
                           ),
                         ],
                       );

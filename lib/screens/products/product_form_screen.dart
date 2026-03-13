@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../models/product.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/global_app_bar.dart';
 
 /// Add / Edit product form screen.
 /// All fields have Urdu labels, big input areas, and numeric keypads for prices.
@@ -65,8 +66,8 @@ class _ProductFormScreenState extends ConsumerState<ProductFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isEdit ? AppStrings.editProduct : AppStrings.addProduct),
+      appBar: GlobalAppBar(
+        title: isEdit ? AppStrings.editProduct : AppStrings.addProduct,
       ),
       body: Form(
         key: _formKey,

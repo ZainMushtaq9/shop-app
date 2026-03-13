@@ -4,7 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../services/auth_service.dart';
+import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
+import '../../widgets/global_app_bar.dart';
 
 /// Settings screen — Branding, store type, language, security, backup, account.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -338,7 +340,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final userName = user?.userMetadata?['full_name'] ?? '';
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppStrings.settings)),
+      appBar: GlobalAppBar(title: AppStrings.settings),
       body: ListView(
         padding: const EdgeInsets.all(AppDimens.spacingMD),
         children: [
@@ -390,13 +392,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ListTile(
                   leading: const Icon(Icons.print_rounded, color: AppColors.primary),
                   title: Text(AppStrings.isUrdu ? 'پرنٹر سیٹنگز' : 'Printer Settings', style: AppTextStyles.urduBody),
-                  subtitle: Text(AppStrings.isUrdu ? 'بلوٹوتھ / USB پرنٹر' : 'Bluetooth / USB Printer', style: AppTextStyles.caption),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppStrings.isUrdu ? 'پرنٹر سیٹ اپ جلد آ رہا ہے' : 'Printer setup coming soon')),
-                    );
-                  },
+                  subtitle: Text(AppStrings.isUrdu ? '(جلد آ رہا ہے)' : '(Coming soon in next update)', style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.print_disabled_rounded, color: AppColors.disabled),
                 ),
               ],
             ),
@@ -466,13 +463,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ListTile(
                   leading: const Icon(Icons.download_rounded, color: Colors.blue),
                   title: Text(AppStrings.isUrdu ? 'ڈیٹا ایکسپورٹ' : 'Export Data', style: AppTextStyles.urduBody),
-                  subtitle: Text(AppStrings.isUrdu ? 'JSON فارمیٹ میں' : 'In JSON format', style: AppTextStyles.caption),
-                  trailing: const Icon(Icons.chevron_right_rounded),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(AppStrings.isUrdu ? 'ایکسپورٹ جلد آ رہا ہے' : 'Export coming soon')),
-                    );
-                  },
+                  subtitle: Text(AppStrings.isUrdu ? '(جلد آ رہا ہے)' : '(Coming soon in next update)', style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.cloud_download_outlined, color: AppColors.disabled),
                 ),
               ],
             ),

@@ -4,6 +4,7 @@ import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/global_app_bar.dart';
 
 /// Money Flow screen showing big picture cash flow:
 /// Cash In Hand calculation = (Total Sales) - (Total Purchases) - (Expenses) + (Received) - (Paid)
@@ -16,12 +17,11 @@ class MoneyFlowScreen extends ConsumerWidget {
     final asyncReceivable = ref.watch(totalReceivableProvider);
     final asyncPayable = ref.watch(totalPayableProvider);
     
-    // In a real app we'd calculate exact cash in hand from all transactions
-    final double cashInHandMock = 45000;
+    final asyncCashInHand = ref.watch(cashInHandProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.moneyFlow),
+      appBar: GlobalAppBar(
+        title: AppStrings.moneyFlow,
       ),
       body: RefreshIndicator(
         onRefresh: () async {
@@ -61,9 +61,13 @@ class MoneyFlowScreen extends ConsumerWidget {
                       style: AppTextStyles.urduCaption.copyWith(color: Colors.white70),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      AppStrings.formatAmount(cashInHandMock),
-                      style: AppTextStyles.amountLarge.copyWith(color: Colors.white, fontSize: 32),
+                    asyncCashInHand.when(
+                      data: (cash) => Text(
+                        AppStrings.formatAmount(cash),
+                        style: AppTextStyles.amountLarge.copyWith(color: Colors.white, fontSize: 32),
+                      ),
+                      loading: () => const SizedBox(height: 32, width: 32, child: CircularProgressIndicator(color: Colors.white)),
+                      error: (_, __) => Text('Rs. 0', style: AppTextStyles.amountLarge.copyWith(color: Colors.white, fontSize: 32)),
                     ),
                   ],
                 ),

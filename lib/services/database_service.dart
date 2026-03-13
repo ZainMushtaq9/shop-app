@@ -18,32 +18,34 @@ class DatabaseService {
 
   Future<void> insertProduct(Product product) async {
     final map = product.toMap();
-    map['user_id'] = _userId;
-    // Map local field names to Supabase column names
+    final barcodeVal = map['barcode']?.toString().trim();
+    
     await _db.from('products').insert({
       'id': map['id'],
       'user_id': _userId,
-      'barcode': map['barcode'] ?? '',
       'name': map['name_urdu'] ?? map['name_english'] ?? '',
+      'category': map['category'] ?? 'عام',
       'cost_price': map['purchase_price'] ?? 0,
       'sale_price': map['sale_price'] ?? 0,
       'stock': map['stock_quantity'] ?? 0,
-      'category': map['category'] ?? 'عام',
+      'barcode': (barcodeVal == null || barcodeVal.isEmpty) ? null : barcodeVal,
       'last_updated': DateTime.now().toIso8601String(),
     });
   }
 
   Future<void> updateProduct(Product product) async {
     final map = product.toMap();
+    final barcodeVal = map['barcode']?.toString().trim();
+    
     await _db.from('products').update({
       'name': map['name_urdu'] ?? map['name_english'] ?? '',
-      'barcode': map['barcode'] ?? '',
+      'category': map['category'] ?? 'عام',
       'cost_price': map['purchase_price'] ?? 0,
       'sale_price': map['sale_price'] ?? 0,
       'stock': map['stock_quantity'] ?? 0,
-      'category': map['category'] ?? 'عام',
+      'barcode': (barcodeVal == null || barcodeVal.isEmpty) ? null : barcodeVal,
       'last_updated': DateTime.now().toIso8601String(),
-    }).eq('id', product.id);
+    }).eq('id', product.id).eq('user_id', _userId!);
   }
 
   Future<void> deleteProduct(String id) async {
@@ -544,29 +546,97 @@ class DatabaseService {
   }
 
   Future<double> getTodayProfit() async {
-    // Profit requires item-level cost vs sale price; approximate from final_amount for now
-    return await getTodaySales() * 0.15; // placeholder until we track cost better
+    // 1. Estimate gross profit (using a flat 15% margin for now as placeholder)
+    final sales = await getTodaySales();
+    final grossProfit = sales * 0.15; 
+
+    // 2. Subtract today's expenses to get Net Profit
+    final today = AppFormatters.dateISO(DateTime.now());
+    final expensesData = await _db
+        .from('expenses')
+        .select('amount')
+        .eq('shopkeeper_id', _userId!)
+        .gte('date', '${today}T00:00:00')
+        .lte('date', '${today}T23:59:59');
+        
+    double totalExpenses = 0;
+    for (final row in (expensesData as List)) {
+      totalExpenses += (row['amount'] as num?)?.toDouble() ?? 0;
+    }
+
+    return grossProfit - totalExpenses;
   }
 
   Future<List<Map<String, dynamic>>> getWeeklySalesProfit() async {
     final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
-    final data = await _db
+    
+    // Fetch Sales
+    final salesData = await _db
         .from('sales')
         .select('date, final_amount')
         .eq('shopkeeper_id', _userId!)
         .gte('date', sevenDaysAgo.toIso8601String())
         .order('date', ascending: true);
 
+    // Fetch Expenses
+    final expensesData = await _db
+        .from('expenses')
+        .select('date, amount')
+        .eq('shopkeeper_id', _userId!)
+        .gte('date', sevenDaysAgo.toIso8601String());
+
     final Map<String, double> salesByDay = {};
-    for (final row in (data as List)) {
+    for (final row in (salesData as List)) {
       final day = (row['date'] as String).substring(0, 10);
       salesByDay[day] = (salesByDay[day] ?? 0) + ((row['final_amount'] as num?)?.toDouble() ?? 0);
     }
-    return salesByDay.entries.map((e) => {
-      'day': e.key,
-      'total_sales': e.value,
-      'total_profit': e.value * 0.15,
+    
+    final Map<String, double> expensesByDay = {};
+    for (final row in (expensesData as List)) {
+      final day = (row['date'] as String).substring(0, 10);
+      expensesByDay[day] = (expensesByDay[day] ?? 0) + ((row['amount'] as num?)?.toDouble() ?? 0);
+    }
+
+    return salesByDay.entries.map((e) {
+      final day = e.key;
+      final sales = e.value;
+      final grossProfit = sales * 0.15; // placeholder 15% margin
+      final expenses = expensesByDay[day] ?? 0;
+      final netProfit = grossProfit - expenses;
+      
+      return {
+        'day': day,
+        'total_sales': sales,
+        'total_profit': netProfit,
+      };
     }).toList();
+  }
+
+  Future<double> getCashInHand() async {
+    // 1. Sum up all CASH payments received from sales
+    final salesData = await _db
+        .from('sales')
+        .select('amount_paid')
+        .eq('shopkeeper_id', _userId!)
+        .eq('payment_type', 'CASH');
+        
+    double totalCashIn = 0;
+    for (final row in (salesData as List)) {
+      totalCashIn += (row['amount_paid'] as num?)?.toDouble() ?? 0;
+    }
+
+    // 2. Sum up all expenses
+    final expensesData = await _db
+        .from('expenses')
+        .select('amount')
+        .eq('shopkeeper_id', _userId!);
+        
+    double totalExpenses = 0;
+    for (final row in (expensesData as List)) {
+      totalExpenses += (row['amount'] as num?)?.toDouble() ?? 0;
+    }
+
+    return totalCashIn - totalExpenses;
   }
 
   Sale _mapSupabaseToSale(Map<String, dynamic> m) {

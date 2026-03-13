@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../models/models.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/global_app_bar.dart';
 
 /// Supplier list screen showing all suppliers with "you owe" amounts.
 class SupplierListScreen extends ConsumerWidget {
@@ -16,8 +17,8 @@ class SupplierListScreen extends ConsumerWidget {
     final asyncSuppliers = ref.watch(suppliersWithBalanceProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.suppliers),
+      appBar: GlobalAppBar(
+        title: AppStrings.suppliers,
       ),
       body: Column(
         children: [
@@ -241,8 +242,8 @@ class _SupplierDetailScreen extends ConsumerWidget {
     final asyncTransactions = ref.watch(supplierTransactionsProvider(supplier.id));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(supplier.name, style: AppTextStyles.urduTitle.copyWith(color: Colors.white)),
+      appBar: GlobalAppBar(
+        title: supplier.name,
       ),
       body: Column(
         children: [

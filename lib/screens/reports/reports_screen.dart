@@ -11,9 +11,6 @@ class ReportsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.reports),
-      ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppDimens.spacingMD),
         child: Column(
@@ -25,7 +22,7 @@ class ReportsScreen extends ConsumerWidget {
               subtitle: AppStrings.isUrdu ? 'آج کی مکمل رپورٹ دیکھیں اور پی ڈی ایف بنائیں' : 'View today\'s full report and export to PDF',
               icon: Icons.today_rounded,
               color: AppColors.primary,
-              onTap: () {},
+              onTap: () => _showComingSoon(context),
             ),
             const SizedBox(height: AppDimens.spacingMD),
 
@@ -35,7 +32,7 @@ class ReportsScreen extends ConsumerWidget {
               subtitle: AppStrings.isUrdu ? 'پچھلے 7 یا 30 دنوں کا گرافیکل جائزہ' : 'Graphical overview of last 7 or 30 days',
               icon: Icons.auto_graph_rounded,
               color: AppColors.moneyReceived,
-              onTap: () {},
+              onTap: () => _showComingSoon(context),
             ),
             const SizedBox(height: AppDimens.spacingMD),
 
@@ -45,7 +42,7 @@ class ReportsScreen extends ConsumerWidget {
               subtitle: AppStrings.isUrdu ? 'وہ تمام اشیاء جو ختم ہونے والی ہیں' : 'All items that are running out of stock',
               icon: Icons.warning_amber_rounded,
               color: AppColors.warning,
-              onTap: () {},
+              onTap: () => _showComingSoon(context),
             ),
             const SizedBox(height: AppDimens.spacingMD),
 
@@ -55,7 +52,7 @@ class ReportsScreen extends ConsumerWidget {
               subtitle: AppStrings.isUrdu ? 'تمام گاہکوں کا بیلنس ایک ساتھ ڈاؤنلوڈ کریں' : 'Download all customers balances at once',
               icon: Icons.file_download_rounded,
               color: Colors.green.shade600,
-              onTap: () {},
+              onTap: () => _showComingSoon(context),
             ),
             const SizedBox(height: AppDimens.spacingMD),
             
@@ -65,10 +62,19 @@ class ReportsScreen extends ConsumerWidget {
               subtitle: AppStrings.isUrdu ? 'سپلیئرز کا ریکارڈ ایکسل فارمیٹ میں نکالیں' : 'Export suppliers records in Excel format',
               icon: Icons.file_upload_rounded,
               color: Colors.blue.shade600,
-              onTap: () {},
+              onTap: () => _showComingSoon(context),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppStrings.isUrdu ? 'یہ فیچر جلد آ رہا ہے' : 'Coming soon in the next update'),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }

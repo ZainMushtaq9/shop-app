@@ -1,3 +1,4 @@
+```
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -5,6 +6,7 @@ import 'package:printing/printing.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/global_app_bar.dart';
 import '../../models/models.dart';
 import '../../services/pdf_export_service.dart';
 import '../../utils/constants.dart';
@@ -84,8 +86,8 @@ class _BuyerDashboardScreenState extends ConsumerState<BuyerDashboardScreen> {
     final asyncCustomers = ref.watch(customersWithBalanceProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.isUrdu ? 'گاہک ڈیشبورڈ' : 'Buyer Dashboard'),
+      appBar: GlobalAppBar(
+        title: AppStrings.isUrdu ? 'گاہک ڈیشبورڈ' : 'Buyer Dashboard',
         actions: [
           IconButton(
             icon: Icon(_hideAmounts ? Icons.visibility_off : Icons.visibility),

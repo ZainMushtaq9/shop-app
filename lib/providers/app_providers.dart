@@ -20,6 +20,17 @@ final productsProvider = FutureProvider<List<Product>>((ref) async {
   return await db.getActiveProducts();
 });
 
+final productCategoriesProvider = FutureProvider<List<String>>((ref) async {
+  final products = await ref.watch(productsProvider.future);
+  final categories = <String>{...AppConstants.defaultCategories};
+  for (final p in products) {
+    if (p.category.trim().isNotEmpty) {
+      categories.add(p.category.trim());
+    }
+  }
+  return categories.toList()..sort();
+});
+
 final lowStockProductsProvider = FutureProvider<List<Product>>((ref) async {
   final db = ref.read(databaseProvider);
   return await db.getLowStockProducts();
@@ -127,6 +138,11 @@ final weeklySalesProfitProvider =
 final todayExpensesProvider = FutureProvider<double>((ref) async {
   final db = ref.read(databaseProvider);
   return await db.getTodayExpenses();
+});
+
+final cashInHandProvider = FutureProvider<double>((ref) async {
+  final db = ref.read(databaseProvider);
+  return await db.getCashInHand(); // We need to write this method
 });
 
 // ═══════════════════════════════════════════════════════════

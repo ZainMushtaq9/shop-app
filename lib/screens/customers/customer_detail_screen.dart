@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../models/models.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/global_app_bar.dart';
 
 /// Customer detail screen showing:
 /// - Balance header card (RED if owed, GREEN if advance)
@@ -22,8 +23,8 @@ class CustomerDetailScreen extends ConsumerWidget {
     final asyncTransactions = ref.watch(customerTransactionsProvider(customer.id));
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(customer.name, style: AppTextStyles.urduTitle.copyWith(color: Colors.white)),
+      appBar: GlobalAppBar(
+        title: customer.name,
       ),
       body: Column(
         children: [

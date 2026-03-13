@@ -17,9 +17,6 @@ class CustomerListScreen extends ConsumerWidget {
     final asyncCustomers = ref.watch(customersWithBalanceProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.customers),
-      ),
       body: Column(
         children: [
           // Total Receivable header

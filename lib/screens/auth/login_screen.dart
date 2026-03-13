@@ -1,9 +1,11 @@
+```
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../providers/app_providers.dart';
 import '../../services/auth_service.dart';
+import '../../widgets/global_app_bar.dart'; // Added this import
 import '../app_shell.dart';
 import 'signup_screen.dart';
 import '../buyer_dashboard/buyer_dashboard_screen.dart';
@@ -170,6 +172,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
+      appBar: GlobalAppBar(
+        title: AppStrings.isUrdu ? 'لاگ ان کریں' : 'Login',
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -182,42 +187,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Language Toggle
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Consumer(builder: (context, ref, _) {
-                          final isUrdu = ref.watch(isUrduProvider);
-                          return InkWell(
-                            onTap: () {
-                              AppStrings.setUrdu(!isUrdu);
-                              ref.read(isUrduProvider.notifier).state = !isUrdu;
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: AppColors.surface,
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: AppColors.primary),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(Icons.language, size: 16, color: AppColors.primary),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    isUrdu ? 'EN' : 'اردو',
-                                    style: TextStyle(fontWeight: FontWeight.bold, color: AppColors.primary),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        }),
-                      ],
-                    ),
-
-                    const SizedBox(height: AppDimens.spacingLG),
                     // Logo Header
                     Container(
                       padding: const EdgeInsets.all(16),

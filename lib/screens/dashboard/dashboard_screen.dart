@@ -19,35 +19,6 @@ class DashboardScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.appName),
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu_rounded, size: 28),
-            onPressed: () => Scaffold.of(context).openDrawer(),
-          ),
-        ),
-        actions: [
-          // Language toggle
-          IconButton(
-            icon: Text(
-              AppStrings.isUrdu ? 'EN' : 'اردو',
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: Colors.white,
-              ),
-            ),
-            onPressed: () {
-              AppStrings.toggleLanguage();
-              ref.read(isUrduProvider.notifier).state = AppStrings.isUrdu;
-              // Force rebuild
-              (context as Element).markNeedsBuild();
-            },
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       body: RefreshIndicator(
         onRefresh: () async {
           // Invalidate all dashboard providers to refresh data

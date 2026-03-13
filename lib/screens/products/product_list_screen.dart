@@ -23,15 +23,6 @@ class ProductListScreen extends ConsumerWidget {
             : ref.watch(productsProvider);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(AppStrings.products),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_rounded, size: 28),
-            onPressed: () => _navigateToAddProduct(context, ref),
-          ),
-        ],
-      ),
       body: Column(
         children: [
           // Search bar + Category filter
@@ -73,13 +64,22 @@ class ProductListScreen extends ConsumerWidget {
                           ref.read(selectedCategoryProvider.notifier).state = null;
                         },
                       ),
-                      ...AppConstants.defaultCategories.map((cat) => _CategoryChip(
-                            label: cat,
-                            isSelected: selectedCategory == cat,
-                            onTap: () {
-                              ref.read(selectedCategoryProvider.notifier).state = cat;
-                            },
-                          )),
+                      ...ref.watch(productCategoriesProvider).maybeWhen(
+                            data: (cats) => cats.map((cat) => _CategoryChip(
+                              label: cat,
+                              isSelected: selectedCategory == cat,
+                              onTap: () {
+                                ref.read(selectedCategoryProvider.notifier).state = cat;
+                              },
+                            )),
+                            orElse: () => AppConstants.defaultCategories.map((cat) => _CategoryChip(
+                              label: cat,
+                              isSelected: selectedCategory == cat,
+                              onTap: () {
+                                ref.read(selectedCategoryProvider.notifier).state = cat;
+                              },
+                            )),
+                          ),
                     ],
                   ),
                 ),
