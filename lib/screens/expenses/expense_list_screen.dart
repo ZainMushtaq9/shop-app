@@ -78,10 +78,10 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
 
   Future<List<Map<String, dynamic>>> _fetchExpenses(db) async {
     try {
-      final data = await db.supabase.from('expenses').select().order('date', ascending: false);
+      final data = await db.getExpenses();
       return (data as List).map((e) => <String, dynamic>{
         'id': e['id'],
-        'category': e['category'],
+        'category': e['category'] ?? '',
         'amount': (e['amount'] as num).toDouble(),
         'note': e['note'] ?? '',
         'date': DateTime.parse(e['date']),
@@ -108,7 +108,9 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
               items: ['چائے/کھانا', 'بجلی/گیس بل', 'دکان کا کرایہ', 'ملازم کی تنخواہ', 'دیگر']
                   .map((c) => DropdownMenuItem(value: c, child: Text(c, style: AppTextStyles.urduBody)))
                   .toList(),
-              onChanged: (_) {},
+              onChanged: (val) {
+                if (val != null) category = val;
+              },
               decoration: const InputDecoration(labelText: 'Category'),
             ),
             const SizedBox(height: 12),
@@ -127,14 +129,14 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: Text(AppStrings.cancel)),
-            ElevatedButton(
+          ElevatedButton(
             onPressed: () async {
               final amt = double.tryParse(amountController.text.trim()) ?? 0.0;
               if (amt <= 0) return;
 
               final db = ref.read(databaseProvider);
               try {
-                await db.supabase.from('expenses').insert({
+                await db.insertExpense({
                   'id': DateTime.now().millisecondsSinceEpoch.toString(),
                   'category': category,
                   'amount': amt,

@@ -639,6 +639,20 @@ class DatabaseService {
     return totalCashIn - totalExpenses;
   }
 
+  Future<List<Map<String, dynamic>>> getExpenses() async {
+    final data = await _db
+        .from('expenses')
+        .select()
+        .eq('shopkeeper_id', _userId!)
+        .order('date', ascending: false);
+    return (data as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> insertExpense(Map<String, dynamic> expense) async {
+    expense['shopkeeper_id'] = _userId;
+    await _db.from('expenses').insert(expense);
+  }
+
   Sale _mapSupabaseToSale(Map<String, dynamic> m) {
     return Sale.fromMap({
       'id': m['id'],
