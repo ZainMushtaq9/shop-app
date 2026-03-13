@@ -476,13 +476,30 @@ class DatabaseService {
   }
 
   Future<void> deleteSale(String saleId) async {
-    // Get sale items first to restore stock
+    // 1. Get sale header to check customer balance
+    final saleData = await _db.from('sales').select().eq('id', saleId).maybeSingle();
+    if (saleData != null) {
+      final customerId = saleData['customer_id'] as String?;
+      final total = (saleData['final_amount'] as num?)?.toDouble() ?? 0;
+      final paid = (saleData['amount_paid'] as num?)?.toDouble() ?? 0;
+      final balanceDue = total - paid;
+      
+      if (customerId != null && balanceDue > 0) {
+        final currentBalance = await getCustomerBalance(customerId);
+        final newBalance = currentBalance - balanceDue;
+        await _db.from('customers').update({'balance': newBalance}).eq('id', customerId);
+      }
+    }
+
+    // 2. Get sale items to restore stock
     final itemData = await _db.from('sale_items').select().eq('sale_id', saleId);
     for (final item in (itemData as List)) {
       final qty = (item['quantity'] as num?)?.toDouble() ?? 0;
       final productId = item['product_id'] as String;
       await updateStock(productId, qty.toInt());
     }
+    
+    // 3. Delete items and header
     await _db.from('sale_items').delete().eq('sale_id', saleId);
     await _db.from('sales').delete().eq('id', saleId);
   }

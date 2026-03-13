@@ -98,9 +98,23 @@ class CustomerListScreen extends ConsumerWidget {
                             color: balance > 0 ? AppColors.moneyOwed : AppColors.moneyReceived,
                           ),
                         ),
-                        title: Text(
-                          customer.name,
-                          style: AppTextStyles.urduBody.copyWith(fontWeight: FontWeight.w600),
+                        title: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                customer.name,
+                                style: AppTextStyles.urduBody.copyWith(fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.edit_outlined, size: 20, color: AppColors.primary),
+                              onPressed: () => _editCustomerDialog(context, ref, customer),
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.delete_outline_rounded, size: 20, color: AppColors.moneyOwed),
+                              onPressed: () => _deleteCustomer(context, ref, customer),
+                            ),
+                          ],
                         ),
                         subtitle: customer.phone.isNotEmpty
                             ? Text(customer.phone, style: AppTextStyles.caption)
@@ -254,6 +268,119 @@ class CustomerListScreen extends ConsumerWidget {
               }
             },
             child: Text(AppStrings.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _editCustomerDialog(BuildContext context, WidgetRef ref, Customer customer) {
+    final nameController = TextEditingController(text: customer.name);
+    final phoneController = TextEditingController(text: customer.phone);
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppStrings.isUrdu ? 'ترمیم کریں' : 'Edit Customer', style: AppTextStyles.urduTitle),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: nameController,
+              style: AppTextStyles.urduBody,
+              decoration: InputDecoration(
+                labelText: AppStrings.customerName,
+                labelStyle: AppTextStyles.urduCaption,
+                prefixIcon: const Icon(Icons.person_rounded),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: phoneController,
+              keyboardType: TextInputType.phone,
+              maxLength: 11,
+              decoration: InputDecoration(
+                labelText: AppStrings.isUrdu ? 'فون (03...)' : 'Phone (03...)',
+                labelStyle: AppTextStyles.urduCaption,
+                prefixIcon: const Icon(Icons.phone_rounded),
+                counterText: '',
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppStrings.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              if (name.isEmpty) return;
+              
+              try {
+                final db = ref.read(databaseProvider);
+                final updated = customer.copyWith(
+                  name: name,
+                  phone: phoneController.text.trim(),
+                );
+                await db.updateCustomer(updated);
+                ref.invalidate(customersWithBalanceProvider);
+                ref.invalidate(customersProvider);
+                if (ctx.mounted) Navigator.pop(ctx);
+              } catch (e) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.moneyOwed),
+                );
+              }
+            },
+            child: Text(AppStrings.save),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _deleteCustomer(BuildContext context, WidgetRef ref, Customer customer) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppStrings.deleteConfirmTitle, style: AppTextStyles.urduTitle),
+        content: Text(
+          AppStrings.isUrdu 
+            ? 'کیا آپ واقعی "${customer.name}" کو حذف کرنا چاہتے ہیں؟' 
+            : 'Are you sure you want to delete "${customer.name}"?', 
+          style: AppTextStyles.urduBody
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppStrings.cancel),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              try {
+                final db = ref.read(databaseProvider);
+                await db.deleteCustomer(customer.id);
+                ref.invalidate(customersWithBalanceProvider);
+                ref.invalidate(customersProvider);
+                ref.invalidate(totalReceivableProvider);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('${customer.name} deleted')),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.moneyOwed),
+                  );
+                }
+              }
+            },
+            style: TextButton.styleFrom(foregroundColor: AppColors.moneyOwed),
+            child: Text(AppStrings.delete),
           ),
         ],
       ),

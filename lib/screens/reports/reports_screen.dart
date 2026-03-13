@@ -4,6 +4,8 @@ import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 
+import 'daily_report_screen.dart';
+
 /// Reports & Analytics screen. Accessible from bottom nav tab "رپورٹس" (Reports).
 class ReportsScreen extends ConsumerWidget {
   const ReportsScreen({super.key});
@@ -22,7 +24,12 @@ class ReportsScreen extends ConsumerWidget {
               subtitle: AppStrings.isUrdu ? 'آج کی مکمل رپورٹ دیکھیں اور پی ڈی ایف بنائیں' : 'View today\'s full report and export to PDF',
               icon: Icons.today_rounded,
               color: AppColors.primary,
-              onTap: () => _showComingSoon(context),
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const DailyReportScreen()),
+                );
+              },
             ),
             const SizedBox(height: AppDimens.spacingMD),
 
