@@ -136,7 +136,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
 
               final db = ref.read(databaseProvider);
               try {
-                await db.insertExpense({
+                await db.insertExpenseRaw({
                   'id': DateTime.now().millisecondsSinceEpoch.toString(),
                   'category': category,
                   'amount': amt,

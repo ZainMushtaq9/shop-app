@@ -648,7 +648,7 @@ class DatabaseService {
     return (data as List).cast<Map<String, dynamic>>();
   }
 
-  Future<void> insertExpense(Map<String, dynamic> expense) async {
+  Future<void> insertExpenseRaw(Map<String, dynamic> expense) async {
     expense['shopkeeper_id'] = _userId;
     await _db.from('expenses').insert(expense);
   }
