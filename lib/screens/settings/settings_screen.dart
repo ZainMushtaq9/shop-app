@@ -6,6 +6,10 @@ import '../../theme/app_theme.dart';
 import '../../services/auth_service.dart';
 import '../auth/login_screen.dart';
 import '../../widgets/global_app_bar.dart';
+import 'sync_status_screen.dart';
+import '../../utils/export_helper.dart';
+import 'customer_portal_qr_screen.dart';
+import 'whatsapp_queue_screen.dart';
 
 /// Settings screen — Branding, store type, language, security, backup, account.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -389,10 +393,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.print_rounded, color: AppColors.primary),
-                  title: Text(AppStrings.isUrdu ? 'پرنٹر سیٹنگز' : 'Printer Settings', style: AppTextStyles.urduBody),
-                  subtitle: Text(AppStrings.isUrdu ? '(جلد آ رہا ہے)' : '(Coming soon in next update)', style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
-                  trailing: const Icon(Icons.print_disabled_rounded, color: AppColors.disabled),
+                  leading: const Icon(Icons.qr_code_2_rounded, color: AppColors.primary),
+                  title: Text(AppStrings.isUrdu ? 'گاہک پورٹل QR' : 'Customer Portal QR', style: AppTextStyles.urduBody),
+                  subtitle: Text(AppStrings.isUrdu ? 'گاہکوں کے لیے سکین کوڈ' : 'Scan code for customers', style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const CustomerPortalQRScreen()),
+                    );
+                  },
+                ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.outbox_rounded, color: AppColors.primary),
+                  title: Text(AppStrings.isUrdu ? 'آف لائن واٹس ایپ قطار' : 'Offline WhatsApp Queue', style: AppTextStyles.urduBody),
+                  subtitle: Text(AppStrings.isUrdu ? 'قطار میں موجود پیغامات دکھائیں' : 'Show pending messages', style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (_) => const WhatsAppQueueScreen()));
+                  },
                 ),
               ],
             ),
@@ -450,20 +470,39 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             child: Column(
               children: [
                 ListTile(
-                  leading: const Icon(Icons.cloud_done_rounded, color: Colors.green),
-                  title: Text(AppStrings.isUrdu ? 'سپاباس سنک' : 'Supabase Cloud Sync', style: AppTextStyles.urduBody),
+                  leading: const Icon(Icons.sync_rounded, color: AppColors.primary),
+                  title: Text(AppStrings.isUrdu ? 'ڈیٹا منتقلی کی کیفیت' : 'Sync Status', style: AppTextStyles.urduBody),
                   subtitle: Text(
-                    AppStrings.isUrdu ? 'تمام ڈیٹا ریئل ٹائم کلاؤڈ پر محفوظ ہے' : 'All data is saved to cloud in real-time',
-                    style: TextStyle(fontSize: 12, color: AppColors.moneyReceived),
+                    AppStrings.isUrdu ? 'آف لائن ڈیٹا اور قطار دیکھیں' : 'View offline pending items',
+                    style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
                   ),
-                  trailing: const Icon(Icons.check_circle, color: AppColors.moneyReceived),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const SyncStatusScreen()),
+                    );
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.download_rounded, color: Colors.blue),
                   title: Text(AppStrings.isUrdu ? 'ڈیٹا ایکسپورٹ' : 'Export Data', style: AppTextStyles.urduBody),
-                  subtitle: Text(AppStrings.isUrdu ? '(جلد آ رہا ہے)' : '(Coming soon in next update)', style: AppTextStyles.caption.copyWith(color: AppColors.textSecondary)),
-                  trailing: const Icon(Icons.cloud_download_outlined, color: AppColors.disabled),
+                  subtitle: Text(AppStrings.isUrdu ? 'تمام ڈیٹا JSON فارمیٹ میں ایکسپورٹ' : 'Export all data in JSON format', style: AppTextStyles.caption),
+                  trailing: const Icon(Icons.cloud_download_outlined, color: Colors.blue),
+                  onTap: () async {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(AppStrings.isUrdu ? 'ایکسپورٹ ہو رہا ہے...' : 'Preparing export...')),
+                    );
+                    try {
+                      await ExportHelper.exportLocalDataAsJson();
+                    } catch (e) {
+                      if (!mounted) return;
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text(AppStrings.isUrdu ? 'ایکسپورٹ ناکام: $e' : 'Export failed: $e'), backgroundColor: AppColors.moneyOwed),
+                      );
+                    }
+                  },
                 ),
               ],
             ),

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Super Business Shop - Inventory</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006c75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0f2223",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav .material-symbols-outlined {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex min-h-screen flex-col max-w-md mx-auto bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
+<!-- Header -->
+<header class="sticky top-0 z-20 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-primary/10">
+<div class="flex items-center p-4 justify-between">
+<div class="text-primary flex size-10 items-center justify-center rounded-lg bg-primary/10">
+<span class="material-symbols-outlined">menu</span>
+</div>
+<h1 class="text-slate-900 dark:text-slate-100 text-lg font-bold flex-1 px-3">Super Business Shop</h1>
+<div class="flex gap-2">
+<button class="text-slate-600 dark:text-slate-400 p-2">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="size-8 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden border border-primary/20">
+<img class="w-full h-full object-cover" data-alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA9fppQhtaSfG3yqGI9Zofbvpm3DWA404xX_-thssNfobBRpoHDDHjTTU-W8RcwFwCSWCk-qsGhpxZLwZOz-xq__OcsBI35IZP5TPnE7IYvUabGqhDhpPLR1_qwKuRcCQtcN3J3EWEVl_BaLhSFEAiJJi2-_NLq-AFTbOgp_mdvmFygIQTNWpq4FrcrlPO8CI0I1GImLKgKVb0O8q1x_QqbUwCDZ0eQs-z_kgahTbwmIo9Y4el5KxmoAVOrn4kT6X9kWfdbkC4HbOzN"/>
+</div>
+</div>
+</div>
+<!-- Search Section -->
+<div class="px-4 pb-3">
+<label class="relative flex items-center w-full">
+<span class="absolute left-3 text-primary/60 material-symbols-outlined">search</span>
+<input class="w-full h-11 pl-10 pr-4 rounded-xl border-none bg-primary/5 dark:bg-primary/20 text-slate-900 dark:text-slate-100 placeholder:text-primary/40 focus:ring-2 focus:ring-primary/50 text-base" placeholder="Search products..." value=""/>
+</label>
+</div>
+<!-- Filter Chips -->
+<div class="flex gap-2 px-4 pb-4 overflow-x-auto no-scrollbar">
+<button class="flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary text-white px-4 text-sm font-medium">
+                    All
+                </button>
+<button class="flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary/10 dark:bg-primary/20 text-primary px-4 text-sm font-medium whitespace-nowrap">
+<span class="material-symbols-outlined text-sm">warning</span>
+                    Low Stock
+                </button>
+<button class="flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary/10 dark:bg-primary/20 text-primary px-4 text-sm font-medium whitespace-nowrap">
+<span class="material-symbols-outlined text-sm">inventory_2</span>
+                    Out of Stock
+                </button>
+<button class="flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary/10 dark:bg-primary/20 text-primary px-4 text-sm font-medium whitespace-nowrap">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+                    High Value
+                </button>
+</div>
+</header>
+<!-- Inventory List -->
+<main class="flex-1 overflow-y-auto px-4 py-2 space-y-4 mb-24">
+<div class="flex items-center justify-between">
+<h2 class="text-sm font-semibold text-slate-500 uppercase tracking-wider">Inventory Items (128)</h2>
+<button class="text-primary text-sm font-medium flex items-center gap-1">
+<span class="material-symbols-outlined text-base">sort</span>
+                    Sorted by Name
+                </button>
+</div>
+<!-- Product Card 1 -->
+<div class="flex gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-primary/10 shadow-sm">
+<div class="size-20 shrink-0 rounded-lg overflow-hidden bg-slate-100">
+<img class="w-full h-full object-cover" data-alt="Modern minimal white watch" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVOARWGB2JQb_aqIkdyxgQvbMWmQEXMzOzFF0ttX_zai2Zp1X6Fcbsu0wmw-kCXcUkmFGoPs2h8N-7YgoAAYBoOgkpKduT8P2I5cxiplM8q6-UQbh2MLpHNl3c1S6Ueskk54baxhzfj5hB9mmM6efXmAj3-HIt-CS4EPnj0DR5ngwEu2D3qJcetWWTRUuaJbGbPgWlVEYLtLqN0oFhUpd9S9boCyI6KGwuHoVTMRz6w_TWVJ5F33aSwJGQ1l92rIxPWbGGQc8DoDt7"/>
+</div>
+<div class="flex flex-col justify-between flex-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Smart Watch Series 5</h3>
+<span class="text-primary font-bold text-lg">$299</span>
+</div>
+<p class="text-xs text-slate-500">Montre Connectée Série 5</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            In Stock: 42
+                        </span>
+<button class="text-primary">
+<span class="material-symbols-outlined">edit_note</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 2 (Low Stock) -->
+<div class="flex gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-orange-200 dark:border-orange-900/50 shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0">
+<div class="bg-orange-500 text-white text-[10px] px-2 py-0.5 rounded-bl-lg font-bold">LOW</div>
+</div>
+<div class="size-20 shrink-0 rounded-lg overflow-hidden bg-slate-100">
+<img class="w-full h-full object-cover" data-alt="Black wireless headphones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB1PmnIGSixZAk4Ydsw8jyI98tM_soByzfH1ryLT4KViki1JTdFcr5tCSKCeyMbLgTViWktVdb9E9ChTcxs-LUlpsUvIznvjj9g_HZBMHYVtUcP5gZtXXYtfIfSNwfvJkQ812A9nfCaSj9W2dnnwVYNP6Ve38kD6KncMnFnz6um0kKATGwp9YS8gJZZ7tKpobZQzc24WZNV0lWpSZC1Dk6ng875JbORldCmLUtVrHrxFZ-20um5rYIpcsrlYzou9ew7QjnmqzTWqsDe"/>
+</div>
+<div class="flex flex-col justify-between flex-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Wireless Headphones</h3>
+<span class="text-primary font-bold text-lg">$149</span>
+</div>
+<p class="text-xs text-slate-500">Casque Sans Fil Premium</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400">
+                            Low Stock: 3
+                        </span>
+<button class="text-primary">
+<span class="material-symbols-outlined">edit_note</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="flex gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-primary/10 shadow-sm">
+<div class="size-20 shrink-0 rounded-lg overflow-hidden bg-slate-100">
+<img class="w-full h-full object-cover" data-alt="Retro polaroid camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpUMYhGy-oBn8X9xrDATdmBXcRE0pCc3ry1w94vpPiR13fGtdtmEkDaix1wK_Pb8LZDott53Oi189_iPC4_t6mWczWhvIb0oBU17grtaIend7RnnJPnzzyOIaT-NFXoliz2HXVXx4PBsHpWbdDEP0rlwDBHI7kUKVbU_aG5XBrvUvJyL8u27BFpjBx_klLtQfQEJnHq5qIV6tFcL2zIDKrBAMsLxq5a6pW_zS0gP6gfzeRWvFLwG3FVZ9GNOH5k6Q--B3h_EaAuaCr"/>
+</div>
+<div class="flex flex-col justify-between flex-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Vintage Camera</h3>
+<span class="text-primary font-bold text-lg">$89</span>
+</div>
+<p class="text-xs text-slate-500">Appareil Photo Vintage</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            In Stock: 15
+                        </span>
+<button class="text-primary">
+<span class="material-symbols-outlined">edit_note</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 4 (Out of Stock) -->
+<div class="flex gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-red-200 dark:border-red-900/50 shadow-sm opacity-75">
+<div class="size-20 shrink-0 rounded-lg overflow-hidden bg-slate-100 grayscale">
+<img class="w-full h-full object-cover" data-alt="Red running shoes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAFLhFasQzT9ke1cFvcqiZ4Yfc-XCUJIDQW8QCd67tpQ2J8SGp9alGp8sUaEZQBoYBNCngvMAsLwuDPsNm2IE4bCAGWVBNSA9DgIvxSTDuUbg05SFGlrSoIzi95lx_V_7mNMuraBzdVF8EpjTH5vygnQO-BbO4DAekn0Y7AYMIZ3ZopQMc27-pWDfZnSqCzca2GoStPxxVtkDhMhYB7yM-S_AWyxAfrgpouQdu8Cpu6n4EQlgRUDw-23XKyZAW7NojxDLj5-rnlrPc2"/>
+</div>
+<div class="flex flex-col justify-between flex-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Speed Runners X</h3>
+<span class="text-primary font-bold text-lg">$120</span>
+</div>
+<p class="text-xs text-slate-500">Chaussures de Course Rapide</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">
+                            Out of Stock
+                        </span>
+<button class="text-primary">
+<span class="material-symbols-outlined">edit_note</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 5 -->
+<div class="flex gap-4 p-3 bg-white dark:bg-slate-800 rounded-xl border border-primary/10 shadow-sm">
+<div class="size-20 shrink-0 rounded-lg overflow-hidden bg-slate-100">
+<img class="w-full h-full object-cover" data-alt="Classic aviator sunglasses" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCq3rAm7vxTBWIqDR_cR27-CvatVJI8uWxm5tpjF6RErMgb93iZIHtZzTSttgWRA8XIy8_4aRknbMK5ZXKgDuXNUwsjVyGMD9hjXVM7N3wE4BISzEszfauHpzoSjPqkOi7lc_Cs6vA509v0ae8w7cKw7TVd0qNKuSAJpCdE8bVfU6sr84cS_9WpQuIbbL3wJWe74I_VkpU-NYYcDyTlrS3MHY2Yv2ijA0dXtMgISnVidyjQEvrqA0OSBpzRTe8nLr-hFmiRFj5DHI3v"/>
+</div>
+<div class="flex flex-col justify-between flex-1">
+<div>
+<div class="flex justify-between items-start">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Aviator Sunglasses</h3>
+<span class="text-primary font-bold text-lg">$210</span>
+</div>
+<p class="text-xs text-slate-500">Lunettes Aviateur Classiques</p>
+</div>
+<div class="flex items-center justify-between mt-2">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">
+                            In Stock: 58
+                        </span>
+<button class="text-primary">
+<span class="material-symbols-outlined">edit_note</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- Floating Action Button -->
+<button class="fixed bottom-24 right-6 size-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center z-30 ring-4 ring-white dark:ring-slate-900">
+<span class="material-symbols-outlined text-3xl">add</span>
+</button>
+<!-- Bottom Navigation -->
+<nav class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-primary/10 px-6 py-2 pb-8 flex justify-between items-center z-40 max-w-md mx-auto">
+<a class="flex flex-col items-center gap-1 active-nav text-primary" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-[10px] font-bold">Inventory</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">shopping_cart</span>
+<span class="text-[10px] font-bold">Orders</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-[10px] font-bold">Analytics</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-bold">Settings</span>
+</a>
+</nav>
+</div>
+</body></html>

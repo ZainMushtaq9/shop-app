@@ -15,14 +15,46 @@ import 'settings/settings_screen.dart';
 import '../services/auth_service.dart';
 import 'auth/login_screen.dart';
 import '../widgets/global_app_bar.dart';
+import 'bills/bills_list_screen.dart';
+import 'returns/returns_screen.dart';
+import 'finance/daily_cash_screen.dart';
+import 'finance/shop_items_screen.dart';
+import '../services/connectivity_service.dart';
+import '../services/data_download_service.dart';
+import '../widgets/offline_banner.dart';
 
 /// Main app shell with bottom navigation (5 tabs) and drawer menu.
 /// Follows the GUI Design Guide from Section 09 of requirements.
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
+
+  @override
+  void initState() {
+    super.initState();
+    _initOfflineServices();
+  }
+
+  Future<void> _initOfflineServices() async {
+    await ConnectivityService.instance.initialize();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final db = ref.read(databaseProvider);
+      final shopId = await db.getShopId();
+      if (shopId != null) {
+        // Background data download for offline use
+        DataDownloadService.instance.downloadEssentialData(shopId);
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentTab = ref.watch(currentTabProvider);
     final isUrdu = ref.watch(isUrduProvider);
 
@@ -43,6 +75,7 @@ class AppShell extends ConsumerWidget {
       ),
       body: Column(
         children: [
+          const OfflineBanner(),
           Expanded(
             child: IndexedStack(
               index: currentTab,
@@ -173,6 +206,62 @@ class AppShell extends ConsumerWidget {
                       context,
                       MaterialPageRoute(
                           builder: (_) => const ExpenseListScreen()),
+                    );
+                  },
+                ),
+                _DrawerItem(
+                  icon: Icons.receipt_rounded,
+                  label: AppStrings.isUrdu ? 'تمام بل / All Bills' : 'All Bills',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const BillsListScreen()),
+                    );
+                  },
+                ),
+                _DrawerItem(
+                  icon: Icons.undo_rounded,
+                  label: AppStrings.isUrdu ? 'مال واپسی / Returns' : 'Returns',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ReturnsScreen()),
+                    );
+                  },
+                ),
+                const Divider(),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 4),
+                  child: Text(
+                    AppStrings.isUrdu ? '💰 پیسا' : '💰 Finance',
+                    style: AppTextStyles.label.copyWith(color: AppColors.primary),
+                  ),
+                ),
+                _DrawerItem(
+                  icon: Icons.account_balance_wallet_rounded,
+                  label: AppStrings.isUrdu ? 'آج کا حساب / Daily Cash' : 'Daily Cash',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const DailyCashScreen()),
+                    );
+                  },
+                ),
+                _DrawerItem(
+                  icon: Icons.inventory_rounded,
+                  label: AppStrings.isUrdu ? 'دکان کی چیزیں / Shop Items' : 'Shop Items',
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (_) => const ShopItemsScreen()),
                     );
                   },
                 ),

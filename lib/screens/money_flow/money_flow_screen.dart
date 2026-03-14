@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fl_chart/fl_chart.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
@@ -118,12 +119,71 @@ class MoneyFlowScreen extends ConsumerWidget {
                   children: [
                     Text(AppStrings.isUrdu ? 'کاروبار کی مالیت' : 'Net Business Worth', style: AppTextStyles.urduTitle),
                     const SizedBox(height: 16),
-                    // Just a mockup empty state for now to satisfy requirements quickly
-                    Center(
-                      child: Text(
-                        AppStrings.isUrdu ? 'یہاں گرافس آئیں گے' : 'Graphs will appear here',
-                        style: AppTextStyles.urduCaption,
-                      ),
+                    Builder(
+                      builder: (context) {
+                        final recv = asyncReceivable.valueOrNull ?? 0;
+                        final pay = asyncPayable.valueOrNull ?? 0;
+                        final cash = asyncCashInHand.valueOrNull ?? 0;
+
+                        if (recv == 0 && pay == 0 && cash == 0) {
+                           return Center(
+                             child: Text(
+                               AppStrings.isUrdu ? 'کوئی ڈیٹا نہیں' : 'No Data',
+                               style: AppTextStyles.urduCaption,
+                             ),
+                           );
+                        }
+
+                        double total = recv + pay + cash;
+                        if (total <= 0) total = 1;
+
+                        return SizedBox(
+                          height: 200,
+                          child: PieChart(
+                            PieChartData(
+                              sectionsSpace: 2,
+                              centerSpaceRadius: 40,
+                              sections: [
+                                if (cash > 0)
+                                  PieChartSectionData(
+                                    color: AppColors.primary,
+                                    value: cash,
+                                    title: '${((cash/total)*100).toStringAsFixed(0)}%',
+                                    radius: 50,
+                                    titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                  ),
+                                if (recv > 0)
+                                  PieChartSectionData(
+                                    color: AppColors.success,
+                                    value: recv,
+                                    title: '${((recv/total)*100).toStringAsFixed(0)}%',
+                                    radius: 50,
+                                    titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                  ),
+                                if (pay > 0)
+                                  PieChartSectionData(
+                                    color: AppColors.error,
+                                    value: pay,
+                                    title: '${((pay/total)*100).toStringAsFixed(0)}%',
+                                    radius: 50,
+                                    titleStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.white),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _LegendItem(color: AppColors.primary, label: AppStrings.isUrdu ? 'نقد' : 'Cash'),
+                        const SizedBox(width: 8),
+                        _LegendItem(color: AppColors.success, label: AppStrings.isUrdu ? 'لینا ہے' : 'Recv'),
+                        const SizedBox(width: 8),
+                        _LegendItem(color: AppColors.error, label: AppStrings.isUrdu ? 'دینا ہے' : 'Pay'),
+                      ],
                     ),
                   ],
                 ),
@@ -195,6 +255,32 @@ class _BalanceCard extends StatelessWidget {
           Text(subtitle, style: const TextStyle(fontSize: 10, color: AppColors.textSecondary)),
         ],
       ),
+    );
+  }
+}
+
+class _LegendItem extends StatelessWidget {
+  final Color color;
+  final String label;
+
+  const _LegendItem({required this.color, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 12,
+          height: 12,
+          decoration: BoxDecoration(
+            color: color,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 4),
+        Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textSecondary)),
+      ],
     );
   }
 }

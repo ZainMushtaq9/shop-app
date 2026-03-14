@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006c75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0f2223",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>Mobile POS - Super Business Shop</title>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased">
+<div class="relative flex h-screen w-full flex-col overflow-hidden">
+<!-- Top Header & Search -->
+<header class="bg-white dark:bg-slate-900 px-4 pt-4 pb-2 shadow-sm shrink-0">
+<div class="flex items-center justify-between mb-4">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">store</span>
+<h1 class="text-lg font-bold leading-tight tracking-tight">Super Business Shop</h1>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center size-10 rounded-lg bg-primary/10 text-primary">
+<span class="material-symbols-outlined">person_add</span>
+</button>
+<button class="flex items-center justify-center size-10 rounded-lg bg-primary text-white">
+<span class="material-symbols-outlined">barcode_scanner</span>
+</button>
+</div>
+</div>
+<div class="flex gap-2 mb-2">
+<div class="relative flex-1">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full bg-slate-100 dark:bg-slate-800 border-none rounded-lg py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-primary text-sm" placeholder="Search products..." type="text"/>
+</div>
+<button class="bg-slate-100 dark:bg-slate-800 p-2.5 rounded-lg text-slate-500">
+<span class="material-symbols-outlined">filter_list</span>
+</button>
+</div>
+<!-- Categories -->
+<div class="flex gap-4 overflow-x-auto no-scrollbar py-2 border-t border-slate-100 dark:border-slate-800">
+<button class="shrink-0 text-sm font-semibold border-b-2 border-primary text-primary pb-1">All Items</button>
+<button class="shrink-0 text-sm font-medium text-slate-500 pb-1">Electronics</button>
+<button class="shrink-0 text-sm font-medium text-slate-500 pb-1">Groceries</button>
+<button class="shrink-0 text-sm font-medium text-slate-500 pb-1">Fashion</button>
+<button class="shrink-0 text-sm font-medium text-slate-500 pb-1">Beverages</button>
+</div>
+</header>
+<!-- Product Grid -->
+<main class="flex-1 overflow-y-auto p-4 pb-48">
+<div class="grid grid-cols-2 gap-4">
+<!-- Product Card 1 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="aspect-square bg-slate-200 relative">
+<img alt="Coffee Beans" class="w-full h-full object-cover" data-alt="Bag of dark roast coffee beans" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVAd7ik4KniFjcS01x5chc7BuHq33ENRi72y4xIf1exCGmP72wSZypLfKq5L9l_ZdhX5zvy_32vp3KVyeXGa5cRAgPdqHpqQ8eq390NOI92I_I38CnYzupS5deDNG9P2UucsVU4Y3D1tFewAj9DO-c5KNcGParbkiWbhWG-EpR2fYQCXmtW7YI0YGvNvIi_JV-DXCjGycnd6NIi7zrxuOMnvMtEDwW0voAHtiL5gtFWVDyc6ntlE72U-aU7EkIgBumhgsBO0inlmQ6"/>
+<div class="absolute top-2 right-2 bg-primary text-white text-[10px] font-bold px-1.5 py-0.5 rounded">STK: 42</div>
+</div>
+<div class="p-3">
+<p class="text-xs text-slate-500 font-medium">Coffee</p>
+<p class="text-sm font-bold truncate">Premium Coffee Beans</p>
+<div class="flex items-center justify-between mt-2">
+<span class="text-primary font-bold">$18.50</span>
+<button class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 2 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="aspect-square bg-slate-200 relative">
+<img alt="Organic Milk" class="w-full h-full object-cover" data-alt="Fresh carton of organic whole milk" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAkoRbh0cfYptoI0qBXXv3yQgj2RruDMoi5WskhIawmpDoMC1F5kFj72MAftxQr6B7CGP_EXqIgMpPvsNdSsJikyLCUlyiwNW_SNw2L_zh3Uls9oCVotd9qQw6HTIx_VpSUnHNB8HXMScFV-xuXrJP1WjEfp4MON2ANF4GIGdyNJxjzHQj7LMwj4v_HzQLY2AmovtY64dCJJ4BH82RHtPUbAfVVqzGBmrZ5xRJ1MP5EfyVMtl_p6RBumfD8rdGrPo3P6VJaObRBZSiB"/>
+</div>
+<div class="p-3">
+<p class="text-xs text-slate-500 font-medium">Dairy</p>
+<p class="text-sm font-bold truncate">Organic Whole Milk</p>
+<div class="flex items-center justify-between mt-2">
+<span class="text-primary font-bold">$4.20</span>
+<button class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 3 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="aspect-square bg-slate-200 relative">
+<img alt="Bread Loaf" class="w-full h-full object-cover" data-alt="Freshly baked crusty bread loaf" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2UZBzm8_PYIvJ6UlZfHNY3UdBskjm9Fls1GTPLS8Lko8DgrXZZIwF8xwhW5BdMRFukBqpITXEYyTahHBFpmMfdwHEHH0DmxB2tvAO0IjWP-29ccTHGpNy8dXgvV9wiGgRw27xUNEDA9Kop_Xyl8jE5Yz5O13Ev-0sWW5P_OVXxPVa-hK-uEjW8DcvkE-Lk0KuTODkX7YVf2odehWTaC3OiAdsPOEpLQbbXE2vDMNuuPaHl-Il_338oDfl1Gl7-4BJK5bjXcKcjc2g"/>
+</div>
+<div class="p-3">
+<p class="text-xs text-slate-500 font-medium">Bakery</p>
+<p class="text-sm font-bold truncate">Artisan Sourdough</p>
+<div class="flex items-center justify-between mt-2">
+<span class="text-primary font-bold">$6.00</span>
+<button class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Product Card 4 -->
+<div class="bg-white dark:bg-slate-900 rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-800">
+<div class="aspect-square bg-slate-200 relative">
+<img alt="Apple Juice" class="w-full h-full object-cover" data-alt="Glass bottle of natural apple juice" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCHUMJZH4rIBExmV0aXYXLk2Jzdt1SWprMpbCjKCJaT_kTytXJgxPmwMLGSRocxLYWad7e4NKl8Q6s7RzPTuvzHLjVFYVjmrfs2DhNfJw63WgHFqbqr2miRwl53qCIXo9xY2ekS7SnLHv2JP46mQcUOv_spoYeehZAoFpvOT57L8HjlRm5OR9KxSinZgSeszB8WpXPOzTBA7rB35dmsO2Mro7uAs-O2prxfqUq7e7AbwbdPONNJBIhs6aEMfzmVp62r4lCDfq9Hw4mX"/>
+</div>
+<div class="p-3">
+<p class="text-xs text-slate-500 font-medium">Beverage</p>
+<p class="text-sm font-bold truncate">Fresh Apple Juice</p>
+<div class="flex items-center justify-between mt-2">
+<span class="text-primary font-bold">$3.50</span>
+<button class="size-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-lg">add</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Cart Bottom Sheet -->
+<div class="absolute bottom-0 left-0 right-0 z-20 bg-white dark:bg-slate-900 rounded-t-3xl shadow-[0_-8px_30px_rgb(0,0,0,0.12)] border-t border-slate-100 dark:border-slate-800">
+<!-- Pull Bar -->
+<div class="flex justify-center py-2">
+<div class="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+</div>
+<!-- Cart Header -->
+<div class="px-6 pb-2 flex justify-between items-center">
+<div class="flex items-center gap-2">
+<h3 class="text-lg font-bold">Current Cart</h3>
+<span class="bg-primary text-white text-xs px-2 py-0.5 rounded-full">3 Items</span>
+</div>
+<button class="text-slate-400">
+<span class="material-symbols-outlined">delete</span>
+</button>
+</div>
+<!-- Cart Items (Partial view) -->
+<div class="px-6 py-2 space-y-4 max-h-48 overflow-y-auto">
+<div class="flex items-center gap-3">
+<div class="size-12 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+<img alt="Cart Item" class="w-full h-full object-cover" data-alt="Miniature image of coffee beans" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBbZOeuIBSVr36DLTBrkoVpZpiNkphvU8jaiiKJgn6Pe6UUELx_DasVQF7S83PEgCn0eEU2mqOXHssW85llgaPc1S_keV9HhP1klDWTVRnD8MNFiLKbAisw0k1XTjddBm64P8a2un66yiOz-nNounTFLFtrG3nKZysaLyow-wWIKut4FzV4uA4joJ1VMwD16eRvoeEFZqgP7-Y1ySJlFIlsrkumgAEaPJir5AkAeB7xObxvMRHz1NLTE2Kr-_1ae4Or-MIm1Hp-Tw9M"/>
+</div>
+<div class="flex-1">
+<p class="text-sm font-semibold">Premium Coffee Beans</p>
+<p class="text-xs text-slate-500">$18.50 x 1</p>
+</div>
+<div class="flex items-center gap-3 bg-slate-100 dark:bg-slate-800 rounded-lg p-1">
+<button class="size-6 flex items-center justify-center text-primary"><span class="material-symbols-outlined text-sm">remove</span></button>
+<span class="text-xs font-bold w-4 text-center">1</span>
+<button class="size-6 flex items-center justify-center text-primary"><span class="material-symbols-outlined text-sm">add</span></button>
+</div>
+</div>
+</div>
+<!-- Payment Type & Totals -->
+<div class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 space-y-4">
+<!-- Payment Toggle -->
+<div class="flex p-1 bg-slate-100 dark:bg-slate-800 rounded-xl">
+<button class="flex-1 py-2 flex items-center justify-center gap-2 bg-white dark:bg-slate-700 rounded-lg shadow-sm text-sm font-bold text-primary">
+<span class="material-symbols-outlined text-sm">payments</span> Cash
+                    </button>
+<button class="flex-1 py-2 flex items-center justify-center gap-2 text-sm font-medium text-slate-500">
+<span class="material-symbols-outlined text-sm">credit_card</span> Card
+                    </button>
+<button class="flex-1 py-2 flex items-center justify-center gap-2 text-sm font-medium text-slate-500">
+<span class="material-symbols-outlined text-sm">qr_code_2</span> QR
+                    </button>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between text-sm text-slate-500">
+<span>Subtotal</span>
+<span>$22.70</span>
+</div>
+<div class="flex justify-between text-base font-bold text-slate-900 dark:text-slate-100">
+<span>Total Due</span>
+<span class="text-primary">$22.70</span>
+</div>
+</div>
+<div class="flex gap-3">
+<button class="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold py-3 rounded-xl">
+                        Save Bill
+                    </button>
+<button class="flex-[2] bg-primary text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-primary/20">
+                        Checkout <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Bottom Nav Bar -->
+<nav class="flex border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pb-6 pt-2">
+<a class="flex flex-1 flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">receipt_long</span>
+<p class="text-[10px] font-bold">Sale</p>
+</a>
+<a class="flex flex-1 flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<p class="text-[10px] font-medium">Inventory</p>
+</a>
+<a class="flex flex-1 flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<p class="text-[10px] font-medium">Reports</p>
+</a>
+<a class="flex flex-1 flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-[10px] font-medium">Settings</p>
+</a>
+</nav>
+</div>
+</div>
+</body></html>

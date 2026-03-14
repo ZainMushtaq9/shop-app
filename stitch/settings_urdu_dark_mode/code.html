@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ur"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006a75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0d1b2a",
+                        "card-dark": "#1a2a3a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Nastaliq Urdu", "serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.75rem", // 12px card radius as requested
+                        "xl": "0.75rem",
+                        "md": "0.5rem", // 8px button radius as requested
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', serif;
+        }
+        .urdu-text {
+            line-height: 2.2;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<header class="flex items-center p-4 sticky top-0 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md z-10 border-b border-slate-200 dark:border-slate-800">
+<button class="flex items-center justify-center p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors">
+<span class="material-symbols-outlined transform scale-x-[-1]">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold urdu-text mr-4">ترتیبات</h1>
+</header>
+<main class="flex-1 overflow-y-auto p-4 space-y-6">
+<section class="bg-card-dark rounded-lg p-4 flex items-center gap-4 shadow-lg">
+<div class="size-16 rounded-lg bg-primary/20 flex items-center justify-center overflow-hidden border border-primary/30">
+<img alt="Shop Logo" class="size-full object-cover" data-alt="Abstract geometric logo for business shop" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsJwHhRY4RlKx_txaOhzD56JwDubCborEYDmpRdFBgwUqcdZz8uatpR6p2HyVK7ZI_OIZWs7WvXshnBWUZfAdSxS84JtyyEhKRuqI8a9KM7r7XIHpXILJjbae0ImzlayGhimx7tUQGbOE9WD3IWxibu7odCn0rgFjKPBq4sWRYwB8Y9huityNUxPilZ9Rqws_UuaQqAec2dp2x70WML0tX2Tl87UI6gQ8TSH_QTDEpHWr7x86oI70mCXV5sDMdkgm__yrExFAlt8Cq"/>
+</div>
+<div class="flex-1">
+<h2 class="text-lg font-bold urdu-text leading-none">سپر بزنس شاپ</h2>
+<p class="text-slate-400 text-sm urdu-text mt-1">مالک: محمد احمد</p>
+</div>
+<button class="text-primary material-symbols-outlined">edit</button>
+</section>
+<section class="space-y-3">
+<h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider urdu-text px-1">عمومی ترتیبات</h3>
+<div class="bg-card-dark rounded-lg p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">language</span>
+<span class="urdu-text">زبان</span>
+</div>
+<div class="flex bg-background-dark rounded-md p-1 border border-slate-700">
+<button class="px-4 py-1 text-xs font-bold rounded-md text-slate-400">ENG</button>
+<button class="px-4 py-1 text-xs font-bold rounded-md bg-primary text-white urdu-text">اردو</button>
+</div>
+</div>
+<div class="bg-card-dark rounded-lg p-4 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">dark_mode</span>
+<span class="urdu-text">ڈارک موڈ</span>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<input checked="" class="sr-only peer" type="checkbox"/>
+<div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:right-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+</div>
+</div>
+</section>
+<section class="space-y-3">
+<h3 class="text-slate-400 text-xs font-semibold uppercase tracking-wider urdu-text px-1">تکنیکی ترتیبات</h3>
+<a class="bg-card-dark rounded-lg p-4 flex items-center justify-between group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">print</span>
+<span class="urdu-text">پرنٹر سیٹ اپ</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 group-hover:translate-x-[-4px] transition-transform">chevron_left</span>
+</a>
+<a class="bg-card-dark rounded-lg p-4 flex items-center justify-between group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">shield</span>
+<span class="urdu-text">سیکیورٹی</span>
+</div>
+<span class="material-symbols-outlined text-slate-500 group-hover:translate-x-[-4px] transition-transform">chevron_left</span>
+</a>
+<a class="bg-card-dark rounded-lg p-4 flex items-center justify-between group" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary">notifications</span>
+<span class="urdu-text">اطلاعات</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="bg-primary/20 text-primary text-[10px] px-2 py-0.5 rounded-full urdu-text font-bold">آن</span>
+<span class="material-symbols-outlined text-slate-500 group-hover:translate-x-[-4px] transition-transform">chevron_left</span>
+</div>
+</a>
+</section>
+<button class="w-full bg-red-500/10 hover:bg-red-500/20 text-red-500 p-4 rounded-md flex items-center justify-center gap-2 transition-colors border border-red-500/20">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-bold urdu-text">لاگ آؤٹ</span>
+</button>
+</main>
+<nav class="bg-card-dark border-t border-slate-800 flex justify-around items-center px-2 py-3 pb-6">
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] urdu-text font-medium">ہوم</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-[10px] urdu-text font-medium">انوینٹری</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<span class="text-[10px] urdu-text font-medium">رپورٹس</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-500" href="#">
+<span class="material-symbols-outlined">group</span>
+<span class="text-[10px] urdu-text font-medium">ٹیم</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined fill-[1]">settings</span>
+<span class="text-[10px] urdu-text font-bold">ترتیبات</span>
+</a>
+</nav>
+</body></html>

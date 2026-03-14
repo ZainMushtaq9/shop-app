@@ -545,9 +545,14 @@ class _LowStockAlerts extends ConsumerWidget {
                 },
               );
             },
-            loading: () => const Padding(
-              padding: EdgeInsets.all(16),
-              child: Center(child: CircularProgressIndicator()),
+            loading: () => ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: 3,
+              itemBuilder: (_, __) => const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppDimens.spacingMD, vertical: AppDimens.spacingXS),
+                child: CustomSkeleton(width: double.infinity, height: 60, borderRadius: 8),
+              ),
             ),
             error: (_, __) => Padding(
               padding: const EdgeInsets.all(16),

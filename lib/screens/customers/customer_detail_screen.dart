@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:uuid/uuid.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../models/models.dart';
 import '../../providers/app_providers.dart';
+import '../../services/connectivity_service.dart';
+import '../../services/local_db_service.dart';
 import '../../widgets/global_app_bar.dart';
 
 /// Customer detail screen showing:
@@ -21,10 +25,17 @@ class CustomerDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncBalance = ref.watch(customerBalanceProvider(customer.id));
     final asyncTransactions = ref.watch(customerTransactionsProvider(customer.id));
+    final asyncLastActivity = ref.watch(customerLastActivityProvider(customer.id));
 
     return Scaffold(
-      appBar: GlobalAppBar(
-        title: customer.name,
+      appBar: AppBar(
+        title: Text(customer.name, style: AppTextStyles.urduTitle),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_suggest_rounded, color: AppColors.primary),
+            onPressed: () => _showVisibilitySettingsDialog(context, ref),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -38,6 +49,31 @@ class CustomerDetailScreen extends ConsumerWidget {
             ),
             loading: () => const SizedBox(height: 120, child: Center(child: CircularProgressIndicator())),
             error: (_, __) => const SizedBox.shrink(),
+          ),
+
+          // ── Last Portal Activity ──
+          asyncLastActivity.when(
+            data: (date) {
+               if (date == null) return const SizedBox.shrink();
+               return Padding(
+                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                 child: Row(
+                   mainAxisAlignment: MainAxisAlignment.center,
+                   children: [
+                     const Icon(Icons.history, size: 14, color: AppColors.textSecondary),
+                     const SizedBox(width: 4),
+                     Text(
+                       AppStrings.isUrdu 
+                        ? 'گاہک نے آخری بار پورٹل دیکھا: ${AppFormatters.dateShort(date)}'
+                        : 'Customer last viewed portal: ${AppFormatters.dateShort(date)}',
+                       style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
+                     )
+                   ]
+                 )
+               );
+            },
+            loading: () => const SizedBox.shrink(),
+            error: (_,__) => const SizedBox.shrink(),
           ),
 
           // ── Ledger Table ──
@@ -75,7 +111,11 @@ class CustomerDetailScreen extends ConsumerWidget {
                         ),
                       ),
                       // Table rows
-                      ...transactions.map((tx) => _LedgerRow(transaction: tx)),
+                      ...transactions.map((tx) => _LedgerRow(
+                        transaction: tx,
+                        ref: ref,
+                        onRefresh: () => ref.refresh(customerTransactionsProvider(customer.id)),
+                      )),
 
                       const SizedBox(height: 16),
 
@@ -102,14 +142,96 @@ class CustomerDetailScreen extends ConsumerWidget {
     );
   }
 
-  void _sendWhatsAppReminder(BuildContext context, double balance) {
-    // In a real app, this would use url_launcher to open WhatsApp
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          AppStrings.whatsappReminderMessage(customer.name, AppStrings.appName, balance),
+  void _sendWhatsAppReminder(BuildContext context, double balance) async {
+    final phone = customer.phone.replaceAll(RegExp(r'\D'), '');
+    if (phone.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No phone number available for this customer.')),
+      );
+      return;
+    }
+    
+    final message = AppStrings.whatsappReminderMessage(customer.name, AppStrings.appName, balance);
+    // Remove leading 0 and add +92 (Pakistan) if needed, simple logic for now:
+    final formattedPhone = phone.startsWith('+') ? phone : (phone.startsWith('0') ? '+92${phone.substring(1)}' : '+$phone');
+    
+    if (!ConnectivityService.instance.isOnline) {
+      await LocalDbService.instance.enqueueWhatsAppMessage(const Uuid().v4(), formattedPhone, message);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppStrings.isUrdu ? 'آف لائن۔ پیغام قطار میں شامل کر دیا گیا۔' : 'Offline. Message queued.')),
+        );
+      }
+      return;
+    }
+
+    final url = Uri.parse('https://wa.me/$formattedPhone?text=${Uri.encodeComponent(message)}');
+    
+    try {
+      if (!await launchUrl(url, mode: LaunchMode.externalApplication)) {
+        throw Exception('Could not launch WhatsApp');
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  void _showVisibilitySettingsDialog(BuildContext context, WidgetRef ref) async {
+    final db = ref.read(databaseProvider);
+    final settings = await db.getCustomerVisibility(customer.id);
+    
+    bool showUdhaar = settings['show_udhaar'] ?? true;
+    bool showPaidBills = settings['show_paid_bills'] ?? true;
+    bool showBalance = settings['show_balance'] ?? true;
+
+    if (!context.mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(AppStrings.isUrdu ? 'گاہک پورٹل کی ترتیبات' : 'Customer Portal Settings', style: AppTextStyles.urduTitle.copyWith(fontSize: 18)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SwitchListTile(
+                title: Text(AppStrings.isUrdu ? 'کل بیلنس دکھائیں' : 'Show Total Balance', style: AppTextStyles.urduBody),
+                value: showBalance,
+                onChanged: (v) => setState(() => showBalance = v),
+              ),
+              SwitchListTile(
+                title: Text(AppStrings.isUrdu ? 'ادھار بل دکھائیں' : 'Show Udhaar Bills', style: AppTextStyles.urduBody),
+                value: showUdhaar,
+                onChanged: (v) => setState(() => showUdhaar = v),
+              ),
+              SwitchListTile(
+                title: Text(AppStrings.isUrdu ? 'ادا شدہ بل دکھائیں' : 'Show Paid Bills', style: AppTextStyles.urduBody),
+                value: showPaidBills,
+                onChanged: (v) => setState(() => showPaidBills = v),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(AppStrings.cancel),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary, foregroundColor: Colors.white),
+              onPressed: () async {
+                await db.setCustomerVisibility(customer.id, {
+                  'show_balance': showBalance,
+                  'show_udhaar': showUdhaar,
+                  'show_paid_bills': showPaidBills,
+                });
+                if (ctx.mounted) Navigator.pop(ctx);
+              },
+              child: Text(AppStrings.save),
+            ),
+          ],
         ),
-        duration: const Duration(seconds: 4),
       ),
     );
   }
@@ -317,13 +439,69 @@ class _HeaderCell extends StatelessWidget {
 
 class _LedgerRow extends StatelessWidget {
   final CustomerTransaction transaction;
+  final WidgetRef ref;
+  final VoidCallback onRefresh;
 
-  const _LedgerRow({required this.transaction});
+  const _LedgerRow({required this.transaction, required this.ref, required this.onRefresh});
+
+  Future<void> _toggleVisibility(BuildContext context) async {
+    final db = ref.read(databaseProvider);
+    try {
+      if (transaction.saleId != null && transaction.saleId!.isNotEmpty) {
+        await db.toggleBillVisibility(transaction.saleId!, !transaction.hiddenFromCustomer);
+        onRefresh();
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(transaction.hiddenFromCustomer ? 'بل اب ظاہر ہے' : 'بل اب چھپا ہوا ہے'), backgroundColor: AppColors.primary),
+          );
+        }
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+      }
+    }
+  }
+
+  Future<void> _deleteTransaction(BuildContext context) async {
+    final db = ref.read(databaseProvider);
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppStrings.isUrdu ? 'حذف کریں؟' : 'Delete?'),
+        content: Text(AppStrings.isUrdu ? 'کیا آپ اس ریکارڑ کو حذف کرنا چاہتے ہیں؟' : 'Are you sure you want to delete this record?'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(AppStrings.cancel)),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.moneyOwed, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(AppStrings.isUrdu ? 'حذف کریں' : 'Delete'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        if (transaction.saleId != null && transaction.saleId!.isNotEmpty) {
+          await db.deleteSale(transaction.saleId!);
+        } else {
+          await db.deleteInstallment(transaction.id);
+        }
+        onRefresh();
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
+        }
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+      color: transaction.hiddenFromCustomer ? Colors.grey.withOpacity(0.1) : null,
       decoration: BoxDecoration(
         border: Border(bottom: BorderSide(color: AppColors.divider)),
       ),
@@ -339,10 +517,24 @@ class _LedgerRow extends StatelessWidget {
           ),
           Expanded(
             flex: 3,
-            child: Text(
-              transaction.typeUrdu,
-              style: AppTextStyles.urduCaption.copyWith(fontSize: 11),
-              textAlign: TextAlign.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (transaction.hiddenFromCustomer)
+                  const Icon(Icons.visibility_off, size: 12, color: Colors.grey),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: Text(
+                    transaction.typeUrdu,
+                    style: AppTextStyles.urduCaption.copyWith(
+                      fontSize: 11,
+                      color: transaction.hiddenFromCustomer ? Colors.grey : AppColors.textMain,
+                    ),
+                    textAlign: TextAlign.center,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
           ),
           Expanded(
@@ -380,6 +572,40 @@ class _LedgerRow extends StatelessWidget {
               ),
               textAlign: TextAlign.center,
             ),
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, size: 16, color: Colors.grey),
+            padding: EdgeInsets.zero,
+            onSelected: (value) {
+              if (value == 'toggle') _toggleVisibility(context);
+              if (value == 'delete') _deleteTransaction(context);
+            },
+            itemBuilder: (context) => [
+              if (transaction.saleId != null && transaction.saleId!.isNotEmpty)
+                PopupMenuItem(
+                  value: 'toggle',
+                  child: Row(
+                    children: [
+                      Icon(transaction.hiddenFromCustomer ? Icons.visibility : Icons.visibility_off, size: 18),
+                      const SizedBox(width: 8),
+                      Text(AppStrings.isUrdu 
+                        ? (transaction.hiddenFromCustomer ? 'ظاہر کریں' : 'گاہک سے چھپائیں') 
+                        : (transaction.hiddenFromCustomer ? 'Show to Customer' : 'Hide from Customer')
+                      ),
+                    ],
+                  ),
+                ),
+              PopupMenuItem(
+                value: 'delete',
+                child: Row(
+                  children: [
+                    const Icon(Icons.delete, color: AppColors.moneyOwed, size: 18),
+                    const SizedBox(width: 8),
+                    Text(AppStrings.isUrdu ? 'حذف کریں' : 'Delete', style: const TextStyle(color: AppColors.moneyOwed)),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

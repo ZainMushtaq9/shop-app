@@ -6,6 +6,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/global_app_bar.dart';
+import '../../widgets/skeleton_loader.dart';
 
 /// Expense tracking screen for shop operations (rent, bills, tea/food, staff).
 class ExpenseListScreen extends ConsumerStatefulWidget {
@@ -30,14 +31,33 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
         future: _fetchExpenses(db),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
+            return ListView.builder(
+              padding: const EdgeInsets.all(AppDimens.spacingMD),
+              itemCount: 6,
+              itemBuilder: (_, __) => const Padding(
+                padding: EdgeInsets.only(bottom: AppDimens.spacingSM),
+                child: CustomSkeleton(width: double.infinity, height: 64, borderRadius: 12),
+              ),
+            );
           }
           if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           }
           final expenses = snapshot.data ?? [];
           if (expenses.isEmpty) {
-            return Center(child: Text(AppStrings.isUrdu ? 'کوئی خرچہ نہیں' : 'No expenses recorded'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.receipt_long_outlined, size: 80, color: AppColors.disabled),
+                  const SizedBox(height: 16),
+                  Text(
+                    AppStrings.isUrdu ? 'ابھی کوئی خرچہ نہیں' : 'No expenses yet',
+                    style: AppTextStyles.urduTitle.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            );
           }
 
           return ListView.builder(

@@ -6,6 +6,7 @@ import '../../utils/constants.dart';
 import '../../models/models.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/global_app_bar.dart';
+import '../../widgets/skeleton_loader.dart';
 
 class DailyReportScreen extends ConsumerWidget {
   const DailyReportScreen({super.key});
@@ -64,7 +65,14 @@ class DailyReportScreen extends ConsumerWidget {
             },
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () => ListView.builder(
+          padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingMD, vertical: AppDimens.spacingSM),
+          itemCount: 5,
+          itemBuilder: (_, __) => const Padding(
+            padding: EdgeInsets.only(bottom: AppDimens.spacingSM),
+            child: CustomSkeleton(width: double.infinity, height: 72, borderRadius: 12),
+          ),
+        ),
         error: (e, __) => Center(child: Text('Error: $e')),
       ),
     );

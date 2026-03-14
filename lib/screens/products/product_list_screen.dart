@@ -5,6 +5,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../models/product.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/skeleton_loader.dart';
 import 'product_form_screen.dart';
 
 /// Product list screen with search, category filter, and swipe-to-delete.
@@ -106,7 +107,14 @@ class ProductListScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: AppDimens.spacingSM),
+                itemCount: 6,
+                itemBuilder: (_, __) => const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: AppDimens.spacingMD, vertical: AppDimens.spacingXS),
+                  child: CustomSkeleton(width: double.infinity, height: 72, borderRadius: 12),
+                ),
+              ),
               error: (error, _) => Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,

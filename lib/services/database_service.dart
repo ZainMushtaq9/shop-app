@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/models.dart';
+import 'local_db_service.dart';
+import 'sync_queue.dart';
 import '../utils/constants.dart';
 
 /// Supabase-backed database service. All CRUD operations hit the live
@@ -10,7 +12,37 @@ class DatabaseService {
   DatabaseService._internal();
 
   SupabaseClient get _db => Supabase.instance.client;
-  String? get _userId => _db.auth.currentUser?.id;
+  String? get _userIdVal => _db.auth.currentUser?.id;
+
+  String? _cachedShopId;
+  Future<String?> getShopId() => _getShopId();
+  Future<String?> _getShopId() async {
+    if (_cachedShopId != null) return _cachedShopId;
+    final uid = _userIdVal;
+    if (uid == null) return null;
+    
+    try {
+      final res = await _db.from('shop_members').select('shop_id').eq('user_id', uid).maybeSingle();
+      if (res != null) {
+        _cachedShopId = res['shop_id'] as String;
+      } else {
+        // Auto-create shop for users
+        final shopRes = await _db.from('shops').select('id').eq('owner_id', uid).maybeSingle();
+        if (shopRes != null) {
+          _cachedShopId = shopRes['id'] as String;
+          await _db.from('shop_members').insert({'shop_id': _cachedShopId, 'user_id': uid, 'role': 'owner'});
+        } else {
+          final newShop = await _db.from('shops').insert({'owner_id': uid}).select('id').single();
+          _cachedShopId = newShop['id'] as String;
+          await _db.from('shop_members').insert({'shop_id': _cachedShopId, 'user_id': uid, 'role': 'owner'});
+          await _db.from('shop_settings').insert({'shop_id': _cachedShopId});
+        }
+      }
+    } catch (e) {
+      print('Error auto-creating shop: $e');
+    }
+    return _cachedShopId;
+  }
 
   // ═══════════════════════════════════════════════════════════
   //  PRODUCTS CRUD
@@ -22,7 +54,7 @@ class DatabaseService {
     
     await _db.from('products').insert({
       'id': map['id'],
-      'user_id': _userId,
+      'shop_id': (await _getShopId()),
       'name': map['name_urdu'] ?? map['name_english'] ?? '',
       'category': map['category'] ?? 'عام',
       'cost_price': map['purchase_price'] ?? 0,
@@ -45,7 +77,7 @@ class DatabaseService {
       'stock': map['stock_quantity'] ?? 0,
       'barcode': (barcodeVal == null || barcodeVal.isEmpty) ? null : barcodeVal,
       'last_updated': DateTime.now().toIso8601String(),
-    }).eq('id', product.id).eq('user_id', _userId!);
+    }).eq('id', product.id).eq('shop_id', (await _getShopId())!);
   }
 
   Future<void> deleteProduct(String id) async {
@@ -54,10 +86,33 @@ class DatabaseService {
   }
 
   Future<List<Product>> getActiveProducts() async {
+    try {
+      final localDb = await LocalDbService.instance.database;
+      final localData = await localDb.query(
+        'local_products',
+        where: 'shop_id = ? AND is_active = 1',
+        whereArgs: [(await _getShopId())!],
+        orderBy: 'name ASC',
+      );
+      if (localData.isNotEmpty) {
+        return localData.map((m) => Product.fromMap({
+          'id': m['id'],
+          'name_urdu': m['name_urdu'] ?? m['name'],
+          'name_english': m['name'],
+          'category': m['category'] ?? 'عام', 
+          'purchase_price': m['purchase_price'] ?? 0,
+          'sale_price': m['sale_price'] ?? 0,
+          'stock_quantity': m['stock_quantity'] ?? 0,
+          'barcode': m['barcode'],
+        })).toList();
+      }
+    } catch (_) {}
+
     final data = await _db
         .from('products')
         .select()
-        .eq('user_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
+        .eq('is_active', true)
         .order('name', ascending: true);
     return (data as List).map((m) => _mapSupabaseToProduct(m)).toList();
   }
@@ -66,7 +121,7 @@ class DatabaseService {
     final data = await _db
         .from('products')
         .select()
-        .eq('user_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .or('name.ilike.%$query%,barcode.ilike.%$query%')
         .order('name', ascending: true);
     return (data as List).map((m) => _mapSupabaseToProduct(m)).toList();
@@ -76,7 +131,7 @@ class DatabaseService {
     final data = await _db
         .from('products')
         .select()
-        .eq('user_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .eq('category', category)
         .order('name', ascending: true);
     return (data as List).map((m) => _mapSupabaseToProduct(m)).toList();
@@ -86,7 +141,7 @@ class DatabaseService {
     final data = await _db
         .from('products')
         .select()
-        .eq('user_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .lte('stock', 5)
         .order('stock', ascending: true);
     return (data as List).map((m) => _mapSupabaseToProduct(m)).toList();
@@ -132,7 +187,7 @@ class DatabaseService {
     final map = customer.toMap();
     await _db.from('customers').insert({
       'id': map['id'],
-      'shopkeeper_id': _userId,
+      'shop_id': (await _getShopId()),
       'name': map['name'],
       'phone': map['phone'] ?? '',
       'balance': 0.0,
@@ -154,7 +209,7 @@ class DatabaseService {
     final data = await _db
         .from('customers')
         .select()
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .order('name', ascending: true);
     return (data as List).map((m) => Customer.fromMap({
       'id': m['id'],
@@ -193,7 +248,7 @@ class DatabaseService {
     // We store transactions in the installments table as a general ledger
     await _db.from('installments').insert({
       'id': map['id'],
-      'shopkeeper_id': _userId,
+      'shop_id': (await _getShopId()),
       'customer_id': map['customer_id'],
       'date': map['date'],
       'amount': (map['debit_amount'] ?? 0) - (map['credit_amount'] ?? 0),
@@ -205,57 +260,186 @@ class DatabaseService {
     await _db.from('customers').update({'balance': newBalance}).eq('id', tx.customerId);
   }
 
+  Future<void> deleteInstallment(String id) async {
+    // Need to adjust customer balance back
+    final tx = await _db.from('installments').select().eq('id', id).maybeSingle();
+    if (tx != null) {
+      final customerId = tx['customer_id'] as String;
+      final amount = (tx['amount'] as num?)?.toDouble() ?? 0;
+      // if positive it was a charge, if negative it was a payment
+      final currentBalance = await getCustomerBalance(customerId);
+      final newBalance = currentBalance - amount;
+      await _db.from('customers').update({'balance': newBalance}).eq('id', customerId);
+    }
+    await _db.from('installments').delete().eq('id', id);
+  }
+
   Future<List<CustomerTransaction>> getCustomerTransactions(String customerId) async {
-    final data = await _db
-        .from('installments')
-        .select()
-        .eq('customer_id', customerId)
-        .order('date', ascending: false);
-    return (data as List).map((m) {
-      final amount = (m['amount'] as num?)?.toDouble() ?? 0;
-      return CustomerTransaction.fromMap({
-        'id': m['id'],
-        'customer_id': m['customer_id'],
-        'date': m['date'] ?? DateTime.now().toIso8601String(),
-        'type': amount >= 0 ? 'DEBIT' : 'CREDIT',
-        'description': m['description'] ?? '',
-        'debit_amount': amount >= 0 ? amount : 0,
-        'credit_amount': amount < 0 ? amount.abs() : 0,
-        'running_balance': 0,
-        'sale_id': '',
-        'payment_method': '',
-        'notes': '',
-        'created_at': m['date'] ?? DateTime.now().toIso8601String(),
-      });
-    }).toList();
+    final salesR = await _db.from('sales').select().eq('customer_id', customerId);
+    final paymentsR = await _db.from('installments').select().eq('customer_id', customerId);
+    
+    final List<CustomerTransaction> combined = [];
+    
+    for (final s in (salesR as List)) {
+      final isUdhaar = s['payment_type'] == 'udhaar';
+      final amount = (s['final_amount'] as num?)?.toDouble() ?? 0;
+      combined.add(CustomerTransaction(
+        id: s['id'],
+        customerId: customerId,
+        date: DateTime.parse(s['date'] ?? DateTime.now().toIso8601String()),
+        type: isUdhaar ? 'CREDIT_SALE' : 'CASH_SALE',
+        description: 'Bill #${s['bill_number'] ?? ''}',
+        debitAmount: amount, // Billed amount
+        saleId: s['id'],
+        hiddenFromCustomer: s['hidden_from_customer'] ?? false,
+      ));
+    }
+    
+    for (final p in (paymentsR as List)) {
+      final amount = (p['amount'] as num?)?.toDouble() ?? 0;
+      final type = p['type'] == 'payment' ? 'PAYMENT_RECEIVED' : 'CHARGE';
+      combined.add(CustomerTransaction(
+        id: p['id'],
+        customerId: customerId,
+        date: DateTime.parse(p['date'] ?? DateTime.now().toIso8601String()),
+        type: type,
+        description: p['description'] ?? '',
+        creditAmount: type == 'PAYMENT_RECEIVED' ? amount : 0,
+        debitAmount: type == 'CHARGE' ? amount : 0,
+        hiddenFromCustomer: false,
+      ));
+    }
+    
+    combined.sort((a, b) => a.date.compareTo(b.date)); // Sort ascending for running balance
+    
+    double running = 0;
+    final List<CustomerTransaction> balanced = [];
+    for (final tx in combined) {
+      running += (tx.debitAmount - tx.creditAmount);
+      balanced.add(CustomerTransaction(
+        id: tx.id,
+        customerId: tx.customerId,
+        date: tx.date,
+        type: tx.type,
+        description: tx.description,
+        debitAmount: tx.debitAmount,
+        creditAmount: tx.creditAmount,
+        runningBalance: running,
+        saleId: tx.saleId,
+        hiddenFromCustomer: tx.hiddenFromCustomer,
+      ));
+    }
+    
+    return balanced.reversed.toList(); // Return descending for UI
   }
 
   Future<List<CustomerTransaction>> getCustomerTransactionsByDateRange(
       String customerId, DateTime start, DateTime end) async {
-    final data = await _db
-        .from('installments')
-        .select()
-        .eq('customer_id', customerId)
-        .gte('date', start.toIso8601String())
-        .lte('date', end.toIso8601String())
-        .order('date', ascending: true);
-    return (data as List).map((m) {
-      final amount = (m['amount'] as num?)?.toDouble() ?? 0;
-      return CustomerTransaction.fromMap({
-        'id': m['id'],
-        'customer_id': m['customer_id'],
-        'date': m['date'] ?? DateTime.now().toIso8601String(),
-        'type': amount >= 0 ? 'DEBIT' : 'CREDIT',
-        'description': m['description'] ?? '',
-        'debit_amount': amount >= 0 ? amount : 0,
-        'credit_amount': amount < 0 ? amount.abs() : 0,
-        'running_balance': 0,
-        'sale_id': '',
-        'payment_method': '',
-        'notes': '',
-        'created_at': m['date'] ?? DateTime.now().toIso8601String(),
-      });
-    }).toList();
+    final salesR = await _db.from('sales').select()
+      .eq('customer_id', customerId)
+      .gte('date', start.toIso8601String())
+      .lte('date', end.toIso8601String());
+      
+    final paymentsR = await _db.from('installments').select()
+      .eq('customer_id', customerId)
+      .gte('date', start.toIso8601String())
+      .lte('date', end.toIso8601String());
+      
+    final List<CustomerTransaction> combined = [];
+    
+    for (final s in (salesR as List)) {
+      final isUdhaar = s['payment_type'] == 'udhaar';
+      final amount = (s['final_amount'] as num?)?.toDouble() ?? 0;
+      combined.add(CustomerTransaction(
+        id: s['id'],
+        customerId: customerId,
+        date: DateTime.parse(s['date'] ?? DateTime.now().toIso8601String()),
+        type: isUdhaar ? 'CREDIT_SALE' : 'CASH_SALE',
+        description: 'Bill #${s['bill_number'] ?? ''}',
+        debitAmount: amount,
+        saleId: s['id'],
+        hiddenFromCustomer: s['hidden_from_customer'] ?? false,
+      ));
+    }
+    
+    for (final p in (paymentsR as List)) {
+      final amount = (p['amount'] as num?)?.toDouble() ?? 0;
+      final type = p['type'] == 'payment' ? 'PAYMENT_RECEIVED' : 'CHARGE';
+      combined.add(CustomerTransaction(
+        id: p['id'],
+        customerId: customerId,
+        date: DateTime.parse(p['date'] ?? DateTime.now().toIso8601String()),
+        type: type,
+        description: p['description'] ?? '',
+        creditAmount: type == 'PAYMENT_RECEIVED' ? amount : 0,
+        debitAmount: type == 'CHARGE' ? amount : 0,
+        hiddenFromCustomer: false,
+      ));
+    }
+    
+    combined.sort((a, b) => a.date.compareTo(b.date)); // Sort ascending for running balance
+    
+    double running = 0;
+    final List<CustomerTransaction> balanced = [];
+    for (final tx in combined) {
+      running += (tx.debitAmount - tx.creditAmount);
+      balanced.add(CustomerTransaction(
+        id: tx.id,
+        customerId: tx.customerId,
+        date: tx.date,
+        type: tx.type,
+        description: tx.description,
+        debitAmount: tx.debitAmount,
+        creditAmount: tx.creditAmount,
+        runningBalance: running,
+        saleId: tx.saleId,
+        hiddenFromCustomer: tx.hiddenFromCustomer,
+      ));
+    }
+    
+    return balanced.reversed.toList();
+  }
+  
+  Future<void> toggleBillVisibility(String saleId, bool isHidden) async {
+    await _db.from('sales').update({'hidden_from_customer': isHidden}).eq('id', saleId);
+  }
+
+  Future<Map<String, dynamic>> getCustomerVisibility(String customerId) async {
+    final data = await _db.from('customer_bill_visibility').select().eq('customer_id', customerId).maybeSingle();
+    if (data == null) {
+      return {'show_udhaar': true, 'show_paid_bills': true, 'show_balance': true}; // Defaults
+    }
+    return data;
+  }
+
+  Future<DateTime?> getCustomerLastActivity(String customerId) async {
+    final customer = await _db.from('customers').select('phone').eq('id', customerId).maybeSingle();
+    final phone = customer?['phone'];
+    if (phone == null || phone.isEmpty) return null;
+    
+    final acc = await _db.from('customer_accounts').select('last_login').eq('phone', phone).maybeSingle();
+    if (acc == null || acc['last_login'] == null) return null;
+    
+    return DateTime.parse(acc['last_login']);
+  }
+
+  Future<void> setCustomerVisibility(String customerId, Map<String, dynamic> settings) async {
+    final shopId = (await _getShopId())!;
+    final payload = {
+      'shop_id': shopId,
+      'customer_id': customerId,
+      'show_udhaar': settings['show_udhaar'] ?? true,
+      'show_paid_bills': settings['show_paid_bills'] ?? true,
+      'show_balance': settings['show_balance'] ?? true,
+    };
+    
+    // Attempt upsert
+    final existing = await _db.from('customer_bill_visibility').select('id').eq('customer_id', customerId).maybeSingle();
+    if (existing != null) {
+      await _db.from('customer_bill_visibility').update(payload).eq('id', existing['id']);
+    } else {
+      await _db.from('customer_bill_visibility').insert(payload);
+    }
   }
 
   Future<double> getCustomerBalance(String customerId) async {
@@ -264,7 +448,7 @@ class DatabaseService {
   }
 
   Future<double> getTotalReceivable() async {
-    final data = await _db.from('customers').select('balance').eq('shopkeeper_id', _userId!);
+    final data = await _db.from('customers').select('balance').eq('shop_id', (await _getShopId())!);
     double total = 0;
     for (final row in (data as List)) {
       final b = (row['balance'] as num?)?.toDouble() ?? 0;
@@ -277,7 +461,7 @@ class DatabaseService {
     final data = await _db
         .from('customers')
         .select()
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .order('balance', ascending: false);
     return (data as List).map((m) => {
       'id': m['id'],
@@ -301,7 +485,7 @@ class DatabaseService {
     final map = supplier.toMap();
     await _db.from('customers').insert({
       'id': map['id'],
-      'shopkeeper_id': _userId,
+      'shop_id': (await _getShopId()),
       'name': 'SUPPLIER:${map['name']}',
       'phone': map['phone'] ?? '',
       'balance': 0.0,
@@ -323,7 +507,7 @@ class DatabaseService {
     final data = await _db
         .from('customers')
         .select()
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .like('name', 'SUPPLIER:%')
         .order('name', ascending: true);
     return (data as List).map((m) => Supplier.fromMap({
@@ -359,7 +543,7 @@ class DatabaseService {
     final map = tx.toMap();
     await _db.from('installments').insert({
       'id': map['id'],
-      'shopkeeper_id': _userId,
+      'shop_id': (await _getShopId()),
       'customer_id': map['supplier_id'],
       'date': map['date'],
       'amount': (map['debit_amount'] ?? 0) - (map['credit_amount'] ?? 0),
@@ -403,7 +587,7 @@ class DatabaseService {
   Future<double> getTotalPayable() async {
     final data = await _db.from('customers')
         .select('balance')
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .like('name', 'SUPPLIER:%');
     double total = 0;
     for (final row in (data as List)) {
@@ -417,7 +601,7 @@ class DatabaseService {
     final data = await _db
         .from('customers')
         .select()
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .like('name', 'SUPPLIER:%')
         .order('balance', ascending: false);
     return (data as List).map((m) => {
@@ -439,10 +623,14 @@ class DatabaseService {
 
   Future<void> insertSale(Sale sale, List<SaleItem> items) async {
     final saleMap = sale.toMap();
-    // Insert sale header
-    await _db.from('sales').insert({
+    final shopId = (await _getShopId())!;
+    final localDb = await LocalDbService.instance.database;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+
+    // 1. Write to local_sales
+    final salesPayload = {
       'id': saleMap['id'],
-      'shopkeeper_id': _userId,
+      'shop_id': shopId,
       'customer_id': saleMap['customer_id'],
       'date': saleMap['date'],
       'total_amount': saleMap['subtotal'] ?? saleMap['total'] ?? 0,
@@ -450,28 +638,96 @@ class DatabaseService {
       'discount_percentage': saleMap['discount_percentage'] ?? 0,
       'final_amount': saleMap['total'] ?? 0,
       'amount_paid': saleMap['amount_paid'] ?? 0,
+      'payment_type': saleMap['payment_type'] ?? 'CASH',
+      'bill_number': saleMap['bill_number'],
+    };
+
+    await localDb.insert('local_sales', {
+      'id': saleMap['id'],
+      'local_id': 'BILL-$nowMs',
+      'shop_id': shopId,
+      'customer_id': saleMap['customer_id'] ?? '',
+      'total_amount': salesPayload['final_amount'],
+      'payment_type': salesPayload['payment_type'],
+      'bill_number': saleMap['bill_number'] ?? '',
+      'created_at': nowMs,
     });
 
-    // Insert sale items
+    await SyncQueue.instance.add(
+      operation: 'insert',
+      tableName: 'sales',
+      recordId: saleMap['id'],
+      payload: salesPayload,
+    );
+
+    // 2. Insert sale items
     for (final item in items) {
       final itemMap = item.toMap();
-      await _db.from('sale_items').insert({
+      final itemPayload = {
         'id': itemMap['id'],
         'sale_id': saleMap['id'],
         'product_id': itemMap['product_id'],
         'quantity': itemMap['quantity'],
         'unit_price': itemMap['sale_price'] ?? 0,
+        'purchase_price': itemMap['purchase_price'] ?? 0,
         'subtotal': (itemMap['quantity'] as num) * ((itemMap['sale_price'] as num?) ?? 0),
+      };
+
+      await localDb.insert('local_sale_items', {
+        'id': itemMap['id'],
+        'sale_id': saleMap['id'],
+        'product_id': itemMap['product_id'],
+        'quantity': itemMap['quantity'],
+        'unit_price': itemMap['sale_price'] ?? 0,
+        'purchase_price': itemMap['purchase_price'] ?? 0,
       });
-      // Decrease stock
-      await updateStock(item.productId, -(item.quantity.toInt()));
+
+      await SyncQueue.instance.add(
+        operation: 'insert',
+        tableName: 'sale_items',
+        recordId: itemMap['id'],
+        payload: itemPayload,
+      );
+
+      // Deduct stock locally
+      await localDb.rawUpdate(
+        'UPDATE local_products SET stock_quantity = stock_quantity - ? WHERE id = ?',
+        [item.quantity.toInt(), item.productId]
+      );
+      
+      // Update Supabase stock (optimistic overwrite for now)
+      final pResult = await localDb.query('local_products', where: 'id = ?', whereArgs: [item.productId]);
+      if (pResult.isNotEmpty) {
+        final newStock = pResult.first['stock_quantity'] as int;
+        await SyncQueue.instance.add(
+          operation: 'update',
+          tableName: 'products',
+          recordId: item.productId,
+          payload: {'stock': newStock, 'last_updated': DateTime.now().toIso8601String()},
+        );
+      }
     }
 
-    // If credit sale, update customer balance
+    // 3. Update customer balance if credit sale
     if (sale.customerId != null && sale.balanceDue > 0) {
-      final currentBalance = await getCustomerBalance(sale.customerId!);
-      final newBalance = currentBalance + sale.balanceDue;
-      await _db.from('customers').update({'balance': newBalance}).eq('id', sale.customerId!);
+      await localDb.rawUpdate(
+        'UPDATE local_customers SET balance = balance + ? WHERE id = ?',
+        [sale.balanceDue, sale.customerId]
+      );
+      
+      final cResult = await localDb.query('local_customers', where: 'id = ?', whereArgs: [sale.customerId]);
+      if (cResult.isNotEmpty) {
+        final newBalance = (cResult.first['balance'] as num).toDouble();
+        await SyncQueue.instance.add(
+          operation: 'update',
+          tableName: 'customers',
+          recordId: sale.customerId!,
+          payload: {'balance': newBalance, 'last_updated': DateTime.now().toIso8601String()},
+        );
+      }
+      
+      // Note: In Supabase we let get_customer_balance calculate it later, 
+      // but for legacy frontend we update the explicit balance column.
     }
   }
 
@@ -515,7 +771,7 @@ class DatabaseService {
     final data = await _db
         .from('sales')
         .select()
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .gte('date', '${dateStr}T00:00:00')
         .lte('date', '${dateStr}T23:59:59')
         .order('date', ascending: false);
@@ -526,7 +782,7 @@ class DatabaseService {
     final data = await _db
         .from('sales')
         .select()
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .gte('date', start.toIso8601String())
         .lte('date', end.toIso8601String())
         .order('date', ascending: false);
@@ -552,7 +808,7 @@ class DatabaseService {
     final data = await _db
         .from('sales')
         .select('final_amount')
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .gte('date', '${today}T00:00:00')
         .lte('date', '${today}T23:59:59');
     double total = 0;
@@ -563,16 +819,35 @@ class DatabaseService {
   }
 
   Future<double> getTodayProfit() async {
-    // 1. Estimate gross profit (using a flat 15% margin for now as placeholder)
-    final sales = await getTodaySales();
-    final grossProfit = sales * 0.15; 
-
-    // 2. Subtract today's expenses to get Net Profit
     final today = AppFormatters.dateISO(DateTime.now());
+    
+    // 1. Get today's sales revenue
+    final sales = await getTodaySales();
+    
+    // 2. Get actual cost of goods sold (from sale_items × product cost_price)
+    final costData = await _db
+        .from('sale_items')
+        .select('quantity, subtotal, sale_id, product_id')
+        .filter('sale_id', 'in', '(SELECT id FROM sales WHERE shop_id = \'$(await _getShopId())\' AND date >= \'${today}T00:00:00\' AND date <= \'${today}T23:59:59\')');
+    
+    // Fallback: calculate cost from products table
+    double totalCost = 0;
+    for (final row in (costData as List)) {
+      final productId = row['product_id'] as String?;
+      final qty = (row['quantity'] as num?)?.toDouble() ?? 0;
+      if (productId != null) {
+        final product = await _db.from('products').select('cost_price').eq('id', productId).maybeSingle();
+        if (product != null) {
+          totalCost += qty * ((product['cost_price'] as num?)?.toDouble() ?? 0);
+        }
+      }
+    }
+
+    // 3. Subtract today's expenses to get Net Profit
     final expensesData = await _db
         .from('expenses')
         .select('amount')
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .gte('date', '${today}T00:00:00')
         .lte('date', '${today}T23:59:59');
         
@@ -581,26 +856,101 @@ class DatabaseService {
       totalExpenses += (row['amount'] as num?)?.toDouble() ?? 0;
     }
 
-    return grossProfit - totalExpenses;
+    return sales - totalCost - totalExpenses;
   }
 
-  Future<List<Map<String, dynamic>>> getWeeklySalesProfit() async {
-    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+  /// Get sales totals for a date range
+  Future<double> getSalesTotalByDateRange(DateTime start, DateTime end) async {
+    final data = await _db
+        .from('sales')
+        .select('final_amount')
+        .eq('shop_id', (await _getShopId())!)
+        .gte('date', start.toIso8601String())
+        .lte('date', '${AppFormatters.dateISO(end)}T23:59:59');
+    double total = 0;
+    for (final row in (data as List)) {
+      total += (row['final_amount'] as num?)?.toDouble() ?? 0;
+    }
+    return total;
+  }
+
+  /// Get cost of goods sold for a date range
+  Future<double> getCostByDateRange(DateTime start, DateTime end) async {
+    final salesData = await _db
+        .from('sales')
+        .select('id')
+        .eq('shop_id', (await _getShopId())!)
+        .gte('date', start.toIso8601String())
+        .lte('date', '${AppFormatters.dateISO(end)}T23:59:59');
     
-    // Fetch Sales
+    double totalCost = 0;
+    for (final sale in (salesData as List)) {
+      final saleId = sale['id'] as String;
+      final items = await _db.from('sale_items').select('quantity, product_id').eq('sale_id', saleId);
+      for (final item in (items as List)) {
+        final productId = item['product_id'] as String?;
+        final qty = (item['quantity'] as num?)?.toDouble() ?? 0;
+        if (productId != null) {
+          final product = await _db.from('products').select('cost_price').eq('id', productId).maybeSingle();
+          if (product != null) {
+            totalCost += qty * ((product['cost_price'] as num?)?.toDouble() ?? 0);
+          }
+        }
+      }
+    }
+    return totalCost;
+  }
+
+  /// Get expenses total for a date range
+  Future<double> getExpenseTotalByDateRange(DateTime start, DateTime end) async {
+    final data = await _db
+        .from('expenses')
+        .select('amount')
+        .eq('shop_id', (await _getShopId())!)
+        .gte('date', start.toIso8601String())
+        .lte('date', '${AppFormatters.dateISO(end)}T23:59:59');
+    double total = 0;
+    for (final row in (data as List)) {
+      total += (row['amount'] as num?)?.toDouble() ?? 0;
+    }
+    return total;
+  }
+
+  /// Get expenses grouped by category for a date range
+  Future<List<Map<String, dynamic>>> getExpensesByCategory(DateTime start, DateTime end) async {
+    final data = await _db
+        .from('expenses')
+        .select()
+        .eq('shop_id', (await _getShopId())!)
+        .gte('date', start.toIso8601String())
+        .lte('date', '${AppFormatters.dateISO(end)}T23:59:59');
+    
+    final Map<String, double> categoryTotals = {};
+    for (final row in (data as List)) {
+      final cat = (row['category'] as String?) ?? 'دیگر';
+      final amt = (row['amount'] as num?)?.toDouble() ?? 0;
+      categoryTotals[cat] = (categoryTotals[cat] ?? 0) + amt;
+    }
+    return categoryTotals.entries.map((e) => {'category': e.key, 'total': e.value}).toList()
+      ..sort((a, b) => (b['total'] as double).compareTo(a['total'] as double));
+  }
+
+  /// Get daily sales breakdown for chart
+  Future<List<Map<String, dynamic>>> getDailySalesBreakdown(DateTime start, DateTime end) async {
     final salesData = await _db
         .from('sales')
         .select('date, final_amount')
-        .eq('shopkeeper_id', _userId!)
-        .gte('date', sevenDaysAgo.toIso8601String())
+        .eq('shop_id', (await _getShopId())!)
+        .gte('date', start.toIso8601String())
+        .lte('date', '${AppFormatters.dateISO(end)}T23:59:59')
         .order('date', ascending: true);
 
-    // Fetch Expenses
     final expensesData = await _db
         .from('expenses')
         .select('date, amount')
-        .eq('shopkeeper_id', _userId!)
-        .gte('date', sevenDaysAgo.toIso8601String());
+        .eq('shop_id', (await _getShopId())!)
+        .gte('date', start.toIso8601String())
+        .lte('date', '${AppFormatters.dateISO(end)}T23:59:59');
 
     final Map<String, double> salesByDay = {};
     for (final row in (salesData as List)) {
@@ -614,19 +964,96 @@ class DatabaseService {
       expensesByDay[day] = (expensesByDay[day] ?? 0) + ((row['amount'] as num?)?.toDouble() ?? 0);
     }
 
-    return salesByDay.entries.map((e) {
-      final day = e.key;
-      final sales = e.value;
-      final grossProfit = sales * 0.15; // placeholder 15% margin
-      final expenses = expensesByDay[day] ?? 0;
-      final netProfit = grossProfit - expenses;
-      
-      return {
-        'day': day,
-        'total_sales': sales,
-        'total_profit': netProfit,
-      };
-    }).toList();
+    // Build list for all days in range
+    final List<Map<String, dynamic>> result = [];
+    DateTime current = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+    while (!current.isAfter(endDay)) {
+      final dayStr = AppFormatters.dateISO(current);
+      result.add({
+        'day': dayStr,
+        'total_sales': salesByDay[dayStr] ?? 0.0,
+        'total_expenses': expensesByDay[dayStr] ?? 0.0,
+      });
+      current = current.add(const Duration(days: 1));
+    }
+    return result;
+  }
+
+  Future<List<Map<String, dynamic>>> getWeeklySalesProfit() async {
+    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+    return getDailySalesBreakdown(sevenDaysAgo, DateTime.now());
+  }
+
+  /// Get count of sales for a date range
+  Future<int> getSalesCountByDateRange(DateTime start, DateTime end) async {
+    final data = await _db
+        .from('sales')
+        .select('id')
+        .eq('shop_id', (await _getShopId())!)
+        .gte('date', start.toIso8601String())
+        .lte('date', '${AppFormatters.dateISO(end)}T23:59:59');
+    return (data as List).length;
+  }
+
+  /// Get top selling products for a date range
+  Future<List<Map<String, dynamic>>> getTopSellingProducts(DateTime start, DateTime end, {int limit = 5}) async {
+    final salesData = await _db
+        .from('sales')
+        .select('id')
+        .eq('shop_id', (await _getShopId())!)
+        .gte('date', start.toIso8601String())
+        .lte('date', '${AppFormatters.dateISO(end)}T23:59:59');
+    
+    final Map<String, double> productSales = {};
+    final Map<String, double> productQty = {};
+    for (final sale in (salesData as List)) {
+      final saleId = sale['id'] as String;
+      final items = await _db.from('sale_items').select('product_id, quantity, subtotal').eq('sale_id', saleId);
+      for (final item in (items as List)) {
+        final pid = item['product_id'] as String;
+        productSales[pid] = (productSales[pid] ?? 0) + ((item['subtotal'] as num?)?.toDouble() ?? 0);
+        productQty[pid] = (productQty[pid] ?? 0) + ((item['quantity'] as num?)?.toDouble() ?? 0);
+      }
+    }
+    
+    final sorted = productSales.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final topEntries = sorted.take(limit);
+    
+    final List<Map<String, dynamic>> result = [];
+    for (final entry in topEntries) {
+      final product = await _db.from('products').select('name').eq('id', entry.key).maybeSingle();
+      result.add({
+        'product_id': entry.key,
+        'name': product?['name'] ?? 'Unknown',
+        'total_sold': productQty[entry.key] ?? 0,
+        'total_revenue': entry.value,
+      });
+    }
+    return result;
+  }
+
+  /// Get stock valuation summary
+  Future<Map<String, dynamic>> getStockValuation() async {
+    final data = await _db.from('products').select('stock, cost_price, sale_price').eq('shop_id', (await _getShopId())!);
+    int totalItems = 0;
+    double costValue = 0;
+    double saleValue = 0;
+    for (final row in (data as List)) {
+      final stock = (row['stock'] as num?)?.toDouble() ?? 0;
+      final cost = (row['cost_price'] as num?)?.toDouble() ?? 0;
+      final sale = (row['sale_price'] as num?)?.toDouble() ?? 0;
+      totalItems += stock.toInt();
+      costValue += stock * cost;
+      saleValue += stock * sale;
+    }
+    return {
+      'total_products': (data as List).length,
+      'total_units': totalItems,
+      'cost_value': costValue,
+      'sale_value': saleValue,
+      'potential_profit': saleValue - costValue,
+    };
   }
 
   Future<double> getCashInHand() async {
@@ -634,7 +1061,7 @@ class DatabaseService {
     final salesData = await _db
         .from('sales')
         .select('amount_paid')
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .eq('payment_type', 'CASH');
         
     double totalCashIn = 0;
@@ -646,7 +1073,7 @@ class DatabaseService {
     final expensesData = await _db
         .from('expenses')
         .select('amount')
-        .eq('shopkeeper_id', _userId!);
+        .eq('shop_id', (await _getShopId())!);
         
     double totalExpenses = 0;
     for (final row in (expensesData as List)) {
@@ -660,13 +1087,13 @@ class DatabaseService {
     final data = await _db
         .from('expenses')
         .select()
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .order('date', ascending: false);
     return (data as List).cast<Map<String, dynamic>>();
   }
 
   Future<void> insertExpenseRaw(Map<String, dynamic> expense) async {
-    expense['shopkeeper_id'] = _userId;
+    expense['shop_id'] = (await _getShopId());
     await _db.from('expenses').insert(expense);
   }
 
@@ -695,13 +1122,36 @@ class DatabaseService {
 
   Future<void> insertExpense(Expense expense) async {
     final map = expense.toMap();
-    await _db.from('expenses').insert({
+    final shopId = (await _getShopId())!;
+    final nowMs = DateTime.now().millisecondsSinceEpoch;
+    
+    final payload = {
       'id': map['id'],
-      'shopkeeper_id': _userId,
-      'date': map['date'],
+      'shop_id': shopId,
+      'title': map['title'],
       'amount': map['amount'] ?? 0,
-      'description': '${map['category'] ?? ''}: ${map['description'] ?? ''}',
+      'category': map['category'] ?? 'General',
+      'date': map['date'],
+    };
+
+    final localDb = await LocalDbService.instance.database;
+    await localDb.insert('local_expenses', {
+      'id': map['id'],
+      'local_id': 'EXP-$nowMs',
+      'shop_id': shopId,
+      'title': payload['title'],
+      'amount': payload['amount'],
+      'category': payload['category'],
+      'expense_date': payload['date'],
+      'created_at': nowMs,
     });
+
+    await SyncQueue.instance.add(
+      operation: 'insert',
+      tableName: 'expenses',
+      recordId: map['id'],
+      payload: payload,
+    );
   }
 
   Future<void> deleteExpense(String id) async {
@@ -713,7 +1163,7 @@ class DatabaseService {
     final data = await _db
         .from('expenses')
         .select()
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .gte('date', '${dateStr}T00:00:00')
         .lte('date', '${dateStr}T23:59:59')
         .order('date', ascending: false);
@@ -732,7 +1182,7 @@ class DatabaseService {
     final data = await _db
         .from('expenses')
         .select('amount')
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .gte('date', '${today}T00:00:00')
         .lte('date', '${today}T23:59:59');
     double total = 0;
@@ -749,7 +1199,7 @@ class DatabaseService {
     final data = await _db
         .from('expenses')
         .select('amount')
-        .eq('shopkeeper_id', _userId!)
+        .eq('shop_id', (await _getShopId())!)
         .gte('date', startDate)
         .lte('date', endDate);
     double total = 0;
@@ -781,11 +1231,11 @@ class DatabaseService {
 
   Future<Map<String, dynamic>> exportAllData() async {
     return {
-      'products': await _db.from('products').select().eq('user_id', _userId!),
-      'customers': await _db.from('customers').select().eq('shopkeeper_id', _userId!),
-      'sales': await _db.from('sales').select().eq('shopkeeper_id', _userId!),
-      'expenses': await _db.from('expenses').select().eq('shopkeeper_id', _userId!),
-      'installments': await _db.from('installments').select().eq('shopkeeper_id', _userId!),
+      'products': await _db.from('products').select().eq('shop_id', (await _getShopId())!),
+      'customers': await _db.from('customers').select().eq('shop_id', (await _getShopId())!),
+      'sales': await _db.from('sales').select().eq('shop_id', (await _getShopId())!),
+      'expenses': await _db.from('expenses').select().eq('shop_id', (await _getShopId())!),
+      'installments': await _db.from('installments').select().eq('shop_id', (await _getShopId())!),
       'exported_at': DateTime.now().toIso8601String(),
     };
   }
@@ -823,7 +1273,7 @@ class DatabaseService {
   Future<void> insertInstallment(Map<String, dynamic> data) async {
     await _db.from('installments').insert({
       'id': data['id'],
-      'shopkeeper_id': _userId,
+      'shop_id': (await _getShopId()),
       'customer_id': data['customer_id'],
       'date': data['date'],
       'amount': data['total_amount'] ?? data['amount'] ?? 0,

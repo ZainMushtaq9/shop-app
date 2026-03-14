@@ -133,7 +133,21 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                         },
                       );
                     },
-                    loading: () => const Center(child: CircularProgressIndicator()),
+                    loading: () => GridView.builder(
+                      padding: const EdgeInsets.all(AppDimens.spacingMD),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 1.5,
+                        crossAxisSpacing: 8,
+                        mainAxisSpacing: 8,
+                      ),
+                      itemCount: 8,
+                      itemBuilder: (_, __) => const CustomSkeleton(
+                        width: double.infinity,
+                        height: double.infinity,
+                        borderRadius: 12,
+                      ),
+                    ),
                     error: (_, __) => Center(child: Text(AppStrings.error)),
                   ),
                 ),
@@ -310,6 +324,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     DateTime selectedDate = DateTime.now();
     bool isWalkIn = _selectedCustomerId == null;
     final totalWithoutDiscount = _subtotal + _taxAmount;
+    String localPaymentType = _paymentType;
+    double partialAmountReceived = 0;
+    final partialController = TextEditingController();
     
     showDialog(
       context: context,
@@ -318,23 +335,29 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           builder: (context, setStateBuilder) {
             double currentTotal = totalWithoutDiscount - discountAmount;
             if (currentTotal < 0) currentTotal = 0;
+            
+            double amountPaid = localPaymentType == 'CASH' ? currentTotal
+                : localPaymentType == 'PARTIAL' ? partialAmountReceived
+                : 0;
+            double balanceDue = currentTotal - amountPaid;
+            if (balanceDue < 0) balanceDue = 0;
 
             return AlertDialog(
-              title: Text('Checkout Summary', style: AppTextStyles.title),
+              title: Text(AppStrings.isUrdu ? 'بل تفصیل' : 'Checkout Summary', style: AppTextStyles.title),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Walk-in Toggle
                     SwitchListTile(
-                      title: Text('Walk-in Customer (No Phone)', style: AppTextStyles.body),
+                      title: Text(AppStrings.isUrdu ? 'عام گاہک (بغیر فون)' : 'Walk-in Customer (No Phone)', style: AppTextStyles.body),
                       value: isWalkIn,
                       onChanged: (val) => setStateBuilder(() => isWalkIn = val),
                     ),
                     const Divider(),
                     // Date picker
                     ListTile(
-                      title: Text('Date: ${AppFormatters.date(selectedDate)}'),
+                      title: Text('${AppStrings.isUrdu ? "تاریخ" : "Date"}: ${AppFormatters.date(selectedDate)}'),
                       trailing: const Icon(Icons.calendar_today),
                       onTap: () async {
                         final picked = await showDatePicker(
@@ -353,7 +376,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                         Expanded(
                           child: SwitchListTile(
                             contentPadding: EdgeInsets.zero,
-                            title: Text('Discount in %', style: AppTextStyles.body),
+                            title: Text(AppStrings.isUrdu ? '% میں چھوٹ' : 'Discount in %', style: AppTextStyles.body),
                             value: isPercentage,
                             onChanged: (val) {
                               setStateBuilder(() {
@@ -369,7 +392,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                     TextField(
                       keyboardType: const TextInputType.numberWithOptions(decimal: true),
                       decoration: InputDecoration(
-                        labelText: isPercentage ? 'Discount Percentage (%)' : 'Discount Amount (Rs)',
+                        labelText: isPercentage
+                          ? (AppStrings.isUrdu ? 'چھوٹ فی صد (%)' : 'Discount Percentage (%)')
+                          : (AppStrings.isUrdu ? 'چھوٹ رقم (Rs)' : 'Discount Amount (Rs)'),
                         prefixIcon: Icon(isPercentage ? Icons.percent : Icons.money_off),
                       ),
                       onChanged: (val) {
@@ -386,15 +411,94 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       },
                     ),
                     const SizedBox(height: 16),
+                    
+                    // ═══ PAYMENT TYPE ═══
+                    Text(
+                      AppStrings.isUrdu ? 'ادائیگی کا طریقہ' : 'Payment Method',
+                      style: AppTextStyles.subtitle,
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _paymentChip('CASH', AppStrings.isUrdu ? '💵 نقد' : '💵 Cash', localPaymentType, AppColors.moneyReceived, (v) => setStateBuilder(() => localPaymentType = v)),
+                        const SizedBox(width: 6),
+                        _paymentChip('CREDIT', AppStrings.isUrdu ? '📋 ادھار' : '📋 Udhaar', localPaymentType, AppColors.moneyOwed, (v) => setStateBuilder(() => localPaymentType = v)),
+                        const SizedBox(width: 6),
+                        _paymentChip('PARTIAL', AppStrings.isUrdu ? '➗ جزوی' : '➗ Partial', localPaymentType, AppColors.warning, (v) => setStateBuilder(() => localPaymentType = v)),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // ═══ PARTIAL PAYMENT AMOUNT ═══
+                    if (localPaymentType == 'PARTIAL') ...[
+                      TextField(
+                        controller: partialController,
+                        keyboardType: TextInputType.number,
+                        decoration: InputDecoration(
+                          labelText: AppStrings.isUrdu ? 'کتنا موصول ہوا (Rs)' : 'Amount Received (Rs)',
+                          prefixText: 'Rs. ',
+                          prefixIcon: const Icon(Icons.payments_rounded),
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(color: AppColors.warning, width: 2),
+                          ),
+                        ),
+                        onChanged: (val) {
+                          setStateBuilder(() {
+                            partialAmountReceived = double.tryParse(val) ?? 0;
+                            if (partialAmountReceived > currentTotal) partialAmountReceived = currentTotal;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppColors.moneyOwed.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(AppStrings.isUrdu ? 'باقی رقم:' : 'Balance Due:', style: AppTextStyles.body.copyWith(color: AppColors.moneyOwed)),
+                            Text(AppFormatters.currency(balanceDue), style: AppTextStyles.amountSmall.copyWith(color: AppColors.moneyOwed)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    
                     // Final Total
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(color: AppColors.surfaceVariant, borderRadius: BorderRadius.circular(8)),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      child: Column(
                         children: [
-                          Text('Final Total:', style: AppTextStyles.title),
-                          Text(AppFormatters.currency(currentTotal), style: AppTextStyles.amountMedium.copyWith(color: AppColors.primary)),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(AppStrings.isUrdu ? 'کل رقم:' : 'Final Total:', style: AppTextStyles.title),
+                              Text(AppFormatters.currency(currentTotal), style: AppTextStyles.amountMedium.copyWith(color: AppColors.primary)),
+                            ],
+                          ),
+                          if (localPaymentType != 'CASH') ...[
+                            const SizedBox(height: 4),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(AppStrings.isUrdu ? 'ادا:' : 'Paid:', style: AppTextStyles.caption),
+                                Text(AppFormatters.currency(amountPaid), style: AppTextStyles.caption.copyWith(color: AppColors.moneyReceived)),
+                              ],
+                            ),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(AppStrings.isUrdu ? 'باقی:' : 'Due:', style: AppTextStyles.caption.copyWith(fontWeight: FontWeight.bold)),
+                                Text(AppFormatters.currency(balanceDue), style: AppTextStyles.caption.copyWith(color: AppColors.moneyOwed, fontWeight: FontWeight.bold)),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
                     ),
@@ -407,9 +511,10 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                   onPressed: () {
                     Navigator.pop(ctx);
                     if (isWalkIn) _selectedCustomerId = null;
-                    _finalizeSale(selectedDate, discountAmount, discountPercentage, currentTotal);
+                    setState(() => _paymentType = localPaymentType);
+                    _finalizeSaleWithPayment(selectedDate, discountAmount, discountPercentage, currentTotal, amountPaid, balanceDue);
                   },
-                  child: Text('Confirm Sale'),
+                  child: Text(AppStrings.isUrdu ? 'بل بنائیں' : 'Confirm Sale'),
                 ),
               ],
             );
@@ -419,7 +524,34 @@ class _PosScreenState extends ConsumerState<PosScreen> {
     );
   }
 
+  Widget _paymentChip(String value, String label, String selected, Color color, Function(String) onSelect) {
+    final isSelected = selected == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => onSelect(value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(
+            color: isSelected ? color.withOpacity(0.15) : AppColors.surface,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: isSelected ? color : AppColors.divider, width: isSelected ? 2 : 1),
+          ),
+          child: Center(
+            child: Text(label, style: TextStyle(fontSize: 12, color: isSelected ? color : AppColors.textSecondary, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+          ),
+        ),
+      ),
+    );
+  }
+
   Future<void> _finalizeSale(DateTime date, double discountAmount, double discountPercentage, double finalTotal) async {
+    // backward-compat: redirect to the new method
+    double amountPaid = _paymentType == 'CASH' ? finalTotal : 0;
+    double balanceDue = finalTotal - amountPaid;
+    await _finalizeSaleWithPayment(date, discountAmount, discountPercentage, finalTotal, amountPaid, balanceDue);
+  }
+
+  Future<void> _finalizeSaleWithPayment(DateTime date, double discountAmount, double discountPercentage, double finalTotal, double amountPaid, double balanceDue) async {
     final db = ref.read(databaseProvider);
     final saleItems = _cart.map((item) => SaleItem(
       saleId: '',
@@ -437,18 +569,13 @@ class _PosScreenState extends ConsumerState<PosScreen> {
       discountPercentage: discountPercentage,
       tax: _taxAmount,
       total: finalTotal,
-      profit: _totalProfit - discountAmount, // Profit reduces with discount
+      profit: _totalProfit - discountAmount,
       paymentType: _paymentType,
-      amountPaid: _paymentType == 'CASH' ? finalTotal : 0,
-      balanceDue: _paymentType == 'CASH' ? 0 : finalTotal,
+      amountPaid: amountPaid,
+      balanceDue: balanceDue,
       customerId: _selectedCustomerId,
     );
 
-    // Update the fake saleId with the generated one
-    for (var i = 0; i < saleItems.length; i++) {
-       // Cannot modify final saleId natively, but database insert handles children properly if we do it normally.
-       // The DB service needs items to have the parent ID.
-    }
     final linkedItems = saleItems.map((item) => SaleItem(
       saleId: sale.id,
       productId: item.productId,

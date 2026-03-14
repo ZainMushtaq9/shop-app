@@ -7,6 +7,7 @@ import '../../utils/constants.dart';
 import '../../models/models.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/global_app_bar.dart';
+import '../../widgets/skeleton_loader.dart';
 
 /// Supplier list screen showing all suppliers with "you owe" amounts.
 class SupplierListScreen extends ConsumerWidget {
@@ -144,7 +145,14 @@ class SupplierListScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: AppDimens.spacingSM, horizontal: AppDimens.spacingMD),
+                itemCount: 6,
+                itemBuilder: (_, __) => const Padding(
+                  padding: EdgeInsets.only(bottom: AppDimens.spacingSM),
+                  child: CustomSkeleton(width: double.infinity, height: 72, borderRadius: 12),
+                ),
+              ),
               error: (_, __) => Center(child: Text(AppStrings.error)),
             ),
           ),
@@ -365,7 +373,14 @@ class _SupplierDetailScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => ListView.builder(
+                padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingMD),
+                itemCount: 3,
+                itemBuilder: (_, __) => const Padding(
+                  padding: EdgeInsets.only(bottom: AppDimens.spacingSM),
+                  child: CustomSkeleton(width: double.infinity, height: 60, borderRadius: 8),
+                ),
+              ),
               error: (_, __) => Center(child: Text(AppStrings.error)),
             ),
           ),

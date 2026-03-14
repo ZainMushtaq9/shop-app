@@ -5,6 +5,7 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../models/models.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/skeleton_loader.dart';
 import 'customer_detail_screen.dart';
 
 /// Customer list screen showing all buyers with their balance.
@@ -164,7 +165,14 @@ class CustomerListScreen extends ConsumerWidget {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+              loading: () => ListView.builder(
+                padding: const EdgeInsets.symmetric(vertical: AppDimens.spacingSM, horizontal: AppDimens.spacingMD),
+                itemCount: 6,
+                itemBuilder: (_, __) => const Padding(
+                  padding: EdgeInsets.only(bottom: AppDimens.spacingSM),
+                  child: CustomSkeleton(width: double.infinity, height: 72, borderRadius: 12),
+                ),
+              ),
               error: (_, __) => Center(child: Text(AppStrings.error)),
             ),
           ),

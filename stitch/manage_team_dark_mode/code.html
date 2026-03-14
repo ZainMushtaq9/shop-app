@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006a75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0d1b2a",
+                        "card-dark": "#1a2a3a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<title>Manage Team - Super Business Shop</title>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Header Navigation -->
+<header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-primary/20">
+<div class="flex items-center p-4 justify-between max-w-2xl mx-auto w-full">
+<div class="flex items-center gap-3">
+<button class="flex size-10 items-center justify-center rounded-full hover:bg-slate-200 dark:hover:bg-primary/20 transition-colors">
+<span class="material-symbols-outlined text-slate-900 dark:text-slate-100">arrow_back</span>
+</button>
+<h1 class="text-xl font-bold tracking-tight">Manage Team</h1>
+</div>
+<button class="flex items-center justify-center p-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors gap-2 px-4">
+<span class="material-symbols-outlined text-sm">person_add</span>
+<span class="text-sm font-semibold">Invite Co-Helper</span>
+</button>
+</div>
+</header>
+<main class="flex-1 max-w-2xl mx-auto w-full p-4 space-y-6">
+<!-- Search and Filter -->
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full bg-white dark:bg-card-dark border-slate-200 dark:border-primary/20 rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all" placeholder="Search members..." type="text"/>
+</div>
+<!-- Section Title -->
+<div class="flex items-center justify-between">
+<h2 class="text-lg font-bold">Team Members <span class="text-sm font-normal text-slate-500 dark:text-primary/60 ml-2">4 Active</span></h2>
+</div>
+<!-- Team List -->
+<div class="space-y-3">
+<!-- Team Member 1 (Owner) -->
+<div class="flex items-center gap-4 bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-primary/10 shadow-sm">
+<div class="relative shrink-0">
+<div class="size-14 rounded-full bg-cover bg-center border-2 border-primary" data-alt="Professional headshot of Alex Johnson" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAY1Sdh-l4L_jptd9_GDi9-2P6wau-8U2-MMn1lk7J-R1FeQiXVbfkJCNCou22MdUSmiJxR6UquL8-rxnA5sCM2A9zNDdv_TpLtUpwsBhIzmFWvID8DP6kJ_UFSuZ7LKxp36SuwxYpcJoBrGJPvv7rQ0Da9Y6GoNlVirBMz4vwibl6kyxdghNZZt8f2qIAt19VZ387nHKYd0NakJjPnp1GeDL2FUGx-xkzJe9Fk1sOGkCB2T0TrfGDi9rv4vEUl1kpa1KcVgbssXU-N");'></div>
+<div class="absolute bottom-0 right-0 size-4 bg-green-500 border-2 border-card-dark rounded-full"></div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-base font-semibold truncate">Alex Johnson (You)</p>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">alex.j@superbusiness.com</p>
+</div>
+<div class="shrink-0">
+<span class="px-3 py-1 rounded-full text-xs font-bold bg-primary text-white uppercase tracking-wider">Owner</span>
+</div>
+</div>
+<!-- Team Member 2 -->
+<div class="flex items-center gap-4 bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-primary/10 shadow-sm">
+<div class="relative shrink-0">
+<div class="size-14 rounded-full bg-cover bg-center" data-alt="Portrait of Sarah Smith team admin" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAw8r8rvBZcsXyvQZ5s9u9kAwvujmaTZZIjBxaifjVraNY6R61DdydgJF4SOjcj8TTqE9nahMsq-WBLt7bMuAOG0q04aYvVoYPhaalGtCMndUAmkgOtdVdTZHD0AMfPN7p9ACb7WInoeE2XpdP9Y8S8ItyHDZgiszL12XOLdS89QP1uvVUi_0OvEV1DH-uLCYcv-xBN4wMmuKN5z7-9kBU7-9IFZTf6v6GLgIXCfGg61VB7vEJbl8p4mUjlfEkLHjv2PCOIPTLHDZAV");'></div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-base font-semibold truncate">Sarah Smith</p>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">sarah.s@superbusiness.com</p>
+</div>
+<div class="shrink-0">
+<span class="px-3 py-1 rounded-full text-xs font-bold bg-primary/20 text-primary border border-primary/30 uppercase tracking-wider">Admin</span>
+</div>
+</div>
+<!-- Team Member 3 -->
+<div class="flex items-center gap-4 bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-primary/10 shadow-sm">
+<div class="relative shrink-0">
+<div class="size-14 rounded-full bg-cover bg-center" data-alt="Profile photo of Marcus Chen helper" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCR4ZugAz1xmB2yWykTfsFOpUS2JeI38DV8P-xNZpEF2SCGf-AuX8EYixJdzOT897omfu7JxHOjOf8zdkXoLUWGutaX7jnoc_nuJkmK-6fvSqO4xGLRymfay_AxGIqrTLAq2ROZHsFBiP2xnpoizvU7wtjIdKEQOs5DWffAEnTdCi4-zrWN-REDmJPPFB5U110rQSSVlYTpek3TX-RUqdzAIPwabBRKtn_aZw-IeNq398KjJVpy3qzXlJR2S3fFum0wR7QvvDbNqIWl");'></div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-base font-semibold truncate">Marcus Chen</p>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">marcus.c@superbusiness.com</p>
+</div>
+<div class="shrink-0">
+<span class="px-3 py-1 rounded-full text-xs font-bold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 uppercase tracking-wider">Helper</span>
+</div>
+</div>
+<!-- Team Member 4 -->
+<div class="flex items-center gap-4 bg-white dark:bg-card-dark p-4 rounded-xl border border-slate-200 dark:border-primary/10 shadow-sm opacity-80">
+<div class="relative shrink-0">
+<div class="size-14 rounded-full bg-cover bg-center filter grayscale" data-alt="Avatar for pending invitation Jordan Lee" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCN2EKJJJDd4fYKIy4CAu7knVihwUUUIOrhhBjJY5odPg0mtZyCNuEc0jY0YH8IjXt-wFHoEf3-xtHRIdKy_vmK1WSeewzR79hCWmW09mOY7UQsz8piqD3SML3hOImLRUa-IJVp5ug3XfSolxv-_aIdOt9ju1STkDY6u_0lcocUXT7V_0im2r_ddDg8uI4SzYxvuPMoJoPsjP1y3tjRgbvMINylGEDtdwv1PcHxhRCrMGcnHWfASE4v9nGoEJwqBoTOtozKPf2L96pG");'></div>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-base font-semibold truncate italic">Jordan Lee (Pending)</p>
+<p class="text-sm text-slate-500 dark:text-slate-400 truncate">jordan.l@external.com</p>
+</div>
+<div class="shrink-0 flex gap-2">
+<button class="p-1 hover:text-red-500 transition-colors">
+<span class="material-symbols-outlined text-xl">cancel</span>
+</button>
+<span class="px-3 py-1 rounded-full text-xs font-bold bg-yellow-500/20 text-yellow-500 border border-yellow-500/30 uppercase tracking-wider">Invite Sent</span>
+</div>
+</div>
+</div>
+<!-- Permissions Note -->
+<div class="p-4 rounded-xl bg-primary/5 border border-primary/20 mt-4">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary">info</span>
+<p class="text-sm text-slate-600 dark:text-slate-300">As the <strong class="text-primary">Owner</strong>, you can manage billing, store settings, and change roles of all team members.</p>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="sticky bottom-0 w-full border-t border-slate-200 dark:border-primary/20 bg-white dark:bg-card-dark pb-safe-area">
+<div class="flex max-w-2xl mx-auto px-4 py-2">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">storefront</span>
+<p class="text-xs font-medium">Shop</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">bar_chart</span>
+<p class="text-xs font-medium">Analytics</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">group</span>
+<p class="text-xs font-bold">Team</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-500 dark:text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-xs font-medium">Settings</p>
+</a>
+</div>
+</nav>
+<style>
+        .pb-safe-area {
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+    </style>
+</body></html>

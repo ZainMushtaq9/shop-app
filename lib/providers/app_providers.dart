@@ -78,6 +78,12 @@ final customerTransactionsProvider =
   return await db.getCustomerTransactions(customerId);
 });
 
+final customerLastActivityProvider =
+    FutureProvider.family<DateTime?, String>((ref, customerId) async {
+  final db = ref.read(databaseProvider);
+  return await db.getCustomerLastActivity(customerId);
+});
+
 // ═══════════════════════════════════════════════════════════
 //  SUPPLIERS PROVIDERS
 // ═══════════════════════════════════════════════════════════

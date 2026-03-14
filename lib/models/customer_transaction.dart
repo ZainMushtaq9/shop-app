@@ -14,6 +14,7 @@ class CustomerTransaction {
   final String? saleId;      // FK to sales table (if linked to a bill)
   final String? paymentMethod; // CASH, BANK_TRANSFER, OTHER
   final String? notes;
+  final bool hiddenFromCustomer;
   final DateTime createdAt;
 
   CustomerTransaction({
@@ -28,6 +29,7 @@ class CustomerTransaction {
     this.saleId,
     this.paymentMethod,
     this.notes,
+    this.hiddenFromCustomer = false,
     DateTime? createdAt,
   })  : id = id ?? const Uuid().v4(),
         date = date ?? DateTime.now(),
@@ -75,6 +77,7 @@ class CustomerTransaction {
       'sale_id': saleId,
       'payment_method': paymentMethod,
       'notes': notes,
+      'hidden_from_customer': hiddenFromCustomer ? 1 : 0,
       'created_at': createdAt.toIso8601String(),
     };
   }
@@ -92,6 +95,7 @@ class CustomerTransaction {
       saleId: map['sale_id'] as String?,
       paymentMethod: map['payment_method'] as String?,
       notes: map['notes'] as String?,
+      hiddenFromCustomer: (map['hidden_from_customer'] == 1 || map['hidden_from_customer'] == true),
       createdAt: DateTime.parse(map['created_at'] as String),
     );
   }
