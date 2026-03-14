@@ -195,10 +195,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     // Logo Header
                     Container(
-                      width: 96,
-                      height: 96,
+                      width: 120,
+                      height: 120,
                       decoration: BoxDecoration(
-                        color: AppColors.primary,
+                        color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
@@ -208,16 +208,25 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ],
                       ),
-                      child: const Center(
-                        child: Icon(Icons.storefront_outlined, size: 56, color: Colors.white),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Image.asset(
+                          'assets/logo.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) {
+                            return const Center(
+                              child: Icon(Icons.storefront_outlined, size: 56, color: AppColors.primary),
+                            );
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(height: AppDimens.spacingMD),
                     Text(
-                      'سپر بزنس شاپ',
+                      'حساب کرو',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.urduHeading.copyWith(
-                        fontSize: 32,
+                        fontSize: 40,
                         color: AppColors.primary,
                         fontWeight: FontWeight.w900,
                         height: 1.2,
@@ -225,11 +234,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Super Business Shop',
+                      'HisaabKaro',
                       textAlign: TextAlign.center,
                       style: AppTextStyles.title.copyWith(
                         color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
                       ),
                     ),
                     const SizedBox(height: AppDimens.spacingXL),

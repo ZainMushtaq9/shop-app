@@ -5,13 +5,9 @@ import 'l10n/app_strings.dart';
 import 'providers/app_providers.dart';
 
 import 'package:flutter/foundation.dart';
-import 'dart:io' as io;
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
 import 'screens/auth/login_screen.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'core/ads/ad_service.dart';
-import 'core/ads/adsense_widget.dart';
 import 'screens/app_shell.dart';
 import 'screens/customer_portal/portal_login_screen.dart';
 
@@ -23,15 +19,6 @@ void main() async {
     url: 'https://wzypjlnexfmkghwmhyrf.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6eXBqbG5leGZta2dod21oeXJmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMzMDQ5MTEsImV4cCI6MjA4ODg4MDkxMX0.iM1faqxzH6sA-JhvweKHWDNqDxLqvsDaHpaFRi1LdEM',
   );
-
-  await AdService.init();
-  registerAdSenseViews();
-
-  // Initialize desktop SQLite compatibility
-  if (!kIsWeb && (io.Platform.isWindows || io.Platform.isLinux || io.Platform.isMacOS)) {
-    sqfliteFfiInit();
-    databaseFactory = databaseFactoryFfi;
-  }
 
   runApp(
     const ProviderScope(
