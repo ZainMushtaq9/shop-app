@@ -12,6 +12,8 @@ import 'screens/auth/login_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/ads/ad_service.dart';
 import 'core/ads/adsense_widget.dart';
+import 'screens/app_shell.dart';
+import 'screens/customer_portal/portal_login_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -57,8 +59,24 @@ class ShopApp extends ConsumerWidget {
       builder: (context, child) {
         return Directionality(
           textDirection: isUrdu ? TextDirection.rtl : TextDirection.ltr,
-          child: child!,
+          child: Semantics(
+            // Enable semantics to help Playwright find text inputs
+            scopesRoute: true,
+            namesRoute: true,
+            child: child!,
+          ),
         );
+      },
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const LoginScreen(),
+        '/dashboard': (context) => const AppShell(),
+        '/pos': (context) => const AppShell(),
+        '/inventory': (context) => const AppShell(),
+        '/customers': (context) => const AppShell(),
+        '/reports': (context) => const AppShell(),
+        '/settings': (context) => const AppShell(),
+        '/customer/login': (context) => const PortalLoginScreen(),
       },
     );
   }

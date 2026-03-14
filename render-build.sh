@@ -22,6 +22,6 @@ flutter pub get
 
 # 4. Build the web app
 echo "Building Flutter Web application..."
-flutter build web --release
+flutter build web --release --web-renderer html
 
 echo "Build complete! Output is in build/web"
