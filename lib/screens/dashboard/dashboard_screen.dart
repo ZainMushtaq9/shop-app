@@ -5,6 +5,7 @@ import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/skeleton_loader.dart';
 
 /// Dashboard — the main home screen showing today's summary.
 /// Matches the dashboard layout from Section 09 of requirements:
