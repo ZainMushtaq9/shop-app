@@ -55,7 +55,8 @@ class DatabaseService {
     await _db.from('products').insert({
       'id': map['id'],
       'shop_id': (await _getShopId()),
-      'name': map['name_urdu'] ?? map['name_english'] ?? '',
+      'name_en': map['name_english'] ?? map['name_urdu'] ?? '',
+      'name_ur': map['name_urdu'] ?? '',
       'category': map['category'] ?? 'عام',
       'cost_price': map['purchase_price'] ?? 0,
       'sale_price': map['sale_price'] ?? 0,
@@ -70,7 +71,8 @@ class DatabaseService {
     final barcodeVal = map['barcode']?.toString().trim();
     
     await _db.from('products').update({
-      'name': map['name_urdu'] ?? map['name_english'] ?? '',
+      'name_en': map['name_english'] ?? map['name_urdu'] ?? '',
+      'name_ur': map['name_urdu'] ?? '',
       'category': map['category'] ?? 'عام',
       'cost_price': map['purchase_price'] ?? 0,
       'sale_price': map['sale_price'] ?? 0,
@@ -164,8 +166,8 @@ class DatabaseService {
   Product _mapSupabaseToProduct(Map<String, dynamic> m) {
     return Product.fromMap({
       'id': m['id'],
-      'name_urdu': m['name'] ?? '',
-      'name_english': m['name'] ?? '',
+      'name_urdu': m['name_ur'] ?? m['name_en'] ?? '',
+      'name_english': m['name_en'] ?? '',
       'category': m['category'] ?? 'عام',
       'purchase_price': m['cost_price'] ?? 0,
       'sale_price': m['sale_price'] ?? 0,
@@ -281,8 +283,8 @@ class DatabaseService {
     final List<CustomerTransaction> combined = [];
     
     for (final s in (salesR as List)) {
-      final isUdhaar = s['payment_type'] == 'udhaar';
-      final amount = (s['final_amount'] as num?)?.toDouble() ?? 0;
+      final isUdhaar = (s['payment_type'] ?? '').toString().toUpperCase() == 'UDHAAR';
+      final amount = (s['total'] as num?)?.toDouble() ?? 0;
       combined.add(CustomerTransaction(
         id: s['id'],
         customerId: customerId,
@@ -348,8 +350,8 @@ class DatabaseService {
     final List<CustomerTransaction> combined = [];
     
     for (final s in (salesR as List)) {
-      final isUdhaar = s['payment_type'] == 'udhaar';
-      final amount = (s['final_amount'] as num?)?.toDouble() ?? 0;
+      final isUdhaar = (s['payment_type'] ?? '').toString().toUpperCase() == 'UDHAAR';
+      final amount = (s['total'] as num?)?.toDouble() ?? 0;
       combined.add(CustomerTransaction(
         id: s['id'],
         customerId: customerId,
@@ -483,53 +485,53 @@ class DatabaseService {
 
   Future<void> insertSupplier(Supplier supplier) async {
     final map = supplier.toMap();
-    await _db.from('customers').insert({
+    await _db.from('suppliers').insert({
       'id': map['id'],
       'shop_id': (await _getShopId()),
-      'name': 'SUPPLIER:${map['name']}',
+      'name': map['name'],
+      'business_name': map['company_name'] ?? '',
       'phone': map['phone'] ?? '',
       'balance': 0.0,
     });
   }
 
   Future<void> updateSupplier(Supplier supplier) async {
-    await _db.from('customers').update({
-      'name': 'SUPPLIER:${supplier.name}',
+    await _db.from('suppliers').update({
+      'name': supplier.name,
       'phone': supplier.phone,
     }).eq('id', supplier.id);
   }
 
   Future<void> deleteSupplier(String id) async {
-    await _db.from('customers').delete().eq('id', id);
+    await _db.from('suppliers').delete().eq('id', id);
   }
 
   Future<List<Supplier>> getAllSuppliers() async {
     final data = await _db
-        .from('customers')
+        .from('suppliers')
         .select()
         .eq('shop_id', (await _getShopId())!)
-        .like('name', 'SUPPLIER:%')
         .order('name', ascending: true);
     return (data as List).map((m) => Supplier.fromMap({
       'id': m['id'],
-      'name': (m['name'] as String).replaceFirst('SUPPLIER:', ''),
+      'name': m['name'] ?? '',
       'phone': m['phone'] ?? '',
       'address': '',
-      'company_name': '',
+      'company_name': m['business_name'] ?? '',
       'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
       'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
     })).toList();
   }
 
   Future<Supplier?> getSupplierById(String id) async {
-    final m = await _db.from('customers').select().eq('id', id).maybeSingle();
+    final m = await _db.from('suppliers').select().eq('id', id).maybeSingle();
     if (m == null) return null;
     return Supplier.fromMap({
       'id': m['id'],
-      'name': (m['name'] as String).replaceFirst('SUPPLIER:', ''),
+      'name': m['name'] ?? '',
       'phone': m['phone'] ?? '',
       'address': '',
-      'company_name': '',
+      'company_name': m['business_name'] ?? '',
       'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
       'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
     });
@@ -541,30 +543,31 @@ class DatabaseService {
 
   Future<void> insertSupplierTransaction(SupplierTransaction tx) async {
     final map = tx.toMap();
-    await _db.from('installments').insert({
+    await _db.from('supplier_transactions').insert({
       'id': map['id'],
       'shop_id': (await _getShopId()),
-      'customer_id': map['supplier_id'],
+      'supplier_id': map['supplier_id'],
       'date': map['date'],
       'amount': (map['debit_amount'] ?? 0) - (map['credit_amount'] ?? 0),
+      'type': tx.debitAmount > 0 ? 'debit' : 'payment',
       'description': map['description'] ?? '',
     });
     final currentBalance = await getSupplierBalance(tx.supplierId);
     final newBalance = currentBalance + (tx.debitAmount - tx.creditAmount);
-    await _db.from('customers').update({'balance': newBalance}).eq('id', tx.supplierId);
+    await _db.from('suppliers').update({'balance': newBalance}).eq('id', tx.supplierId);
   }
 
   Future<List<SupplierTransaction>> getSupplierTransactions(String supplierId) async {
     final data = await _db
-        .from('installments')
+        .from('supplier_transactions')
         .select()
-        .eq('customer_id', supplierId)
+        .eq('supplier_id', supplierId)
         .order('date', ascending: false);
     return (data as List).map((m) {
       final amount = (m['amount'] as num?)?.toDouble() ?? 0;
       return SupplierTransaction.fromMap({
         'id': m['id'],
-        'supplier_id': m['customer_id'],
+        'supplier_id': m['supplier_id'],
         'date': m['date'] ?? DateTime.now().toIso8601String(),
         'type': amount >= 0 ? 'DEBIT' : 'CREDIT',
         'description': m['description'] ?? '',
@@ -580,15 +583,14 @@ class DatabaseService {
   }
 
   Future<double> getSupplierBalance(String supplierId) async {
-    final data = await _db.from('customers').select('balance').eq('id', supplierId).maybeSingle();
+    final data = await _db.from('suppliers').select('balance').eq('id', supplierId).maybeSingle();
     return (data?['balance'] as num?)?.toDouble() ?? 0.0;
   }
 
   Future<double> getTotalPayable() async {
-    final data = await _db.from('customers')
+    final data = await _db.from('suppliers')
         .select('balance')
-        .eq('shop_id', (await _getShopId())!)
-        .like('name', 'SUPPLIER:%');
+        .eq('shop_id', (await _getShopId())!);
     double total = 0;
     for (final row in (data as List)) {
       final b = (row['balance'] as num?)?.toDouble() ?? 0;
@@ -599,17 +601,16 @@ class DatabaseService {
 
   Future<List<Map<String, dynamic>>> getSuppliersWithBalance() async {
     final data = await _db
-        .from('customers')
+        .from('suppliers')
         .select()
         .eq('shop_id', (await _getShopId())!)
-        .like('name', 'SUPPLIER:%')
         .order('balance', ascending: false);
     return (data as List).map((m) => {
       'id': m['id'],
-      'name': (m['name'] as String).replaceFirst('SUPPLIER:', ''),
+      'name': m['name'] ?? '',
       'phone': m['phone'] ?? '',
       'address': '',
-      'company_name': '',
+      'company_name': m['business_name'] ?? '',
       'created_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
       'updated_at': m['last_updated'] ?? DateTime.now().toIso8601String(),
       'balance': (m['balance'] as num?)?.toDouble() ?? 0.0,
@@ -633,13 +634,16 @@ class DatabaseService {
       'shop_id': shopId,
       'customer_id': saleMap['customer_id'],
       'date': saleMap['date'],
-      'total_amount': saleMap['subtotal'] ?? saleMap['total'] ?? 0,
+      'subtotal': saleMap['subtotal'] ?? saleMap['total'] ?? 0,
       'discount_amount': saleMap['discount'] ?? 0,
       'discount_percentage': saleMap['discount_percentage'] ?? 0,
-      'final_amount': saleMap['total'] ?? 0,
+      'total': saleMap['total'] ?? 0,
+      'profit': saleMap['profit'] ?? 0,
       'amount_paid': saleMap['amount_paid'] ?? 0,
+      'balance_due': ((saleMap['total'] as num?)?.toDouble() ?? 0) - ((saleMap['amount_paid'] as num?)?.toDouble() ?? 0),
       'payment_type': saleMap['payment_type'] ?? 'CASH',
       'bill_number': saleMap['bill_number'],
+      'status': 'COMPLETED',
     };
 
     await localDb.insert('local_sales', {
@@ -647,7 +651,7 @@ class DatabaseService {
       'local_id': 'BILL-$nowMs',
       'shop_id': shopId,
       'customer_id': saleMap['customer_id'] ?? '',
-      'total_amount': salesPayload['final_amount'],
+      'total_amount': salesPayload['total'],
       'payment_type': salesPayload['payment_type'],
       'bill_number': saleMap['bill_number'] ?? '',
       'created_at': nowMs,
@@ -667,10 +671,10 @@ class DatabaseService {
         'id': itemMap['id'],
         'sale_id': saleMap['id'],
         'product_id': itemMap['product_id'],
+        'product_name': itemMap['product_name'] ?? '',
         'quantity': itemMap['quantity'],
-        'unit_price': itemMap['sale_price'] ?? 0,
+        'sale_price': itemMap['sale_price'] ?? 0,
         'purchase_price': itemMap['purchase_price'] ?? 0,
-        'subtotal': (itemMap['quantity'] as num) * ((itemMap['sale_price'] as num?) ?? 0),
       };
 
       await localDb.insert('local_sale_items', {
@@ -736,7 +740,7 @@ class DatabaseService {
     final saleData = await _db.from('sales').select().eq('id', saleId).maybeSingle();
     if (saleData != null) {
       final customerId = saleData['customer_id'] as String?;
-      final total = (saleData['final_amount'] as num?)?.toDouble() ?? 0;
+      final total = (saleData['total'] as num?)?.toDouble() ?? 0;
       final paid = (saleData['amount_paid'] as num?)?.toDouble() ?? 0;
       final balanceDue = total - paid;
       
@@ -795,10 +799,10 @@ class DatabaseService {
       'id': m['id'],
       'sale_id': m['sale_id'],
       'product_id': m['product_id'] ?? '',
-      'product_name': '',
+      'product_name': m['product_name'] ?? '',
       'quantity': m['quantity'] ?? 0,
-      'purchase_price': 0,
-      'sale_price': m['unit_price'] ?? 0,
+      'purchase_price': m['purchase_price'] ?? 0,
+      'sale_price': m['sale_price'] ?? 0,
       'profit': 0,
     })).toList();
   }
@@ -807,13 +811,13 @@ class DatabaseService {
     final today = AppFormatters.dateISO(DateTime.now());
     final data = await _db
         .from('sales')
-        .select('final_amount')
+        .select('total')
         .eq('shop_id', (await _getShopId())!)
         .gte('date', '${today}T00:00:00')
         .lte('date', '${today}T23:59:59');
     double total = 0;
     for (final row in (data as List)) {
-      total += (row['final_amount'] as num?)?.toDouble() ?? 0;
+      total += (row['total'] as num?)?.toDouble() ?? 0;
     }
     return total;
   }
@@ -828,8 +832,8 @@ class DatabaseService {
     final shopId = await _getShopId();
     final costData = await _db
         .from('sale_items')
-        .select('quantity, subtotal, sale_id, product_id')
-        .filter('sale_id', 'in', '(SELECT id FROM sales WHERE shop_id = \'${shopId}\' AND date >= \'${today}T00:00:00\' AND date <= \'${today}T23:59:59\')');
+        .select('quantity, sale_price, sale_id, product_id')
+        .filter('sale_id', 'in', '(SELECT id FROM sales WHERE shop_id = \'${shopId}\' AND date >= \'${today}T00:00:00\' AND date <= \'${today}T23:59:59\')');    
     
     // Fallback: calculate cost from products table
     double totalCost = 0;
@@ -864,13 +868,13 @@ class DatabaseService {
   Future<double> getSalesTotalByDateRange(DateTime start, DateTime end) async {
     final data = await _db
         .from('sales')
-        .select('final_amount')
+        .select('total')
         .eq('shop_id', (await _getShopId())!)
         .gte('date', start.toIso8601String())
         .lte('date', '${AppFormatters.dateISO(end)}T23:59:59');
     double total = 0;
     for (final row in (data as List)) {
-      total += (row['final_amount'] as num?)?.toDouble() ?? 0;
+      total += (row['total'] as num?)?.toDouble() ?? 0;
     }
     return total;
   }
@@ -940,7 +944,7 @@ class DatabaseService {
   Future<List<Map<String, dynamic>>> getDailySalesBreakdown(DateTime start, DateTime end) async {
     final salesData = await _db
         .from('sales')
-        .select('date, final_amount')
+        .select('date, total')
         .eq('shop_id', (await _getShopId())!)
         .gte('date', start.toIso8601String())
         .lte('date', '${AppFormatters.dateISO(end)}T23:59:59')
@@ -956,7 +960,7 @@ class DatabaseService {
     final Map<String, double> salesByDay = {};
     for (final row in (salesData as List)) {
       final day = (row['date'] as String).substring(0, 10);
-      salesByDay[day] = (salesByDay[day] ?? 0) + ((row['final_amount'] as num?)?.toDouble() ?? 0);
+      salesByDay[day] = (salesByDay[day] ?? 0) + ((row['total'] as num?)?.toDouble() ?? 0);
     }
     
     final Map<String, double> expensesByDay = {};
@@ -1010,11 +1014,13 @@ class DatabaseService {
     final Map<String, double> productQty = {};
     for (final sale in (salesData as List)) {
       final saleId = sale['id'] as String;
-      final items = await _db.from('sale_items').select('product_id, quantity, subtotal').eq('sale_id', saleId);
+      final items = await _db.from('sale_items').select('product_id, quantity, sale_price').eq('sale_id', saleId);
       for (final item in (items as List)) {
         final pid = item['product_id'] as String;
-        productSales[pid] = (productSales[pid] ?? 0) + ((item['subtotal'] as num?)?.toDouble() ?? 0);
-        productQty[pid] = (productQty[pid] ?? 0) + ((item['quantity'] as num?)?.toDouble() ?? 0);
+        final qty = (item['quantity'] as num?)?.toDouble() ?? 0;
+        final price = (item['sale_price'] as num?)?.toDouble() ?? 0;
+        productSales[pid] = (productSales[pid] ?? 0) + (qty * price);
+        productQty[pid] = (productQty[pid] ?? 0) + qty;
       }
     }
     
@@ -1023,10 +1029,10 @@ class DatabaseService {
     
     final List<Map<String, dynamic>> result = [];
     for (final entry in topEntries) {
-      final product = await _db.from('products').select('name').eq('id', entry.key).maybeSingle();
+      final product = await _db.from('products').select('name_en').eq('id', entry.key).maybeSingle();
       result.add({
         'product_id': entry.key,
-        'name': product?['name'] ?? 'Unknown',
+        'name': product?['name_en'] ?? 'Unknown',
         'total_sold': productQty[entry.key] ?? 0,
         'total_revenue': entry.value,
       });
@@ -1103,15 +1109,15 @@ class DatabaseService {
       'id': m['id'],
       'date': m['date'] ?? DateTime.now().toIso8601String(),
       'customer_id': m['customer_id'],
-      'subtotal': m['total_amount'] ?? 0,
+      'subtotal': m['subtotal'] ?? 0,
       'discount': m['discount_amount'] ?? 0,
       'discount_percentage': m['discount_percentage'] ?? 0,
-      'tax': 0,
-      'total': m['final_amount'] ?? 0,
-      'profit': 0,
-      'payment_type': 'CASH',
+      'tax': m['tax'] ?? 0,
+      'total': m['total'] ?? 0,
+      'profit': m['profit'] ?? 0,
+      'payment_type': m['payment_type'] ?? 'CASH',
       'amount_paid': m['amount_paid'] ?? 0,
-      'balance_due': ((m['final_amount'] as num?)?.toDouble() ?? 0) - ((m['amount_paid'] as num?)?.toDouble() ?? 0),
+      'balance_due': m['balance_due'] ?? (((m['total'] as num?)?.toDouble() ?? 0) - ((m['amount_paid'] as num?)?.toDouble() ?? 0)),
       'bill_pdf_path': '',
       'created_at': m['date'] ?? DateTime.now().toIso8601String(),
     });
@@ -1171,8 +1177,8 @@ class DatabaseService {
     return (data as List).map((m) => Expense.fromMap({
       'id': m['id'],
       'date': m['date'] ?? DateTime.now().toIso8601String(),
-      'category': 'دیگر',
-      'description': m['description'] ?? '',
+      'category': m['category'] ?? 'دیگر',
+      'description': m['title'] ?? '',
       'amount': m['amount'] ?? 0,
       'created_at': m['date'] ?? DateTime.now().toIso8601String(),
     })).toList();
