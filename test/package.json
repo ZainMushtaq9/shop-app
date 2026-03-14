@@ -1,0 +1,17 @@
+{
+  "name": "super-business-shop-tests",
+  "version": "1.0.0",
+  "description": "Automated QA test suite for Super Business Shop",
+  "scripts": {
+    "test": "node test/run_all_tests.js",
+    "test:auth": "node -e \"const h=require('./test/helpers');const c=require('./test/config');const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({headless:false});const ctx=await b.newContext({viewport:{width:1440,height:900},recordVideo:{dir:'test/videos/flows/',size:{width:1440,height:900}}});const p=await ctx.newPage();p.setDefaultTimeout(30000);await require('./test/tests/01_auth')(p,h,c);await ctx.close();await b.close()})().catch(console.error)\"",
+    "test:pos": "node -e \"const h=require('./test/helpers');const c=require('./test/config');const {chromium}=require('playwright');(async()=>{const b=await chromium.launch({headless:false});const ctx=await b.newContext({viewport:{width:1440,height:900},recordVideo:{dir:'test/videos/flows/',size:{width:1440,height:900}}});const p=await ctx.newPage();p.setDefaultTimeout(30000);await require('./test/tests/05_pos')(p,h,c);await ctx.close();await b.close()})().catch(console.error)\"",
+    "report": "start test/reports/test_report.html",
+    "manual": "start test/manual/user_manual_english.html",
+    "clean": "rmdir /s /q test\\images test\\videos test\\reports test\\manual 2>nul & echo Cleaned"
+  },
+  "dependencies": {
+    "playwright": "^1.42.0",
+    "@playwright/test": "^1.42.0"
+  }
+}
