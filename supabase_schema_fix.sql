@@ -1,16 +1,13 @@
 -- ═══════════════════════════════════════════════════════════════════
 -- SUPER BUSINESS SHOP — COMPLETE FRESH SCHEMA
--- Run this ENTIRE script in Supabase SQL Editor → New Query → Run
+-- Run this ENTIRE script in Supabase SQL Editor
 -- ═══════════════════════════════════════════════════════════════════
 
--- ══════════════════════════════════════════
--- STEP 1: DROP EVERYTHING IN REVERSE ORDER
--- ══════════════════════════════════════════
-DROP TRIGGER IF EXISTS trg_sale_marketing ON sales;
-DROP FUNCTION IF EXISTS update_marketing_on_sale();
-DROP FUNCTION IF EXISTS get_dashboard_stats(UUID);
-DROP FUNCTION IF EXISTS get_customer_balance(UUID);
-DROP FUNCTION IF EXISTS public.is_shop_member(UUID);
+-- STEP 1: NUKE EVERYTHING (CASCADE drops dependent policies too)
+DROP FUNCTION IF EXISTS public.is_shop_member(UUID) CASCADE;
+DROP FUNCTION IF EXISTS update_marketing_on_sale() CASCADE;
+DROP FUNCTION IF EXISTS get_dashboard_stats(UUID) CASCADE;
+DROP FUNCTION IF EXISTS get_customer_balance(UUID) CASCADE;
 
 DROP TABLE IF EXISTS customer_bill_reads CASCADE;
 DROP TABLE IF EXISTS customer_bill_visibility CASCADE;
@@ -24,7 +21,10 @@ DROP TABLE IF EXISTS return_items CASCADE;
 DROP TABLE IF EXISTS returns CASCADE;
 DROP TABLE IF EXISTS sale_items CASCADE;
 DROP TABLE IF EXISTS installments CASCADE;
+DROP TABLE IF EXISTS kist_installments CASCADE;
+DROP TABLE IF EXISTS kist_plans CASCADE;
 DROP TABLE IF EXISTS daily_cash_sessions CASCADE;
+DROP TABLE IF EXISTS shop_items CASCADE;
 DROP TABLE IF EXISTS expenses CASCADE;
 DROP TABLE IF EXISTS sales CASCADE;
 DROP TABLE IF EXISTS suppliers CASCADE;
@@ -34,23 +34,18 @@ DROP TABLE IF EXISTS shop_settings CASCADE;
 DROP TABLE IF EXISTS shop_members CASCADE;
 DROP TABLE IF EXISTS shops CASCADE;
 
--- ══════════════════════════════════════════
 -- STEP 2: HELPER FUNCTION
--- ══════════════════════════════════════════
 CREATE OR REPLACE FUNCTION public.is_shop_member(check_shop_id UUID)
 RETURNS BOOLEAN AS $$
 BEGIN
   RETURN EXISTS (
     SELECT 1 FROM public.shop_members
-    WHERE shop_id = check_shop_id
-    AND user_id = auth.uid()
+    WHERE shop_id = check_shop_id AND user_id = auth.uid()
   );
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- ══════════════════════════════════════════
 -- 1. SHOPS
--- ══════════════════════════════════════════
 CREATE TABLE public.shops (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -58,44 +53,31 @@ CREATE TABLE public.shops (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.shops ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "shop_owner" ON public.shops
-  FOR ALL USING (owner_id = auth.uid());
+CREATE POLICY "shop_owner" ON public.shops FOR ALL USING (owner_id = auth.uid());
 
--- ══════════════════════════════════════════
 -- 2. SHOP MEMBERS
--- ══════════════════════════════════════════
 CREATE TABLE public.shop_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  role VARCHAR(20) NOT NULL DEFAULT 'owner'
-    CHECK (role IN ('owner','salesperson','accountant')),
-  status VARCHAR(20) DEFAULT 'active'
-    CHECK (status IN ('active','suspended')),
+  role VARCHAR(20) NOT NULL DEFAULT 'owner' CHECK (role IN ('owner','salesperson','accountant')),
+  status VARCHAR(20) DEFAULT 'active' CHECK (status IN ('active','suspended')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(shop_id, user_id)
 );
 ALTER TABLE public.shop_members ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "members_view" ON public.shop_members
-  FOR SELECT USING (user_id = auth.uid() OR shop_id IN (
-    SELECT shop_id FROM public.shop_members WHERE user_id = auth.uid()
-  ));
-CREATE POLICY "members_manage" ON public.shop_members
-  FOR INSERT WITH CHECK (true);
-CREATE POLICY "members_update" ON public.shop_members
-  FOR UPDATE USING (shop_id IN (
-    SELECT shop_id FROM public.shop_members
-    WHERE user_id = auth.uid() AND role = 'owner'
-  ));
-CREATE POLICY "members_delete" ON public.shop_members
-  FOR DELETE USING (shop_id IN (
-    SELECT shop_id FROM public.shop_members
-    WHERE user_id = auth.uid() AND role = 'owner'
-  ));
+CREATE POLICY "members_view" ON public.shop_members FOR SELECT USING (
+  user_id = auth.uid() OR shop_id IN (SELECT shop_id FROM public.shop_members WHERE user_id = auth.uid())
+);
+CREATE POLICY "members_insert" ON public.shop_members FOR INSERT WITH CHECK (true);
+CREATE POLICY "members_update" ON public.shop_members FOR UPDATE USING (
+  shop_id IN (SELECT shop_id FROM public.shop_members WHERE user_id = auth.uid() AND role = 'owner')
+);
+CREATE POLICY "members_delete" ON public.shop_members FOR DELETE USING (
+  shop_id IN (SELECT shop_id FROM public.shop_members WHERE user_id = auth.uid() AND role = 'owner')
+);
 
--- ══════════════════════════════════════════
 -- 3. SHOP SETTINGS
--- ══════════════════════════════════════════
 CREATE TABLE public.shop_settings (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE UNIQUE,
@@ -108,10 +90,8 @@ CREATE TABLE public.shop_settings (
   city VARCHAR(50),
   logo_url TEXT,
   primary_color VARCHAR(7) DEFAULT '#006D77',
-  dark_mode VARCHAR(10) DEFAULT 'system'
-    CHECK (dark_mode IN ('light','dark','system')),
-  language VARCHAR(5) DEFAULT 'en'
-    CHECK (language IN ('en','ur')),
+  dark_mode VARCHAR(10) DEFAULT 'system' CHECK (dark_mode IN ('light','dark','system')),
+  language VARCHAR(5) DEFAULT 'en' CHECK (language IN ('en','ur')),
   bill_show_logo BOOLEAN DEFAULT TRUE,
   bill_tagline TEXT,
   bill_footer_msg TEXT DEFAULT 'Shukriya! Dobara zaroor tashreef laein',
@@ -123,12 +103,9 @@ CREATE TABLE public.shop_settings (
 );
 ALTER TABLE public.shop_settings ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "settings_access" ON public.shop_settings
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 4. PRODUCTS
--- ══════════════════════════════════════════
 CREATE TABLE public.products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -146,13 +123,9 @@ CREATE TABLE public.products (
 );
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "products_access" ON public.products
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
-CREATE INDEX idx_products_shop ON public.products(shop_id);
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 5. CUSTOMERS
--- ══════════════════════════════════════════
 CREATE TABLE public.customers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -164,14 +137,9 @@ CREATE TABLE public.customers (
 );
 ALTER TABLE public.customers ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "customers_access" ON public.customers
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
-CREATE INDEX idx_customers_shop ON public.customers(shop_id);
-CREATE INDEX idx_customers_phone ON public.customers(phone);
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 6. SUPPLIERS
--- ══════════════════════════════════════════
 CREATE TABLE public.suppliers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -183,12 +151,9 @@ CREATE TABLE public.suppliers (
 );
 ALTER TABLE public.suppliers ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "suppliers_access" ON public.suppliers
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 7. SALES
--- ══════════════════════════════════════════
 CREATE TABLE public.sales (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -204,20 +169,15 @@ CREATE TABLE public.sales (
   payment_type VARCHAR(20) DEFAULT 'CASH',
   amount_paid REAL NOT NULL DEFAULT 0,
   balance_due REAL NOT NULL DEFAULT 0,
-  status VARCHAR(20) DEFAULT 'COMPLETED'
-    CHECK (status IN ('COMPLETED','CANCELLED','DRAFT')),
+  status VARCHAR(20) DEFAULT 'COMPLETED' CHECK (status IN ('COMPLETED','CANCELLED','DRAFT')),
   hidden_from_customer BOOLEAN DEFAULT FALSE,
   is_synced BOOLEAN DEFAULT TRUE
 );
 ALTER TABLE public.sales ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "sales_access" ON public.sales
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
-CREATE INDEX idx_sales_shop_date ON public.sales(shop_id, date);
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 8. SALE ITEMS
--- ══════════════════════════════════════════
 CREATE TABLE public.sale_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   sale_id UUID NOT NULL REFERENCES public.sales(id) ON DELETE CASCADE,
@@ -229,21 +189,10 @@ CREATE TABLE public.sale_items (
 );
 ALTER TABLE public.sale_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "sale_items_access" ON public.sale_items
-  FOR ALL USING (EXISTS (
-    SELECT 1 FROM public.sales s
-    WHERE s.id = sale_items.sale_id
-    AND public.is_shop_member(s.shop_id)
-  ))
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM public.sales s
-    WHERE s.id = sale_items.sale_id
-    AND public.is_shop_member(s.shop_id)
-  ));
-CREATE INDEX idx_sale_items_sale ON public.sale_items(sale_id);
+  FOR ALL USING (EXISTS (SELECT 1 FROM public.sales s WHERE s.id = sale_items.sale_id AND public.is_shop_member(s.shop_id)))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.sales s WHERE s.id = sale_items.sale_id AND public.is_shop_member(s.shop_id)));
 
--- ══════════════════════════════════════════
--- 9. INSTALLMENTS (Customer Payments)
--- ══════════════════════════════════════════
+-- 9. INSTALLMENTS
 CREATE TABLE public.installments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -256,12 +205,9 @@ CREATE TABLE public.installments (
 );
 ALTER TABLE public.installments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "installments_access" ON public.installments
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 10. SUPPLIER TRANSACTIONS
--- ══════════════════════════════════════════
 CREATE TABLE public.supplier_transactions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -274,12 +220,9 @@ CREATE TABLE public.supplier_transactions (
 );
 ALTER TABLE public.supplier_transactions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "supplier_tx_access" ON public.supplier_transactions
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 11. EXPENSES
--- ══════════════════════════════════════════
 CREATE TABLE public.expenses (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -295,13 +238,9 @@ CREATE TABLE public.expenses (
 );
 ALTER TABLE public.expenses ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "expenses_access" ON public.expenses
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
-CREATE INDEX idx_expenses_shop_date ON public.expenses(shop_id, date);
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 12. RETURNS
--- ══════════════════════════════════════════
 CREATE TABLE public.returns (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -314,12 +253,9 @@ CREATE TABLE public.returns (
 );
 ALTER TABLE public.returns ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "returns_access" ON public.returns
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 13. RETURN ITEMS
--- ══════════════════════════════════════════
 CREATE TABLE public.return_items (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   return_id UUID NOT NULL REFERENCES public.returns(id) ON DELETE CASCADE,
@@ -330,20 +266,10 @@ CREATE TABLE public.return_items (
 );
 ALTER TABLE public.return_items ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "return_items_access" ON public.return_items
-  FOR ALL USING (EXISTS (
-    SELECT 1 FROM public.returns r
-    WHERE r.id = return_items.return_id
-    AND public.is_shop_member(r.shop_id)
-  ))
-  WITH CHECK (EXISTS (
-    SELECT 1 FROM public.returns r
-    WHERE r.id = return_items.return_id
-    AND public.is_shop_member(r.shop_id)
-  ));
+  FOR ALL USING (EXISTS (SELECT 1 FROM public.returns r WHERE r.id = return_items.return_id AND public.is_shop_member(r.shop_id)))
+  WITH CHECK (EXISTS (SELECT 1 FROM public.returns r WHERE r.id = return_items.return_id AND public.is_shop_member(r.shop_id)));
 
--- ══════════════════════════════════════════
 -- 14. DAILY CASH SESSIONS
--- ══════════════════════════════════════════
 CREATE TABLE public.daily_cash_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -352,19 +278,15 @@ CREATE TABLE public.daily_cash_sessions (
   closing_balance REAL,
   expected_closing REAL,
   difference REAL,
-  status VARCHAR(20) DEFAULT 'OPEN'
-    CHECK (status IN ('OPEN','CLOSED')),
+  status VARCHAR(20) DEFAULT 'OPEN' CHECK (status IN ('OPEN','CLOSED')),
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(shop_id, date)
 );
 ALTER TABLE public.daily_cash_sessions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "daily_cash_access" ON public.daily_cash_sessions
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
--- 15. CUSTOMER ACCOUNTS (Portal Login)
--- ══════════════════════════════════════════
+-- 15. CUSTOMER ACCOUNTS
 CREATE TABLE public.customer_accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   phone VARCHAR(20) NOT NULL UNIQUE,
@@ -375,18 +297,12 @@ CREATE TABLE public.customer_accounts (
   last_login TIMESTAMPTZ,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_ca_phone ON public.customer_accounts(phone);
 ALTER TABLE public.customer_accounts ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "ca_public_read" ON public.customer_accounts
-  FOR SELECT USING (true);
-CREATE POLICY "ca_insert" ON public.customer_accounts
-  FOR INSERT WITH CHECK (true);
-CREATE POLICY "ca_update" ON public.customer_accounts
-  FOR UPDATE USING (true);
+CREATE POLICY "ca_read" ON public.customer_accounts FOR SELECT USING (true);
+CREATE POLICY "ca_insert" ON public.customer_accounts FOR INSERT WITH CHECK (true);
+CREATE POLICY "ca_update" ON public.customer_accounts FOR UPDATE USING (true);
 
--- ══════════════════════════════════════════
 -- 16. CUSTOMER NOTIFICATIONS
--- ══════════════════════════════════════════
 CREATE TABLE public.customer_notifications (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_account_id UUID REFERENCES public.customer_accounts(id),
@@ -399,16 +315,11 @@ CREATE TABLE public.customer_notifications (
   is_read BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
-CREATE INDEX idx_cn_customer ON public.customer_notifications(customer_account_id);
 ALTER TABLE public.customer_notifications ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "cn_public_read" ON public.customer_notifications
-  FOR SELECT USING (true);
-CREATE POLICY "cn_insert" ON public.customer_notifications
-  FOR INSERT WITH CHECK (true);
+CREATE POLICY "cn_read" ON public.customer_notifications FOR SELECT USING (true);
+CREATE POLICY "cn_insert" ON public.customer_notifications FOR INSERT WITH CHECK (true);
 
--- ══════════════════════════════════════════
 -- 17. CUSTOMER BILL VISIBILITY
--- ══════════════════════════════════════════
 CREATE TABLE public.customer_bill_visibility (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id),
@@ -422,12 +333,9 @@ CREATE TABLE public.customer_bill_visibility (
 );
 ALTER TABLE public.customer_bill_visibility ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "cbv_access" ON public.customer_bill_visibility
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 18. CUSTOMER BILL READS
--- ══════════════════════════════════════════
 CREATE TABLE public.customer_bill_reads (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   customer_account_id UUID REFERENCES public.customer_accounts(id),
@@ -436,12 +344,9 @@ CREATE TABLE public.customer_bill_reads (
   UNIQUE(customer_account_id, sale_id)
 );
 ALTER TABLE public.customer_bill_reads ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "cbr_public" ON public.customer_bill_reads
-  FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "cbr_public" ON public.customer_bill_reads FOR ALL USING (true) WITH CHECK (true);
 
--- ══════════════════════════════════════════
 -- 19. AD EVENTS
--- ══════════════════════════════════════════
 CREATE TABLE public.ad_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES auth.users(id),
@@ -458,14 +363,10 @@ CREATE TABLE public.ad_events (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 ALTER TABLE public.ad_events ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "ad_events_insert" ON public.ad_events
-  FOR INSERT WITH CHECK (true);
-CREATE POLICY "ad_events_select" ON public.ad_events
-  FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "ae_insert" ON public.ad_events FOR INSERT WITH CHECK (true);
+CREATE POLICY "ae_select" ON public.ad_events FOR SELECT USING (user_id = auth.uid());
 
--- ══════════════════════════════════════════
 -- 20. AUDIT LOGS
--- ══════════════════════════════════════════
 CREATE TABLE public.audit_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
@@ -478,17 +379,13 @@ CREATE TABLE public.audit_logs (
 );
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "audit_access" ON public.audit_logs
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- 21. BACKUP LOGS
--- ══════════════════════════════════════════
 CREATE TABLE public.backup_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   shop_id UUID NOT NULL REFERENCES public.shops(id) ON DELETE CASCADE,
-  status VARCHAR(20)
-    CHECK (status IN ('SUCCESS','FAILURE','IN_PROGRESS')),
+  status VARCHAR(20) CHECK (status IN ('SUCCESS','FAILURE','IN_PROGRESS')),
   drive_file_id TEXT,
   drive_url TEXT,
   error_message TEXT,
@@ -496,9 +393,6 @@ CREATE TABLE public.backup_logs (
 );
 ALTER TABLE public.backup_logs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "backup_access" ON public.backup_logs
-  FOR ALL USING (public.is_shop_member(shop_id))
-  WITH CHECK (public.is_shop_member(shop_id));
+  FOR ALL USING (public.is_shop_member(shop_id)) WITH CHECK (public.is_shop_member(shop_id));
 
--- ══════════════════════════════════════════
 -- DONE! All 21 tables created.
--- ══════════════════════════════════════════
