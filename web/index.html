@@ -1,62 +1,182 @@
 <!DOCTYPE html>
-<html>
+<html lang="ur">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport"
-    content="width=device-width, initial-scale=1.0">
+    content="width=device-width, initial-scale=1.0,
+    maximum-scale=1.0, user-scalable=no">
+  
   <title>HisaabKaro — حساب کرو</title>
-  <link id="favicon" rel="icon" type="image/png"
-    href="favicon.png"/>
+  
+  <!-- Favicon — SVG inline (no file needed) -->
+  <link rel="icon" href="data:image/svg+xml,
+    <svg xmlns='http://www.w3.org/2000/svg'
+    viewBox='0 0 100 100'>
+    <rect width='100' height='100' rx='20'
+    fill='%23006D77'/>
+    <text y='75' x='50' text-anchor='middle'
+    font-size='60' fill='white'>₨</text>
+    </svg>">
+  
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#006D77">
+  <meta name="apple-mobile-web-app-capable"
+    content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style"
+    content="black-translucent">
+  <meta name="apple-mobile-web-app-title"
+    content="HisaabKaro">
 
-  <!-- AdSense (add after approval) -->
-  <script async
-    src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX"
-    crossorigin="anonymous">
-  </script>
+  <!-- Preload Flutter engine -->
+  <link rel="preload"
+    href="flutter_bootstrap.js" as="script">
 
+  <!-- Loading screen styles -->
   <style>
-    body {
-      margin: 0;
-      background-color: #006D77;
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    html, body {
+      width: 100%;
+      height: 100%;
+      background: #006D77;
+      overflow: hidden;
     }
+
     #loading {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: #006D77;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      height: 100vh;
+      z-index: 9999;
+      transition: opacity 0.5s ease;
+    }
+
+    #loading.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .logo-wrap {
+      margin-bottom: 24px;
+      animation: popInOut 2s ease-in-out infinite alternate;
+    }
+
+    @keyframes popInOut {
+      0%   { transform: scale(0.95) translateY(0); opacity: 0.9; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+      100% { transform: scale(1.05) translateY(-8px); opacity: 1; box-shadow: 0 12px 24px rgba(0,0,0,0.3); }
+    }
+
+    .app-name {
       color: white;
-      font-family: sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      font-family: Arial, sans-serif;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
     }
-    #loading img {
-      width: 80px;
-      margin-bottom: 16px;
-      border-radius: 16px;
-    }
-    #loading p {
+
+    .app-name-ur {
+      color: rgba(255,255,255,0.8);
       font-size: 16px;
-      opacity: 0.8;
+      font-family: Arial, sans-serif;
+      margin-bottom: 32px;
+      direction: rtl;
     }
-    #loading h2 {
-      font-family: sans-serif;
-      margin-bottom: 8px;
+
+    .progress-bar {
+      width: 200px;
+      height: 3px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: white;
+      border-radius: 3px;
+      animation: progress 2.5s ease-in-out forwards;
+    }
+
+    @keyframes progress {
+      0%   { width: 0%; }
+      30%  { width: 40%; }
+      60%  { width: 70%; }
+      90%  { width: 90%; }
+      100% { width: 95%; }
+    }
+
+    .loading-text {
+      color: rgba(255,255,255,0.6);
+      font-size: 12px;
+      font-family: Arial, sans-serif;
+      margin-top: 12px;
+      letter-spacing: 1px;
     }
   </style>
 </head>
 <body>
 
+<!-- LOADING SCREEN — shows instantly -->
 <div id="loading">
-  <img src="icons/logo.png" alt="Logo">
-  <h2>حساب کرو HisaabKaro</h2>
-  <p>Loading...</p>
+  
+  <!-- Actual Logo -->
+  <div class="logo-wrap">
+    <img src="icons/logo.png" alt="HisaabKaro Logo" width="120" height="120" style="border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.2);">
+  </div>
+
+  <div class="app-name">HisaabKaro</div>
+  <div class="app-name-ur">حساب کرو</div>
+  
+  <div class="progress-bar">
+    <div class="progress-fill"></div>
+  </div>
+  
+  <div class="loading-text">Loading...</div>
+  
+  <div id="motivation-text" style="color: rgba(255,255,255,0.9); font-size: 14px; margin-top: 32px; text-align: center; max-width: 80%; line-height: 1.5; font-style: italic; min-height: 48px; transition: opacity 0.5s ease;">
+    "Great things in business are never done by one person."
+  </div>
+
 </div>
 
+<!-- Flutter -->
 <script>
-  window.addEventListener('flutter-first-frame', function() {
-    document.getElementById('loading').remove();
+  window.addEventListener('flutter-first-frame', () => {
+    const loading = document.getElementById('loading');
+    if (loading) {
+      loading.classList.add('fade-out');
+      setTimeout(() => loading.remove(), 600);
+    }
   });
-</script>
 
+  const quotes = [
+    "Great things in business are never done by isolated individuals.",
+    "محنت کا پھل میٹھا ہوتا ہے۔",
+    "Your most unhappy customers are your greatest source of learning.",
+    "رزق حلال میں برکت ہے۔",
+    "Success usually comes to those who are too busy to be looking for it.",
+    "صبر کا پھل میٹھا ہوتا ہے۔",
+  ];
+  
+  let quoteIndex = 0;
+  const quoteEl = document.getElementById('motivation-text');
+  
+  setInterval(() => {
+    quoteIndex = (quoteIndex + 1) % quotes.length;
+    quoteEl.style.opacity = 0;
+    setTimeout(() => {
+      quoteEl.innerText = '"' + quotes[quoteIndex] + '"';
+      quoteEl.style.opacity = 1;
+    }, 500);
+  }, 3500);
+</script>
 <script src="flutter_bootstrap.js" async></script>
+
 </body>
 </html>

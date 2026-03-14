@@ -182,7 +182,29 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
   Widget _buildInfoStep() {
     return Column(
       children: [
-        Icon(Icons.person_add_alt_1_rounded, size: 48, color: AppColors.primary),
+        Container(
+          width: 80,
+          height: 80,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.primary.withOpacity(0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.asset(
+              'assets/logo.png',
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Icon(Icons.person_add_alt_1_rounded, size: 40, color: AppColors.primary),
+            ),
+          ),
+        ),
         const SizedBox(height: AppDimens.spacingSM),
         Text(
           AppStrings.isUrdu ? 'نیا اکاؤنٹ بنائیں' : 'Create New Account',

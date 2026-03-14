@@ -6,6 +6,7 @@ import 'providers/app_providers.dart';
 
 import 'package:flutter/foundation.dart';
 import 'screens/auth/login_screen.dart';
+import 'screens/auth/splash_screen.dart';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/app_shell.dart';
@@ -40,7 +41,7 @@ class ShopApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.light, // Force light mode as requested
+      themeMode: themeMode,
       home: const LoginScreen(),
       // Directionality for Urdu (RTL) support
       builder: (context, child) {
@@ -56,7 +57,8 @@ class ShopApp extends ConsumerWidget {
       },
       initialRoute: '/',
       routes: {
-        '/': (context) => const LoginScreen(),
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginScreen(),
         '/dashboard': (context) => const AppShell(),
         '/pos': (context) => const AppShell(),
         '/inventory': (context) => const AppShell(),

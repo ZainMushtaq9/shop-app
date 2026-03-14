@@ -97,7 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: Row(
             children: [
-              const Icon(Icons.lock_reset, color: AppColors.primary),
+              Image.asset('assets/logo.png', width: 32, height: 32, errorBuilder: (_, __, ___) => const Icon(Icons.lock_reset, color: AppColors.primary)),
               const SizedBox(width: 8),
               Text(AppStrings.isUrdu ? 'پاس ورڈ بھول گئے؟' : 'Forgot Password?'),
             ],
@@ -274,7 +274,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      AppStrings.isUrdu ? 'لاگ ان / Login' : 'Login / لاگ ان',
+                                      AppStrings.isUrdu ? 'لاگ ان' : 'Login',
                                       style: AppTextStyles.title.copyWith(fontSize: 14, color: AppColors.primary),
                                     ),
                                   ),
@@ -288,7 +288,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   ),
                                   child: Center(
                                     child: Text(
-                                      AppStrings.isUrdu ? 'تصدیق / Verify' : 'Verify / تصدیق',
+                                      AppStrings.isUrdu ? 'تصدیق' : 'Verify',
                                       style: AppTextStyles.title.copyWith(
                                         fontSize: 14, 
                                         color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary
@@ -303,7 +303,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           
                           // Email Input
                           Text(
-                            AppStrings.isUrdu ? 'ای میل / Email' : 'Email / ای میل',
+                            AppStrings.isUrdu ? 'ای میل' : 'Email',
                             style: AppTextStyles.label.copyWith(fontSize: 14),
                           ),
                           const SizedBox(height: 8),
@@ -323,13 +323,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                AppStrings.isUrdu ? 'پاس ورڈ / Password' : 'Password / پاس ورڈ',
+                                AppStrings.isUrdu ? 'پاس ورڈ' : 'Password',
                                 style: AppTextStyles.label.copyWith(fontSize: 14),
                               ),
                               InkWell(
                                 onTap: _forgotPassword,
                                 child: Text(
-                                  AppStrings.isUrdu ? 'بھول گئے؟ / Forgot?' : 'Forgot? / بھول گئے؟',
+                                  AppStrings.isUrdu ? 'بھول گئے؟' : 'Forgot?',
                                   style: AppTextStyles.label.copyWith(fontSize: 12, color: AppColors.primary),
                                 ),
                               ),
@@ -364,7 +364,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        AppStrings.isUrdu ? 'لاگ ان کریں / Login' : 'Login / لاگ ان کریں',
+                                        AppStrings.isUrdu ? 'لاگ ان کریں' : 'Login',
                                         style: AppTextStyles.title.copyWith(color: Colors.white, fontSize: 16),
                                       ),
                                       const SizedBox(width: 8),

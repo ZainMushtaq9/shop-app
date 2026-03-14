@@ -1,35 +1,25 @@
 {
-    "name": "Super Business Shop",
-    "short_name": "My Khata",
-    "start_url": ".",
-    "display": "standalone",
-    "background_color": "#ffffff",
-    "theme_color": "#006D77",
-    "description": "Shop POS and Customer Portal System.",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
-    "icons": [
-        {
-            "src": "icons/Icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png"
-        },
-        {
-            "src": "icons/Icon-maskable-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "icons/Icon-maskable-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        }
-    ]
+  "name": "HisaabKaro",
+  "short_name": "HisaabKaro",
+  "description": "Aap ki dukaan ka mukammal hisaab",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#006D77",
+  "theme_color": "#006D77",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/Icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/Icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
