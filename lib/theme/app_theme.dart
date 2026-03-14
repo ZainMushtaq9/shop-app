@@ -11,7 +11,7 @@ class AppColors {
   AppColors._();
 
   // Stitch Primary (Teal)
-  static const Color primary = Color(0xFF006C75);        
+  static const Color primary = Color(0xFF006D77);        
   static const Color primaryLight = Color(0xFF338991);
   static const Color primaryDark = Color(0xFF00565E);
 
@@ -36,7 +36,7 @@ class AppColors {
   static const Color darkDivider     = Color(0xFF374151);
 
   // Common
-  static const Color textOnPrimary = Color(0xFF111827); // Dark text on gold buttons
+  static const Color textOnPrimary = Color(0xFFFFFFFF); // White text on teal buttons
   static const Color textOnGreen = Colors.white;
   static const Color textOnRed = Colors.white;
 
@@ -179,13 +179,12 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.light,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.light,
+      colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         onPrimary: AppColors.textOnPrimary,
         surface: AppColors.lightSurface,
         error: AppColors.moneyOwed,
+        secondary: Color(0xFFE8A838),
       ),
       scaffoldBackgroundColor: AppColors.lightBackground,
       appBarTheme: AppBarTheme(
@@ -254,13 +253,12 @@ class AppTheme {
     return ThemeData(
       useMaterial3: true,
       brightness: Brightness.dark,
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: AppColors.primary,
-        brightness: Brightness.dark,
+      colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
         onPrimary: AppColors.textOnPrimary,
         surface: AppColors.darkSurface,
         error: AppColors.moneyOwed,
+        secondary: Color(0xFFE8A838),
       ),
       scaffoldBackgroundColor: AppColors.darkBackground,
       appBarTheme: AppBarTheme(
