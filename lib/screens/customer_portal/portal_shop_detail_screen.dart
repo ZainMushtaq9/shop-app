@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/constants.dart';
 import 'portal_providers.dart';
 import 'portal_bill_detail_screen.dart';
 
@@ -134,12 +135,12 @@ class PortalShopDetailScreen extends ConsumerWidget {
                           title: Text(
                             isPayment 
                                 ? (urdu ? 'رقم جمع کرائی' : 'Payment Made')
-                                : (urdu ? 'بل (\${t['bill_number']})' : 'Bill (\${t['bill_number']})'),
+                                : (urdu ? 'بل (${t["bill_number"]})' : 'Bill (${t["bill_number"]})'),
                             style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           subtitle: Text(
                             DateFormat('dd MMM yyyy, hh:mm a').format(date) + 
-                            (isPayment && t['description'] != null ? '\\n\${t['description']}' : ''),
+                            (isPayment && t['description'] != null ? '\n${t["description"]}' : ''),
                             style: TextStyle(color: Colors.grey[600]),
                           ),
                           isThreeLine: isPayment && t['description'] != null,

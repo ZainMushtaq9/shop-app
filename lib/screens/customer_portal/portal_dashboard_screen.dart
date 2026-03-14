@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/constants.dart';
 import 'customer_auth_service.dart';
 import '../../widgets/global_app_bar.dart';
 import 'portal_login_screen.dart';

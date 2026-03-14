@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/constants.dart';
 import 'portal_providers.dart';
 
 class PortalBillDetailScreen extends ConsumerStatefulWidget {

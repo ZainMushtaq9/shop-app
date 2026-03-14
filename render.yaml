@@ -23,8 +23,12 @@ services:
   - type: web
     name: super-business-shop
     env: static
-    buildCommand: ./render-build.sh
+    buildCommand: chmod +x render-build.sh && ./render-build.sh
     staticPublishPath: build/web
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
     routes:
       - type: rewrite
         source: /*
