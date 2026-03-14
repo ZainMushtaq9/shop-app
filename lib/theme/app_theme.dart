@@ -57,6 +57,9 @@ class AppColors {
   static const Color textSecondary = darkTextSecondary;
   static const Color divider = darkDivider;
   static const Color disabled = Color(0xFF6B7280);
+  static const Color success = moneyReceived;   // green
+  static const Color error = moneyOwed;         // red
+  static const Color textMain = textPrimary;    // main text
 
   static const LinearGradient salesGradient = LinearGradient(
     colors: [Color(0xFF2A3440), Color(0xFF354454)],

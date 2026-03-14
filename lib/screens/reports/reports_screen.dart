@@ -127,7 +127,7 @@ class ReportsScreen extends ConsumerWidget {
       for (final c in customers) {
         final name = c.name.replaceAll(',', ' ');
         final phone = c.phone.replaceAll(',', ' ');
-        final balance = c.balance;
+        final balance = await db.getCustomerBalance(c.id);
         csv.writeln('$name,$phone,$balance');
       }
       
@@ -139,7 +139,7 @@ class ReportsScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error)
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.moneyOwed)
         );
       }
     }
@@ -163,7 +163,7 @@ class ReportsScreen extends ConsumerWidget {
       for (final s in suppliers) {
         final name = s.name.replaceAll(',', ' ');
         final phone = s.phone.replaceAll(',', ' ');
-        final balance = s.balance;
+        final balance = await db.getSupplierBalance(s.id);
         csv.writeln('$name,$phone,$balance');
       }
       
@@ -175,7 +175,7 @@ class ReportsScreen extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error)
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.moneyOwed)
         );
       }
     }

@@ -142,7 +142,7 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                         mainAxisSpacing: 8,
                       ),
                       itemCount: 8,
-                      itemBuilder: (_, __) => const CustomSkeleton(
+                      itemBuilder: (_, __) => CustomSkeleton(
                         width: double.infinity,
                         height: double.infinity,
                         borderRadius: 12,

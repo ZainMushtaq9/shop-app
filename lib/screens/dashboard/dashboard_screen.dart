@@ -549,8 +549,8 @@ class _LowStockAlerts extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: 3,
-              itemBuilder: (_, __) => const Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppDimens.spacingMD, vertical: AppDimens.spacingXS),
+              itemBuilder: (_, __) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingMD, vertical: AppDimens.spacingXS),
                 child: CustomSkeleton(width: double.infinity, height: 60, borderRadius: 8),
               ),
             ),
