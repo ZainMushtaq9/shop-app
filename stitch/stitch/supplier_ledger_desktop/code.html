@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Supplier Ledger - Super Business Shop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "primary": "#006c75",
+                "background-light": "#f5f8f8",
+                "background-dark": "#0f2223",
+              },
+              fontFamily: {
+                "display": ["Inter"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+      </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display min-h-screen">
+<div class="relative flex min-h-screen w-full flex-col">
+<!-- Top Navigation -->
+<header class="flex items-center justify-between border-b border-primary/10 bg-white dark:bg-slate-900 px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-8">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-8 bg-primary/10 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">apartment</span>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-lg font-bold leading-tight tracking-[-0.015em]">Super Business Shop</h2>
+</div>
+<label class="flex flex-col min-w-40 h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full overflow-hidden">
+<div class="text-primary/60 flex items-center justify-center bg-primary/5 px-3">
+<span class="material-symbols-outlined text-xl">search</span>
+</div>
+<input class="form-input w-full border-none bg-primary/5 focus:ring-0 focus:outline-none placeholder:text-primary/40 text-sm" placeholder="Search suppliers..." type="text"/>
+</div>
+</label>
+</div>
+<div class="flex flex-1 justify-end gap-6 items-center">
+<nav class="flex items-center gap-6">
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Dashboard</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Inventory</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Customers</a>
+<a class="text-primary text-sm font-bold border-b-2 border-primary py-1" href="#">Suppliers</a>
+<a class="text-slate-600 dark:text-slate-400 text-sm font-medium hover:text-primary transition-colors" href="#">Reports</a>
+</nav>
+<div class="flex gap-2">
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/5 text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-primary/5 text-primary hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+<div class="bg-primary/20 rounded-full size-10 flex items-center justify-center overflow-hidden border border-primary/10">
+<img class="w-full h-full object-cover" data-alt="User profile avatar" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAS38ejvnU_E8tmpSIytlMDwif63f15vrLuPKEaWe5ypBk41Zyo-f5LQJfGmX1sUBZ2mnMOJExdnTaJpOM54MixDhfJ2059kJdv9aDJJQOC-zjpJj3CJi0RydR692WMKSsDQn6IvMXq1C5TG_-q1MKyvrLyhPSEs0BKMQGdAFJnyUOM8NS6j6aSso95aUFoheEfDTM0s-9SOR3mR2Eh6sNIX4YIqdTezQtR-95VrLkeX-MHJyYLGuHcrHHq0fWRtORU7uRmOj1GP95n"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1">
+<!-- Sidebar Navigation -->
+<aside class="w-64 border-r border-primary/10 bg-white dark:bg-slate-900 p-4 hidden lg:flex flex-col gap-4">
+<div class="flex flex-col gap-1">
+<div class="px-3 py-2">
+<p class="text-primary text-[10px] font-bold uppercase tracking-wider">Management</p>
+</div>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/5 text-slate-700 dark:text-slate-300" href="#">
+<span class="material-symbols-outlined text-xl">dashboard</span>
+<span class="text-sm font-medium">Overview</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/5 text-slate-700 dark:text-slate-300" href="#">
+<span class="material-symbols-outlined text-xl">receipt_long</span>
+<span class="text-sm font-medium">Purchase Orders</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg bg-primary text-white" href="#">
+<span class="material-symbols-outlined text-xl">group</span>
+<span class="text-sm font-medium">Suppliers</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/5 text-slate-700 dark:text-slate-300" href="#">
+<span class="material-symbols-outlined text-xl">payments</span>
+<span class="text-sm font-medium">Payments</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-primary/5 text-slate-700 dark:text-slate-300" href="#">
+<span class="material-symbols-outlined text-xl">trending_down</span>
+<span class="text-sm font-medium">Expenses</span>
+</a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 flex flex-col p-8">
+<!-- Breadcrumbs -->
+<nav class="flex items-center gap-2 text-sm mb-6 text-slate-500">
+<a class="hover:text-primary transition-colors" href="#">Suppliers</a>
+<span class="material-symbols-outlined text-sm">chevron_right</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">Supplier Ledger: Global Tech Solutions</span>
+</nav>
+<!-- Header Area -->
+<div class="flex flex-wrap justify-between items-end gap-4 mb-8">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-3">
+<h1 class="text-3xl font-black text-slate-900 dark:text-slate-100">Global Tech Solutions</h1>
+<span class="bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 text-xs font-bold px-2 py-1 rounded">DEBTOR</span>
+</div>
+<p class="text-slate-500 max-w-xl">Transaction history, detailed statements, and settlement tracker for hardware and peripheral supplies.</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 rounded-lg h-11 px-5 border border-primary text-primary font-bold hover:bg-primary/5 transition-colors">
+<span class="material-symbols-outlined">download</span>
+                            Statement
+                        </button>
+<button class="flex items-center gap-2 rounded-lg h-11 px-6 bg-primary text-white font-bold shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all">
+<span class="material-symbols-outlined">add_card</span>
+                            Record Payment to Supplier
+                        </button>
+</div>
+</div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-primary/10 shadow-sm">
+<p class="text-slate-500 text-sm font-medium mb-1">Total Purchases</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-slate-100">$124,500.00</p>
+<div class="mt-3 flex items-center text-emerald-600 text-xs font-bold">
+<span class="material-symbols-outlined text-sm">trending_up</span>
+<span class="ml-1">+14.2% from last month</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-primary/10 shadow-sm">
+<p class="text-slate-500 text-sm font-medium mb-1">Amount Paid</p>
+<p class="text-2xl font-bold text-slate-900 dark:text-slate-100">$98,000.00</p>
+<div class="mt-3 flex items-center text-emerald-600 text-xs font-bold">
+<span class="material-symbols-outlined text-sm">check_circle</span>
+<span class="ml-1">78.7% Paid</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-red-500/20 shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2 opacity-10">
+<span class="material-symbols-outlined text-6xl text-red-600">account_balance_wallet</span>
+</div>
+<p class="text-slate-500 text-sm font-medium mb-1">Total Payable (I Owe)</p>
+<p class="text-2xl font-bold text-red-600">$26,500.00</p>
+<div class="mt-3 flex items-center text-red-500 text-xs font-bold">
+<span class="material-symbols-outlined text-sm">warning</span>
+<span class="ml-1">3 Overdue Invoices</span>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-emerald-500/20 shadow-sm relative overflow-hidden">
+<div class="absolute top-0 right-0 p-2 opacity-10">
+<span class="material-symbols-outlined text-6xl text-emerald-600">assignment_return</span>
+</div>
+<p class="text-slate-500 text-sm font-medium mb-1">Credit Balance (They Owe)</p>
+<p class="text-2xl font-bold text-emerald-600">$1,200.00</p>
+<div class="mt-3 flex items-center text-slate-400 text-xs font-bold">
+<span class="material-symbols-outlined text-sm">info</span>
+<span class="ml-1">From returned goods</span>
+</div>
+</div>
+</div>
+<!-- Ledger Table -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-primary/10 overflow-hidden">
+<div class="p-4 border-b border-primary/10 flex justify-between items-center bg-primary/5">
+<h3 class="font-bold text-slate-900 dark:text-slate-100">Transaction History</h3>
+<div class="flex gap-2">
+<button class="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded bg-white dark:bg-slate-800 border border-primary/20 text-slate-600">
+<span class="material-symbols-outlined text-sm">filter_list</span> Filter
+                            </button>
+<button class="flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded bg-white dark:bg-slate-800 border border-primary/20 text-slate-600">
+<span class="material-symbols-outlined text-sm">calendar_today</span> Oct 2023 - Dec 2023
+                            </button>
+</div>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead class="bg-slate-50 dark:bg-slate-800/50">
+<tr>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Date</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Reference / PO</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Description</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase">Type</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Debit ($)</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Credit ($)</th>
+<th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase text-right">Balance ($)</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-primary/5">
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Dec 15, 2023</td>
+<td class="px-6 py-4 text-sm font-medium text-primary">PO-9942</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Bulk Order: 50x Monitor Stands</td>
+<td class="px-6 py-4 text-sm"><span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-xs">Purchase</span></td>
+<td class="px-6 py-4 text-sm text-right font-bold text-red-600">5,000.00</td>
+<td class="px-6 py-4 text-sm text-right text-slate-400">0.00</td>
+<td class="px-6 py-4 text-sm text-right font-bold text-red-600">26,500.00</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Dec 10, 2023</td>
+<td class="px-6 py-4 text-sm font-medium text-primary">PAY-8821</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Check Payment #4421</td>
+<td class="px-6 py-4 text-sm"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-bold">Payment</span></td>
+<td class="px-6 py-4 text-sm text-right text-slate-400">0.00</td>
+<td class="px-6 py-4 text-sm text-right font-bold text-emerald-600">10,000.00</td>
+<td class="px-6 py-4 text-sm text-right font-bold text-red-600">21,500.00</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Dec 05, 2023</td>
+<td class="px-6 py-4 text-sm font-medium text-primary">RET-4412</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Return: Damaged Graphic Cards (x4)</td>
+<td class="px-6 py-4 text-sm"><span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 text-xs font-bold">Credit Note</span></td>
+<td class="px-6 py-4 text-sm text-right text-slate-400">0.00</td>
+<td class="px-6 py-4 text-sm text-right font-bold text-emerald-600">1,200.00</td>
+<td class="px-6 py-4 text-sm text-right font-bold text-red-600">31,500.00</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Nov 28, 2023</td>
+<td class="px-6 py-4 text-sm font-medium text-primary">PO-9811</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Restock: RTX Series GPUs</td>
+<td class="px-6 py-4 text-sm"><span class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 text-xs">Purchase</span></td>
+<td class="px-6 py-4 text-sm text-right font-bold text-red-600">12,500.00</td>
+<td class="px-6 py-4 text-sm text-right text-slate-400">0.00</td>
+<td class="px-6 py-4 text-sm text-right font-bold text-red-600">32,700.00</td>
+</tr>
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Nov 15, 2023</td>
+<td class="px-6 py-4 text-sm font-medium text-primary">PAY-8750</td>
+<td class="px-6 py-4 text-sm text-slate-600 dark:text-slate-400">Wire Transfer: Initial Deposit</td>
+<td class="px-6 py-4 text-sm"><span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 text-xs font-bold">Payment</span></td>
+<td class="px-6 py-4 text-sm text-right text-slate-400">0.00</td>
+<td class="px-6 py-4 text-sm text-right font-bold text-emerald-600">15,000.00</td>
+<td class="px-6 py-4 text-sm text-right font-bold text-red-600">20,200.00</td>
+</tr>
+</tbody>
+<tfoot class="bg-slate-50 dark:bg-slate-800 font-bold border-t-2 border-primary/10">
+<tr>
+<td class="px-6 py-4 text-right text-slate-900 dark:text-slate-100 uppercase text-xs tracking-wider" colspan="4">Net Outstanding Balance</td>
+<td class="px-6 py-4 text-right text-xl text-red-600" colspan="3">$26,500.00 (Due)</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<div class="px-6 py-4 border-t border-primary/10 flex items-center justify-between text-sm">
+<p class="text-slate-500">Showing 1-5 of 142 transactions</p>
+<div class="flex gap-2">
+<button class="px-4 py-2 border border-primary/20 rounded-lg bg-white dark:bg-slate-800 text-slate-600 hover:bg-primary/5 disabled:opacity-50">Previous</button>
+<button class="px-4 py-2 border border-primary/20 rounded-lg bg-primary text-white">Next</button>
+</div>
+</div>
+</div>
+<!-- Summary Footer Info -->
+<div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-primary/10">
+<h4 class="font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">contact_mail</span>
+                            Supplier Contact Information
+                        </h4>
+<div class="space-y-3">
+<div class="flex justify-between py-2 border-b border-primary/5">
+<span class="text-slate-500 text-sm">Account Manager</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">David Miller</span>
+</div>
+<div class="flex justify-between py-2 border-b border-primary/5">
+<span class="text-slate-500 text-sm">Email Address</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">accounts@globaltech.com</span>
+</div>
+<div class="flex justify-between py-2 border-b border-primary/5">
+<span class="text-slate-500 text-sm">Payment Terms</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">Net 30 Days</span>
+</div>
+<div class="flex justify-between py-2">
+<span class="text-slate-500 text-sm">Office Location</span>
+<span class="text-slate-900 dark:text-slate-100 font-medium">San Francisco, CA</span>
+</div>
+</div>
+</div>
+<div class="bg-white dark:bg-slate-900 rounded-xl p-6 border border-primary/10">
+<h4 class="font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">account_tree</span>
+                            Aging Summary
+                        </h4>
+<div class="space-y-4">
+<div>
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-slate-500">Current (0-30 days)</span>
+<span class="text-slate-900 dark:text-slate-100">$18,000.00</span>
+</div>
+<div class="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-emerald-500" style="width: 68%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-slate-500">Overdue (31-60 days)</span>
+<span class="text-red-500">$6,500.00</span>
+</div>
+<div class="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-red-400" style="width: 24%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-xs font-bold mb-1">
+<span class="text-slate-500">Long Overdue (60+ days)</span>
+<span class="text-red-700">$2,000.00</span>
+</div>
+<div class="h-2 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+<div class="h-full bg-red-700" style="width: 8%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</div>
+</body></html>

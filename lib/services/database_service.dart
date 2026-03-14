@@ -825,10 +825,11 @@ class DatabaseService {
     final sales = await getTodaySales();
     
     // 2. Get actual cost of goods sold (from sale_items × product cost_price)
+    final shopId = await _getShopId();
     final costData = await _db
         .from('sale_items')
         .select('quantity, subtotal, sale_id, product_id')
-        .filter('sale_id', 'in', '(SELECT id FROM sales WHERE shop_id = \'$(await _getShopId())\' AND date >= \'${today}T00:00:00\' AND date <= \'${today}T23:59:59\')');
+        .filter('sale_id', 'in', '(SELECT id FROM sales WHERE shop_id = \'${shopId}\' AND date >= \'${today}T00:00:00\' AND date <= \'${today}T23:59:59\')');
     
     // Fallback: calculate cost from products table
     double totalCost = 0;

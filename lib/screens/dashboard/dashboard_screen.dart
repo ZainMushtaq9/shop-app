@@ -5,6 +5,7 @@ import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../providers/app_providers.dart';
+import '../../widgets/skeleton_loader.dart';
 
 /// Dashboard — the main home screen showing today's summary.
 /// Matches the dashboard layout from Section 09 of requirements:
@@ -549,8 +550,8 @@ class _LowStockAlerts extends ConsumerWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: 3,
-              itemBuilder: (_, __) => const Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppDimens.spacingMD, vertical: AppDimens.spacingXS),
+              itemBuilder: (_, __) => Padding(
+                padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingMD, vertical: AppDimens.spacingXS),
                 child: CustomSkeleton(width: double.infinity, height: 60, borderRadius: 8),
               ),
             ),

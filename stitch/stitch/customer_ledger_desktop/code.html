@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Customer Ledger - Super Business Shop</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006c75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0f2223",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="flex h-screen overflow-hidden">
+<!-- Sidebar Navigation -->
+<aside class="w-64 bg-white dark:bg-slate-900 border-r border-primary/10 flex flex-col">
+<div class="p-6 flex items-center gap-3">
+<div class="size-10 rounded-full bg-primary flex items-center justify-center text-white">
+<span class="material-symbols-outlined">storefront</span>
+</div>
+<div>
+<h1 class="font-bold text-slate-900 dark:text-white leading-tight">Super Business</h1>
+<p class="text-xs text-primary font-medium">Shop Management</p>
+</div>
+</div>
+<nav class="flex-1 px-4 space-y-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-primary/5 rounded-lg" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-primary/10 text-primary rounded-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">group</span>
+<span class="text-sm font-medium">Customer Ledger</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-primary/5 rounded-lg" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-sm font-medium">Inventory</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-primary/5 rounded-lg" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="text-sm font-medium">Sales</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-primary/5 rounded-lg" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-primary/10">
+<div class="flex items-center gap-3 p-2">
+<div class="size-8 rounded-full bg-slate-200 dark:bg-slate-800 bg-cover bg-center" data-alt="User profile avatar placeholder" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCyvuNO89iPbEpvkhhnb3aQmsC3S5Gbb1gdsV91boj7baut6dxaNST7XgQz5Y1wqwlwQHvaAwPeMQn--A56EWzQe805VaINGqBz8bC3QaXY6Uo1q2kCBJhkaSwLfKO7KtBIRqEjkAjhmY3SVOfMuZOjnGmevKqWI8Tt3kTnYIb5ePqxaXlSUYwXR8Kiy2tBVPvtPUZQT2vCpIp0vnjdF7qW6xuVaL4-kHoxlQPHXTOckRFlw0OPB6If_qhm3bXdZfz_jmhOL6vs8_aO')"></div>
+<div class="flex-1 min-w-0">
+<p class="text-sm font-semibold truncate">Admin User</p>
+<p class="text-xs text-slate-500 truncate">Store Manager</p>
+</div>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 flex flex-col overflow-hidden">
+<!-- Header -->
+<header class="h-16 bg-white dark:bg-slate-900 border-b border-primary/10 px-8 flex items-center justify-between">
+<div class="flex items-center gap-4 flex-1 max-w-xl">
+<div class="relative w-full">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">search</span>
+<input class="w-full pl-10 pr-4 py-2 bg-primary/5 border-none rounded-lg text-sm focus:ring-2 focus:ring-primary/20" placeholder="Search customers by name or phone..." type="text"/>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<button class="p-2 text-slate-500 hover:bg-primary/5 rounded-full relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 size-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
+</button>
+<button class="bg-primary text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2">
+<span class="material-symbols-outlined text-sm">person_add</span>
+                        Add New Customer
+                    </button>
+</div>
+</header>
+<!-- Dashboard Grid -->
+<div class="flex-1 flex overflow-hidden">
+<!-- Left Column: Customer List -->
+<section class="w-1/3 border-r border-primary/10 bg-white/50 dark:bg-slate-900/50 flex flex-col">
+<div class="p-4 border-b border-primary/5 flex justify-between items-center bg-white dark:bg-slate-900">
+<h2 class="font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider text-xs">All Customers</h2>
+<span class="text-xs text-primary font-medium">124 Total</span>
+</div>
+<div class="flex-1 overflow-y-auto">
+<!-- Customer Item (Owes) -->
+<div class="p-4 border-b border-primary/5 bg-primary/5 cursor-pointer">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="Customer Ahmed Khan avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBgBEPjko1iu3Qrkr0qof3FNaxpN132IzSQ4BJqOzunK9e2CMBmh2L7SZ2zjmVdsGzTOXIUZ14ZOPZaO39V1i13xtUjpkf6YT1mNOEZOTQZvJ9bvPh5vSKYVHhynhBDjCr0unxEqtI0S0stiIApZE2t9W1fw5QvzB4dqlSuhZqeCwUeXt7MZq2IMSEka949oEMYoH_uVTSZ1BZaxuPibYoxMEjbm8Zii5U75lG_0uIrrsgJDZ2CHwLTpMuL_yZSssejX6-7KnqOx7cg')"></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-semibold text-sm">Ahmed Khan</h3>
+<span class="text-xs text-red-600 dark:text-red-400 font-bold">OWES</span>
+</div>
+<div class="flex justify-between items-end mt-1">
+<p class="text-xs text-slate-500">Last: 2 hours ago</p>
+<p class="text-sm font-black text-slate-900 dark:text-white">Rs. 15,000</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Customer Item (Advance) -->
+<div class="p-4 border-b border-primary/5 hover:bg-primary/5 cursor-pointer bg-white dark:bg-slate-900">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="Customer Sarah Ali avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDzmFNXqVq8sqq9rmMcFLDKIVsC1TshWijDugUWa9LqNCp41BIW1LLHceBww0nN_RG9-CCsE4GnKN9O4MLXlbohgA8ujUFBZWXMp81HoahSkAlgO_CXlwmJT-NAjb025uAQa5y__gPkI3wETpSxh_9dZ-nCaxPideZ8-JjLzB22NhczrdHOL2dX6tgGRWL_FFG8Gh2gbAfamcTt8MwvbHi90qviarjoyu31r4PoF5VuqeIt2B1ZYI_xCF1MOOFt5RoRUbJwM1SnppoJ')"></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-semibold text-sm">Sarah Ali</h3>
+<span class="text-xs text-green-600 dark:text-green-400 font-bold uppercase">Advance</span>
+</div>
+<div class="flex justify-between items-end mt-1">
+<p class="text-xs text-slate-500">Last: Yesterday</p>
+<p class="text-sm font-black text-slate-900 dark:text-white">Rs. 2,500</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Customer Item (Owes) -->
+<div class="p-4 border-b border-primary/5 hover:bg-primary/5 cursor-pointer bg-white dark:bg-slate-900">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-slate-200 dark:bg-slate-700 bg-cover bg-center" data-alt="Customer John Doe avatar" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCKkG_BOZ83KFZAHvBW4ElICYAqp0nhprjfthC-YiIr3W4RBTWLz9a4S3rUXyQTXCG7x-cjv5yjfpZcR_vs_bxV0_nu5v3f662OpQhQItQcWU7j3YjfO5V-cBWhNV4Se-PEWxaQ0ppcrLSlZ_iUcCnnB1IPtuWG4Y9N-_-pkbZjNjqdx2y-8Ftx-VFFOeRfAHm8yq-SaSphKkpZY-dmvsZWvjdwZRX2ksjxhl7nEKjKVt6tzTodDZjL--dRB7KA-I93MML2bf6C5VxA')"></div>
+<div class="flex-1">
+<div class="flex justify-between items-start">
+<h3 class="font-semibold text-sm">John Doe</h3>
+<span class="text-xs text-red-600 dark:text-red-400 font-bold uppercase">Owes</span>
+</div>
+<div class="flex justify-between items-end mt-1">
+<p class="text-xs text-slate-500">Last: 3 days ago</p>
+<p class="text-sm font-black text-slate-900 dark:text-white">Rs. 500</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Right Column: Customer Details -->
+<section class="flex-1 flex flex-col overflow-y-auto">
+<!-- Detail Header -->
+<div class="p-8 bg-white dark:bg-slate-900 border-b border-primary/10">
+<div class="flex justify-between items-start">
+<div class="flex gap-6 items-center">
+<div class="size-24 rounded-2xl bg-slate-200 dark:bg-slate-800 bg-cover bg-center ring-4 ring-primary/5" data-alt="Large profile photo of Ahmed Khan" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuA6k4UKnJGQBK-0IudMC__bievvD9PCbvJhmv4vtZx-l2IhNiRqQy8X0oFJ1IEDfh_tgs41YVud7eKZtXEbeUHhqT0rPxIvgrq61cxpm_kh_K7mEc3h2AhNF59bTTJE4E2zZIK0tqg1d2PZ_swDClfnXZ7q2LlgtqMjp4ztELe992vRP6EuqJZw9bUOthRZwWlU9V6u7-AR1WxyPM-LNoo7PRkRqk9iyd1-oCWePfSr9AbYAIakAey_MS6LJ3YFtUGkZ3IhHZ0vOJ8-')"></div>
+<div>
+<h2 class="text-3xl font-black tracking-tight text-slate-900 dark:text-white">Ahmed Khan</h2>
+<div class="flex items-center gap-2 mt-1">
+<span class="material-symbols-outlined text-primary text-sm">call</span>
+<p class="text-slate-500 font-medium">+92 300 1234567</p>
+</div>
+<div class="mt-4 flex gap-2">
+<span class="px-3 py-1 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-full">CREDIT CUSTOMER</span>
+<span class="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">A-GRADE</span>
+</div>
+</div>
+</div>
+<div class="text-right">
+<p class="text-sm font-medium text-slate-500 mb-1">Current Balance</p>
+<p class="text-5xl font-black text-red-600 dark:text-red-500 tracking-tighter">Rs. 15,000</p>
+<p class="text-xs font-bold text-red-600/60 mt-1 uppercase">Balance Due Since Oct 15</p>
+</div>
+</div>
+<div class="mt-8 flex gap-4">
+<button class="flex-1 flex items-center justify-center gap-2 bg-primary text-white py-3 rounded-xl font-bold shadow-lg shadow-primary/20 hover:brightness-110 transition-all">
+<span class="material-symbols-outlined">payments</span>
+                                Record Payment
+                            </button>
+<button class="flex-1 flex items-center justify-center gap-2 bg-white dark:bg-slate-800 border-2 border-primary/20 text-primary py-3 rounded-xl font-bold hover:bg-primary/5 transition-all">
+<span class="material-symbols-outlined">calendar_month</span>
+                                Create Kist Plan
+                            </button>
+<button class="flex-1 flex items-center justify-center gap-2 bg-green-600 text-white py-3 rounded-xl font-bold shadow-lg shadow-green-600/20 hover:brightness-110 transition-all">
+<span class="material-symbols-outlined">chat</span>
+                                WhatsApp Reminder
+                            </button>
+</div>
+</div>
+<!-- Transaction Timeline -->
+<div class="p-8">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-bold text-lg">Transaction History</h3>
+<button class="text-primary text-sm font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-sm">filter_list</span>
+                                Filter
+                            </button>
+</div>
+<div class="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary/20 before:via-primary/20 before:to-transparent">
+<!-- Item: Purchase -->
+<div class="relative flex items-center justify-between group">
+<div class="flex items-center gap-6">
+<div class="size-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 z-10">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'wght' 700">shopping_bag</span>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-white">Stock Purchase - Grocery Items</p>
+<p class="text-xs text-slate-500">Bill #45021 • 12:45 PM, Today</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-black text-red-600 dark:text-red-400">+ Rs. 5,000</p>
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Added to Baqi</p>
+</div>
+</div>
+<!-- Item: Payment -->
+<div class="relative flex items-center justify-between group">
+<div class="flex items-center gap-6">
+<div class="size-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center text-green-600 dark:text-green-400 z-10">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'wght' 700">check_circle</span>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-white">Cash Payment Received</p>
+<p class="text-xs text-slate-500">Collected by Admin • Oct 22, 2023</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-black text-green-600 dark:text-green-400">- Rs. 10,000</p>
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Paid Cash</p>
+</div>
+</div>
+<!-- Item: Purchase -->
+<div class="relative flex items-center justify-between group">
+<div class="flex items-center gap-6">
+<div class="size-10 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center text-red-600 dark:text-red-400 z-10">
+<span class="material-symbols-outlined text-base" style="font-variation-settings: 'wght' 700">shopping_bag</span>
+</div>
+<div>
+<p class="font-bold text-slate-900 dark:text-white">Milk &amp; Dairy Products</p>
+<p class="text-xs text-slate-500">Bill #44899 • Oct 20, 2023</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-black text-red-600 dark:text-red-400">+ Rs. 12,000</p>
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Added to Baqi</p>
+</div>
+</div>
+<!-- Item: Old Balance -->
+<div class="relative flex items-center justify-between group">
+<div class="flex items-center gap-6">
+<div class="size-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400 z-10">
+<span class="material-symbols-outlined text-base">history</span>
+</div>
+<div>
+<p class="font-bold text-slate-600 dark:text-slate-400">Opening Balance</p>
+<p class="text-xs text-slate-500">Account Created • Oct 01, 2023</p>
+</div>
+</div>
+<div class="text-right">
+<p class="font-black text-slate-600 dark:text-slate-400">Rs. 8,000</p>
+<p class="text-[10px] text-slate-400 uppercase font-bold tracking-widest">Starting Baqi</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</div>
+</body></html>

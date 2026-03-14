@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<html class="light" dir="rtl" lang="ur"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400..700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006c75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0f2223",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"],
+                        "urdu": ["'Noto Nastaliq Urdu'", "serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', sans-serif;
+        }
+        .urdu-text {
+            font-family: 'Noto Nastaliq Urdu', serif;
+            line-height: 2.5;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+<div class="relative flex h-auto min-h-screen w-full flex-col bg-background-light dark:bg-background-dark overflow-x-hidden max-w-md mx-auto shadow-2xl">
+<!-- Header Section -->
+<div class="flex items-center bg-white dark:bg-slate-900 p-4 pb-2 justify-between border-b border-primary/10">
+<div class="text-primary flex size-12 shrink-0 items-center justify-start">
+<span class="material-symbols-outlined text-3xl">menu</span>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold urdu-text flex-1 text-center">سپر بزنس شاپ</h2>
+<div class="flex w-12 items-center justify-end">
+<button class="flex cursor-pointer items-center justify-center rounded-lg h-12 bg-transparent text-primary">
+<span class="material-symbols-outlined text-2xl">notifications</span>
+</button>
+</div>
+</div>
+<!-- Search Bar Section -->
+<div class="px-4 py-4 bg-white dark:bg-slate-900">
+<label class="flex flex-col min-w-40 h-12 w-full">
+<div class="flex w-full flex-1 items-stretch rounded-xl h-full overflow-hidden shadow-sm border border-primary/20">
+<div class="text-primary flex bg-primary/5 items-center justify-center px-4">
+<span class="material-symbols-outlined">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 border-none bg-primary/5 focus:ring-0 h-full placeholder:text-slate-400 px-4 urdu-text text-right" placeholder="گاہک تلاش کریں..." value=""/>
+</div>
+</label>
+</div>
+<!-- Tabs Section -->
+<div class="bg-white dark:bg-slate-900">
+<div class="flex border-b border-primary/10 px-4 gap-8">
+<a class="flex flex-col items-center justify-center border-b-[3px] border-primary text-primary pb-2 pt-4 flex-1" href="#">
+<p class="urdu-text text-sm font-bold">تمام</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-slate-500 pb-2 pt-4 flex-1" href="#">
+<p class="urdu-text text-sm font-bold">باقی</p>
+</a>
+<a class="flex flex-col items-center justify-center border-b-[3px] border-transparent text-slate-500 pb-2 pt-4 flex-1" href="#">
+<p class="urdu-text text-sm font-bold">ایڈوانس</p>
+</a>
+</div>
+</div>
+<!-- Stats Overview -->
+<div class="grid grid-cols-2 gap-3 p-4">
+<div class="bg-red-50 dark:bg-red-900/20 p-4 rounded-xl border border-red-100 dark:border-red-800">
+<p class="urdu-text text-xs text-red-600 dark:text-red-400">کل واجب الادا</p>
+<p class="text-xl font-bold text-red-700 dark:text-red-300">Rs 45,200</p>
+</div>
+<div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-xl border border-green-100 dark:border-green-800">
+<p class="urdu-text text-xs text-green-600 dark:text-green-400">کل ایڈوانس</p>
+<p class="text-xl font-bold text-green-700 dark:text-green-300">Rs 12,850</p>
+</div>
+</div>
+<!-- Customer List -->
+<div class="flex-1 overflow-y-auto px-4 space-y-3 pb-24">
+<!-- Customer Item 1 (Owes Money - Red) -->
+<div class="flex items-center gap-4 bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12 border-2 border-primary/10" data-alt="Portrait of a male customer for account ledger" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuD4Gfoq1MRl-0ERLMBwJklr5EgEoXTUvk6v3pZc533vFonS3sshRC-EekSEk-yYhNCq6fu4k0m27StMB3VLtU85N8EOitqBAfWqTzWqbU8h65ivXLCwfkjm5CCYDVxTIOBgdWDYucsmWvxqiOnWys4Bjb63GRAbaLSVmFDy3ElTZcMRw7Zin6okxrkLbImxkSi9GBW4RWCUDx-GTBkzBc_fhD_n9bE5hwKjIctz2JEZRozwy5zJVRkX1sEXDAjDTws70SOITjbWK2k6");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-slate-100 font-bold urdu-text leading-tight">محمد احمد خان</p>
+<p class="text-slate-500 text-xs urdu-text">آخری لین دین: 2 گھنٹے پہلے</p>
+</div>
+</div>
+<div class="text-left">
+<p class="text-red-600 dark:text-red-400 font-bold text-lg">Rs 5,000</p>
+<p class="urdu-text text-[10px] text-red-500 text-left">باقی</p>
+</div>
+</div>
+<!-- Customer Item 2 (Advance - Green) -->
+<div class="flex items-center gap-4 bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12 border-2 border-primary/10" data-alt="Portrait of a smiling customer in business attire" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAhWQYHsWfr-SPeKdMGtbwGs3Z9FCJRxnMV89dAzaZW_6B2RweY3WXv7jUFxDCggiYOu8xL7rbuOEy8oxwpztwnfSzwL9luGFcNdIGL61p-rgCKcZEfP7vEAy5NSSSCFyQhP94rZYG3_bm-lkbECby_MyV1cj1ALN-no9RATzi82Jgx_2xeT9B8zXKMdFrpXzPsIRr2kX_cCX9AtfsvaHoqruHCGKZXC-MAHopj1Dy4SPW7KGXXVuTFQXvdhuKZwMa8JTO-m6pIhA79");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-slate-100 font-bold urdu-text leading-tight">عبدالرحمان</p>
+<p class="text-slate-500 text-xs urdu-text">آخری لین دین: کل</p>
+</div>
+</div>
+<div class="text-left">
+<p class="text-green-600 dark:text-green-400 font-bold text-lg">Rs 2,300</p>
+<p class="urdu-text text-[10px] text-green-500 text-left">ایڈوانس</p>
+</div>
+</div>
+<!-- Customer Item 3 (Owes Money - Red) -->
+<div class="flex items-center gap-4 bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12 border-2 border-primary/10" data-alt="Portrait of an elderly gentleman customer" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAeYTsEdNk47OSK0kUyWS6FdPq6qxIlWv6yxV5fu8R-fQqtWpqDNuRRNrq0d86KNCKU5JkykXF_ol4ivKuqmn88y14egNFx1re4rXobC-Jw_4XIalxPfIiTXbnZ28R4X67mZWe8MB8BBLfxlukMp21EimRWWb3ltkWXSiCSZifZCmKcgu_LL1YFljF2ZflLdv6FzK22hhaDDvYnKSA5vNoKGzHgsej__1rtM82P0GwATEBh3tMm6aunHcoEeIr5dVR0tBu_MDn3LvA3");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-slate-100 font-bold urdu-text leading-tight">حاجی اسلم</p>
+<p class="text-slate-500 text-xs urdu-text">آخری لین دین: 3 دن پہلے</p>
+</div>
+</div>
+<div class="text-left">
+<p class="text-red-600 dark:text-red-400 font-bold text-lg">Rs 12,400</p>
+<p class="urdu-text text-[10px] text-red-500 text-left">باقی</p>
+</div>
+</div>
+<!-- Customer Item 4 (Advance - Green) -->
+<div class="flex items-center gap-4 bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12 border-2 border-primary/10" data-alt="Generic placeholder user icon for customer" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuAdmpLhwwOjQKRk4GHXYl9LMNzhPD2j5t_qqIBSJmjAqvo7u6Mh7bjYaM_iBokJHNCLngGGX7LshAP-NVPVAYlDQBWDRH1fXW9pCMi5eakD89v9Ejvmpi8rIpKbI8A4EUU0WX-kvVxRMl5M8zqBcdxp0BTa7-MceU0ZOkGHmVq_FoWcwdPkTASk7tRy1BaSthJd_s9QGxPLO6kWGuhO4_P4GqXYsA3ucDIHN5OXcV7hFgJ4tR1Z3R8U7kRYL332q-hUG1tCsU5cmLb1");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-slate-100 font-bold urdu-text leading-tight">عرفان علی</p>
+<p class="text-slate-500 text-xs urdu-text">آخری لین دین: ابھی</p>
+</div>
+</div>
+<div class="text-left">
+<p class="text-green-600 dark:text-green-400 font-bold text-lg">Rs 850</p>
+<p class="urdu-text text-[10px] text-green-500 text-left">ایڈوانس</p>
+</div>
+</div>
+<!-- Customer Item 5 (Owes Money - Red) -->
+<div class="flex items-center gap-4 bg-white dark:bg-slate-900 p-3 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 justify-between">
+<div class="flex items-center gap-4">
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-12 w-12 border-2 border-primary/10" data-alt="Customer avatar icon" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDkDli5zpinsH41Hgmb41gEw4s7ATCnz8GkQUy9UOjqtFUZnd3x_lPvgqvhxHAnWMovPfbzmWOG1CwPUjCNHArlTJg62ZlaQ3hClFwmVy46DsgClbpbzG61EIjCAHWBowhTCOZvZv9xLkvzhrVF3HPF5nd-CnlWPfsaHvD356VFXz47cDk0tKJmL8WpNrBlxNryW4I_oJXEgSiINSkc2Bq7wjxRvYXJ_SkUY7CVKTx7vcmHduP7lILQsV4wBXLAafvU-fMT0Nvpm5p0");'></div>
+<div class="flex flex-col justify-center">
+<p class="text-slate-900 dark:text-slate-100 font-bold urdu-text leading-tight">سہیل اختر</p>
+<p class="text-slate-500 text-xs urdu-text">آخری لین دین: 1 ہفتہ پہلے</p>
+</div>
+</div>
+<div class="text-left">
+<p class="text-red-600 dark:text-red-400 font-bold text-lg">Rs 1,200</p>
+<p class="urdu-text text-[10px] text-red-500 text-left">باقی</p>
+</div>
+</div>
+</div>
+<!-- Floating Add Button -->
+<button class="fixed bottom-24 left-6 bg-primary text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-primary/90 transition-colors">
+<span class="material-symbols-outlined text-3xl">person_add</span>
+</button>
+<!-- Mirrored Bottom Navigation Bar -->
+<div class="fixed bottom-0 left-0 right-0 bg-white dark:bg-slate-900 border-t border-primary/10 max-w-md mx-auto">
+<div class="flex gap-2 px-4 pb-3 pt-2">
+<!-- Mirrored order: Home, Ledger, Reports, Settings -->
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">home</span>
+</div>
+<p class="urdu-text text-xs font-medium">ہوم</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-primary border-t-2 border-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined fill-1">menu_book</span>
+</div>
+<p class="urdu-text text-xs font-bold">کھاتہ</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">bar_chart</span>
+</div>
+<p class="urdu-text text-xs font-medium">رپورٹ</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">settings</span>
+</div>
+<p class="urdu-text text-xs font-medium">ترتیبات</p>
+</a>
+</div>
+</div>
+</div>
+</body></html>

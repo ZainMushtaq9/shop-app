@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
 import '../../services/database_service.dart';
+import '../../providers/app_providers.dart';
 
 class CustomerPortalQRScreen extends ConsumerStatefulWidget {
   const CustomerPortalQRScreen({super.key});

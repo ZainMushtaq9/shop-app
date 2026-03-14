@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ur"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006c75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0f2223",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Nastaliq Urdu", "serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            /* Mirroring icons for RTL */
+            transform: scaleX(-1);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="max-w-md mx-auto bg-white dark:bg-slate-900 min-h-screen flex flex-col shadow-xl">
+<!-- Header -->
+<div class="flex items-center p-4 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md z-10">
+<div class="flex-1">
+<h1 class="text-xl font-bold text-slate-900 dark:text-white leading-loose">ترتیبات</h1>
+</div>
+<button class="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors">
+<span class="material-symbols-outlined text-slate-600 dark:text-slate-400">arrow_forward</span>
+</button>
+</div>
+<!-- Profile Section -->
+<div class="p-6 flex items-center gap-4 bg-primary/5 dark:bg-primary/10 m-4 rounded-xl">
+<div class="relative">
+<div class="w-20 h-20 rounded-full bg-primary/20 border-2 border-primary overflow-hidden flex items-center justify-center">
+<img alt="Shop Profile" class="w-full h-full object-cover" data-alt="A small modern storefront with glass windows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDv23f1iJVMdBkXFNU5nNI7lhfUK46D8eO1RY0P646kuNeQTyMxrLrotik76MP3o0DXRH2HdmVP5RLrx-j6jzd5jVeTSyEEnuogkeoJSXZFA2VoXNBsWbLjNgo2QlGDey-lsNfRkscv1wArzWhRVP_LYryogGpc0UM-vMKTESBbdvvzJX3VDgR41cT8gATALqswXNN9k8XM1nTGTMLt1QAKyoo4q38eTWjbH3Hm4kt_Rg8GnVZNISPNbNWLvY_UUtnpn62HNpStx9S"/>
+</div>
+<div class="absolute bottom-0 right-0 bg-primary text-white p-1 rounded-full border-2 border-white dark:border-slate-900 flex items-center justify-center">
+<span class="material-symbols-outlined text-sm">edit</span>
+</div>
+</div>
+<div class="flex flex-col">
+<h2 class="text-lg font-bold text-slate-900 dark:text-white leading-loose">سپر بزنس شاپ</h2>
+<p class="text-slate-500 dark:text-slate-400 text-sm leading-loose">مالک: محمد احمد</p>
+</div>
+</div>
+<!-- Settings List -->
+<div class="flex-1 px-4 space-y-2 pb-24">
+<h3 class="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-widest px-2 py-2">عام ترتیبات</h3>
+<!-- Language Toggle -->
+<div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-primary/10 dark:bg-primary/20 text-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">translate</span>
+</div>
+<div>
+<p class="font-semibold leading-loose">زبان</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-loose">انگریزی / اردو منتخب کریں</p>
+</div>
+</div>
+<div class="flex bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg p-1">
+<button class="px-3 py-1 text-xs font-medium rounded-md bg-primary text-white">اردو</button>
+<button class="px-3 py-1 text-xs font-medium rounded-md text-slate-500">ENG</button>
+</div>
+</div>
+<!-- Dark Mode Toggle -->
+<div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-primary/10 dark:bg-primary/20 text-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">dark_mode</span>
+</div>
+<div>
+<p class="font-semibold leading-loose">ڈارک موڈ</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-loose">سکرین کی روشنی تبدیل کریں</p>
+</div>
+</div>
+<div class="w-12 h-6 bg-slate-200 dark:bg-primary/40 rounded-full relative">
+<div class="absolute left-1 top-1 w-4 h-4 bg-white dark:bg-primary rounded-full transition-all"></div>
+</div>
+</div>
+<h3 class="text-slate-400 dark:text-slate-500 text-xs font-bold uppercase tracking-widest px-2 py-4">تکنیکی ترتیبات</h3>
+<!-- Printer Setup -->
+<div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-primary/10 dark:bg-primary/20 text-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">print</span>
+</div>
+<div>
+<p class="font-semibold leading-loose">پرنٹر سیٹ اپ</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-loose">رسیپٹ پرنٹر مینیج کریں</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-400">chevron_left</span>
+</div>
+<!-- Security -->
+<div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-primary/10 dark:bg-primary/20 text-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">security</span>
+</div>
+<div>
+<p class="font-semibold leading-loose">سیکیورٹی</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-loose">پاس ورڈ اور بائیو میٹرک</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-slate-400">chevron_left</span>
+</div>
+<!-- Notifications -->
+<div class="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-colors">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 bg-primary/10 dark:bg-primary/20 text-primary rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined">notifications</span>
+</div>
+<div>
+<p class="font-semibold leading-loose">اطلاعات</p>
+<p class="text-xs text-slate-500 dark:text-slate-400 leading-loose">الرٹس اور میسجز</p>
+</div>
+</div>
+<div class="bg-primary/10 text-primary text-[10px] px-2 py-0.5 rounded-full font-bold">آن</div>
+</div>
+<!-- Logout -->
+<div class="mt-8 p-4 flex items-center justify-center gap-2 text-red-500 bg-red-50 dark:bg-red-900/10 rounded-xl cursor-pointer">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-bold leading-loose">لاگ آؤٹ</span>
+</div>
+</div>
+<!-- Bottom Navigation Bar -->
+<div class="fixed bottom-0 left-0 right-0 max-w-md mx-auto border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 pb-3 pt-2">
+<div class="flex gap-2">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">settings</span>
+</div>
+<p class="text-[10px] font-bold leading-normal">ترتیبات</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">bar_chart</span>
+</div>
+<p class="text-[10px] font-medium leading-normal">رپورٹس</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">inventory_2</span>
+</div>
+<p class="text-[10px] font-medium leading-normal">انوینٹری</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 dark:text-slate-500" href="#">
+<div class="flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">home</span>
+</div>
+<p class="text-[10px] font-medium leading-normal">ہوم</p>
+</a>
+</div>
+</div>
+</div>
+</body></html>

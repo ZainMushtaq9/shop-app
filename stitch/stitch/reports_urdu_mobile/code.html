@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+
+<html dir="rtl" lang="ur"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>سپر بزنس شاپ - رپورٹس</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006c75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0f2223",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Nastaliq Urdu", "serif"],
+                        "urdu": ["Noto Nastaliq Urdu", "serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', serif;
+        }
+        .urdu-text {
+            font-family: 'Noto Nastaliq Urdu', serif;
+            line-height: 2.5;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100">
+<div class="relative flex min-h-screen w-full flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
+<div class="flex items-center p-4 justify-between">
+<div class="flex items-center gap-3">
+<div class="size-10 bg-primary rounded-lg flex items-center justify-center text-white">
+<span class="material-symbols-outlined">storefront</span>
+</div>
+<h1 class="text-xl font-bold urdu-text text-primary">سپر بزنس شاپ</h1>
+</div>
+<div class="flex gap-2">
+<button class="p-2 rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">search</span>
+</button>
+<button class="p-2 rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+</div>
+</div>
+<nav class="flex px-4 overflow-x-auto no-scrollbar gap-6 border-t border-primary/5">
+<a class="border-b-2 border-primary text-primary py-3 px-1 urdu-text font-bold" href="#">رپورٹس</a>
+<a class="border-b-2 border-transparent text-slate-500 py-3 px-1 urdu-text" href="#">تجزیات</a>
+<a class="border-b-2 border-transparent text-slate-500 py-3 px-1 urdu-text" href="#">فروخت</a>
+<a class="border-b-2 border-transparent text-slate-500 py-3 px-1 urdu-text" href="#">اخراجات</a>
+</nav>
+</header>
+<main class="flex-1 pb-24">
+<section class="p-4">
+<div class="bg-white dark:bg-slate-800/50 rounded-xl p-4 shadow-sm border border-primary/5">
+<div class="flex items-center justify-between mb-4">
+<button class="p-1 rounded-lg hover:bg-primary/5">
+<span class="material-symbols-outlined text-primary">chevron_right</span>
+</button>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">calendar_month</span>
+<span class="font-bold urdu-text">جنوری ۲۰۲۴</span>
+</div>
+<button class="p-1 rounded-lg hover:bg-primary/5">
+<span class="material-symbols-outlined text-primary">chevron_left</span>
+</button>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center text-xs">
+<div class="py-2 text-slate-400 font-bold">اتوار</div>
+<div class="py-2 text-slate-400 font-bold">پیر</div>
+<div class="py-2 text-slate-400 font-bold">منگل</div>
+<div class="py-2 text-slate-400 font-bold">بدھ</div>
+<div class="py-2 text-slate-400 font-bold">جمعرات</div>
+<div class="py-2 text-slate-400 font-bold">جمعہ</div>
+<div class="py-2 text-slate-400 font-bold">ہفتہ</div>
+<div class="py-3 text-slate-300">29</div>
+<div class="py-3 text-slate-300">30</div>
+<div class="py-3 text-slate-300">31</div>
+<div class="py-3 bg-primary/10 rounded-full font-bold">1</div>
+<div class="py-3 bg-primary/10 font-bold">2</div>
+<div class="py-3 bg-primary/10 font-bold">3</div>
+<div class="py-3 bg-primary text-white rounded-full font-bold">4</div>
+</div>
+</div>
+</section>
+<section class="grid grid-cols-1 md:grid-cols-3 gap-4 px-4 py-2">
+<div class="bg-primary/5 border border-primary/10 rounded-xl p-5 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="urdu-text text-primary font-bold">کل آمدنی</span>
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined">payments</span>
+</div>
+</div>
+<div class="text-2xl font-bold text-slate-900 mt-2">Rs. 150,000</div>
+<div class="flex items-center gap-1 text-green-600 text-sm mt-1">
+<span class="material-symbols-outlined text-xs">trending_up</span>
+<span>+12% پچھلے مہینے سے</span>
+</div>
+</div>
+<div class="bg-red-50 dark:bg-red-900/10 border border-red-100 dark:border-red-900/20 rounded-xl p-5 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="urdu-text text-red-600 font-bold">کل اخراجات</span>
+<div class="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg text-red-600">
+<span class="material-symbols-outlined">shopping_cart_checkout</span>
+</div>
+</div>
+<div class="text-2xl font-bold text-slate-900 mt-2">Rs. 85,000</div>
+<div class="flex items-center gap-1 text-red-600 text-sm mt-1">
+<span class="material-symbols-outlined text-xs">trending_down</span>
+<span>-5% پچھلے مہینے سے</span>
+</div>
+</div>
+<div class="bg-green-50 dark:bg-green-900/10 border border-green-100 dark:border-green-900/20 rounded-xl p-5 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="urdu-text text-green-700 font-bold">کل منافع</span>
+<div class="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg text-green-700">
+<span class="material-symbols-outlined">account_balance_wallet</span>
+</div>
+</div>
+<div class="text-2xl font-bold text-slate-900 mt-2">Rs. 65,000</div>
+<div class="flex items-center gap-1 text-green-600 text-sm mt-1">
+<span class="material-symbols-outlined text-xs">trending_up</span>
+<span>+18% پچھلے مہینے سے</span>
+</div>
+</div>
+</section>
+<section class="p-4">
+<div class="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-primary/5">
+<div class="flex justify-between items-center mb-6">
+<h3 class="urdu-text text-lg font-bold">فروخت کا خلاصہ</h3>
+<span class="material-symbols-outlined text-slate-400">more_vert</span>
+</div>
+<div class="relative h-48 w-full flex items-end justify-between gap-2 px-2">
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full bg-primary/20 rounded-t-lg h-[40%] hover:bg-primary transition-all relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100">40k</div>
+</div>
+<span class="urdu-text text-[10px]">پیر</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full bg-primary/20 rounded-t-lg h-[65%] hover:bg-primary transition-all relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100">65k</div>
+</div>
+<span class="urdu-text text-[10px]">منگل</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full bg-primary rounded-t-lg h-[90%] relative">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded">90k</div>
+</div>
+<span class="urdu-text text-[10px] font-bold text-primary">بدھ</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full bg-primary/20 rounded-t-lg h-[55%] hover:bg-primary transition-all relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100">55k</div>
+</div>
+<span class="urdu-text text-[10px]">جمعرات</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full bg-primary/20 rounded-t-lg h-[75%] hover:bg-primary transition-all relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100">75k</div>
+</div>
+<span class="urdu-text text-[10px]">جمعہ</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full bg-primary/20 rounded-t-lg h-[30%] hover:bg-primary transition-all relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100">30k</div>
+</div>
+<span class="urdu-text text-[10px]">ہفتہ</span>
+</div>
+<div class="flex flex-col items-center gap-2 flex-1">
+<div class="w-full bg-primary/20 rounded-t-lg h-[45%] hover:bg-primary transition-all relative group">
+<div class="absolute -top-8 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100">45k</div>
+</div>
+<span class="urdu-text text-[10px]">اتوار</span>
+</div>
+</div>
+</div>
+</section>
+<section class="p-4">
+<div class="bg-white dark:bg-slate-800 rounded-xl p-5 shadow-sm border border-primary/5">
+<div class="flex justify-between items-center mb-4">
+<h3 class="urdu-text text-lg font-bold">سب سے زیادہ فروخت ہونے والی مصنوعات</h3>
+<a class="text-primary text-xs urdu-text" href="#">سب دیکھیں</a>
+</div>
+<div class="space-y-4">
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Modern wrist watch product" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsNbTai5_PJwcOBqHiprFK0LnXG_YlZjSu9U95sNbl1EG9lIBBa0JU_c6lt3t8pGdYWK7mRIyhWTI7zrMBk9geB3j__xrHCWmniVAlNt7gHun0zApooN02rbbc7i3ymGtdJPstl8LnnW_tQ3LhRtlRV-6z4m8CVv0buKCGuYSQyq_pg-ifS9539-WaIRGjxYmxoOfHXa_DT_S3Dd_pMIZCNDADB-EGZBf3NIZHrfgz9pSMK_XFVHfsQo5y19BJG1ZkYJ7gdVxUalz4"/>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm urdu-text">پریمیم واچ</h4>
+<p class="text-xs text-slate-500">145 فروخت ہوئے</p>
+</div>
+<div class="text-left">
+<span class="font-bold text-primary">Rs. 12,500</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Red sports running shoes" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAHjZSKtrs08aojQb-SHzheI4CsVgBpqF_uJBTWXgRf6CKYh8anwwWig5H3dRi1nSaiWHdMtJrZDTNqqXUd7eJ261P_reETIj2P6qpk04lc1WNVsQdvzBtWU6R9Bq0ZbeOqyRxipIHT8-L1XW-SJLFA-DVQV1Yr9MHmh3Uhfb0RT0x3QCx6weoaZDhhOaWRrH-wHGGpAjfsbTmNrdz6ApcuLrca9ydRSPZV1v_mueT9O4uatcLHYeUdmm5p8gasS0JzW2py0FSFAQnS"/>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm urdu-text">اسپورٹس جوتے</h4>
+<p class="text-xs text-slate-500">92 فروخت ہوئے</p>
+</div>
+<div class="text-left">
+<span class="font-bold text-primary">Rs. 8,900</span>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="size-12 rounded-lg bg-slate-100 overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Wireless noise cancelling headphones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoIYRhsrvIURyTzyhAImel-RRSONDXz28kmGBBq6g1dM3zxrZttCILFmiz1W7MLgyaxcqvylPm0KVCGDddKtsv9dOmVJNH2TBTTE0dLV9cl64BubQEtl66vTWZ-G1vBIMJi_s-5VCsD1NGB4-tqiCU7E8UKV75Aosse4cJgy7sNtzZ6PXTEbdCG5SGkmhBCh8oM_xtwc12ULIrR_KvQN95ZD_sOEdsaJF6SgEMOihDEPhE2tJAqykFBY-D_2omCbhoPUNNbL4sBZ9N"/>
+</div>
+<div class="flex-1">
+<h4 class="font-bold text-sm urdu-text">ہیڈ فونز</h4>
+<p class="text-xs text-slate-500">88 فروخت ہوئے</p>
+</div>
+<div class="text-left">
+<span class="font-bold text-primary">Rs. 4,500</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<footer class="fixed bottom-0 w-full bg-white dark:bg-background-dark border-t border-primary/10 px-4 pb-4 pt-2">
+<div class="flex items-center justify-between">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined fill-1">bar_chart</span>
+<span class="text-[10px] urdu-text font-bold">رپورٹس</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">inventory_2</span>
+<span class="text-[10px] urdu-text">انوینٹری</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">home</span>
+<span class="text-[10px] urdu-text">ہوم</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] urdu-text">ترتیبات</span>
+</a>
+</div>
+</footer>
+</div>
+</body></html>
