@@ -1,10 +1,41 @@
 -- ═══════════════════════════════════════════════════════════════════
--- SUPER BUSINESS SHOP — COMPLETE SUPABASE SCHEMA (Fresh Install)
+-- SUPER BUSINESS SHOP — COMPLETE FRESH SCHEMA
 -- Run this ENTIRE script in Supabase SQL Editor → New Query → Run
 -- ═══════════════════════════════════════════════════════════════════
 
 -- ══════════════════════════════════════════
--- HELPER FUNCTION
+-- STEP 1: DROP EVERYTHING IN REVERSE ORDER
+-- ══════════════════════════════════════════
+DROP TRIGGER IF EXISTS trg_sale_marketing ON sales;
+DROP FUNCTION IF EXISTS update_marketing_on_sale();
+DROP FUNCTION IF EXISTS get_dashboard_stats(UUID);
+DROP FUNCTION IF EXISTS get_customer_balance(UUID);
+DROP FUNCTION IF EXISTS public.is_shop_member(UUID);
+
+DROP TABLE IF EXISTS customer_bill_reads CASCADE;
+DROP TABLE IF EXISTS customer_bill_visibility CASCADE;
+DROP TABLE IF EXISTS customer_notifications CASCADE;
+DROP TABLE IF EXISTS customer_accounts CASCADE;
+DROP TABLE IF EXISTS ad_events CASCADE;
+DROP TABLE IF EXISTS backup_logs CASCADE;
+DROP TABLE IF EXISTS audit_logs CASCADE;
+DROP TABLE IF EXISTS supplier_transactions CASCADE;
+DROP TABLE IF EXISTS return_items CASCADE;
+DROP TABLE IF EXISTS returns CASCADE;
+DROP TABLE IF EXISTS sale_items CASCADE;
+DROP TABLE IF EXISTS installments CASCADE;
+DROP TABLE IF EXISTS daily_cash_sessions CASCADE;
+DROP TABLE IF EXISTS expenses CASCADE;
+DROP TABLE IF EXISTS sales CASCADE;
+DROP TABLE IF EXISTS suppliers CASCADE;
+DROP TABLE IF EXISTS customers CASCADE;
+DROP TABLE IF EXISTS products CASCADE;
+DROP TABLE IF EXISTS shop_settings CASCADE;
+DROP TABLE IF EXISTS shop_members CASCADE;
+DROP TABLE IF EXISTS shops CASCADE;
+
+-- ══════════════════════════════════════════
+-- STEP 2: HELPER FUNCTION
 -- ══════════════════════════════════════════
 CREATE OR REPLACE FUNCTION public.is_shop_member(check_shop_id UUID)
 RETURNS BOOLEAN AS $$
@@ -31,7 +62,7 @@ CREATE POLICY "shop_owner" ON public.shops
   FOR ALL USING (owner_id = auth.uid());
 
 -- ══════════════════════════════════════════
--- 2. SHOP MEMBERS (RBAC)
+-- 2. SHOP MEMBERS
 -- ══════════════════════════════════════════
 CREATE TABLE public.shop_members (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -50,7 +81,14 @@ CREATE POLICY "members_view" ON public.shop_members
     SELECT shop_id FROM public.shop_members WHERE user_id = auth.uid()
   ));
 CREATE POLICY "members_manage" ON public.shop_members
-  FOR ALL USING (shop_id IN (
+  FOR INSERT WITH CHECK (true);
+CREATE POLICY "members_update" ON public.shop_members
+  FOR UPDATE USING (shop_id IN (
+    SELECT shop_id FROM public.shop_members
+    WHERE user_id = auth.uid() AND role = 'owner'
+  ));
+CREATE POLICY "members_delete" ON public.shop_members
+  FOR DELETE USING (shop_id IN (
     SELECT shop_id FROM public.shop_members
     WHERE user_id = auth.uid() AND role = 'owner'
   ));
@@ -462,5 +500,5 @@ CREATE POLICY "backup_access" ON public.backup_logs
   WITH CHECK (public.is_shop_member(shop_id));
 
 -- ══════════════════════════════════════════
--- DONE! All 21 tables created successfully.
+-- DONE! All 21 tables created.
 -- ══════════════════════════════════════════
