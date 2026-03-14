@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_strings.dart';
 import '../../theme/app_theme.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../providers/app_providers.dart';
 import '../../utils/constants.dart';
-
 import 'daily_report_screen.dart';
 import 'munafa_nuqsan_screen.dart';
 import 'trends_report_screen.dart';
@@ -106,7 +109,7 @@ class ReportsScreen extends ConsumerWidget {
     );
   }
 
-  void _exportCustomerLedger(BuildContext context, WidgetRef ref) {
+  Future<void> _exportCustomerLedger(BuildContext context, WidgetRef ref) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppStrings.isUrdu ? 'ڈاؤنلوڈ ہو رہا ہے...' : 'Downloading...'),
@@ -114,10 +117,35 @@ class ReportsScreen extends ConsumerWidget {
         behavior: SnackBarBehavior.floating,
       ),
     );
-    // CSV export will be implemented with share_plus 
+    try {
+      final db = ref.read(databaseProvider);
+      final customers = await db.getAllCustomers();
+      
+      final StringBuffer csv = StringBuffer();
+      csv.writeln('Name,Phone,Balance');
+      
+      for (final c in customers) {
+        final name = c.name.replaceAll(',', ' ');
+        final phone = c.phone.replaceAll(',', ' ');
+        final balance = c.balance;
+        csv.writeln('$name,$phone,$balance');
+      }
+      
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/customers_ledger.csv');
+      await file.writeAsString(csv.toString());
+      
+      await Share.shareXFiles([XFile(file.path)], subject: 'Customers Ledger');
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error)
+        );
+      }
+    }
   }
 
-  void _exportSupplierLedger(BuildContext context, WidgetRef ref) {
+  Future<void> _exportSupplierLedger(BuildContext context, WidgetRef ref) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(AppStrings.isUrdu ? 'ڈاؤنلوڈ ہو رہا ہے...' : 'Downloading...'),
@@ -125,6 +153,32 @@ class ReportsScreen extends ConsumerWidget {
         behavior: SnackBarBehavior.floating,
       ),
     );
+    try {
+      final db = ref.read(databaseProvider);
+      final suppliers = await db.getAllSuppliers();
+      
+      final StringBuffer csv = StringBuffer();
+      csv.writeln('Name,Phone,Balance');
+      
+      for (final s in suppliers) {
+        final name = s.name.replaceAll(',', ' ');
+        final phone = s.phone.replaceAll(',', ' ');
+        final balance = s.balance;
+        csv.writeln('$name,$phone,$balance');
+      }
+      
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/suppliers_ledger.csv');
+      await file.writeAsString(csv.toString());
+      
+      await Share.shareXFiles([XFile(file.path)], subject: 'Suppliers Ledger');
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.error)
+        );
+      }
+    }
   }
 }
 
