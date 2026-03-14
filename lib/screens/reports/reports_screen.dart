@@ -11,6 +11,9 @@ import 'daily_report_screen.dart';
 import 'munafa_nuqsan_screen.dart';
 import 'trends_report_screen.dart';
 import 'low_stock_screen.dart';
+import '../../core/ads/app_banner_ad.dart';
+import '../../core/ads/adsense_widget.dart';
+import 'package:flutter/foundation.dart';
 
 /// Reports & Analytics screen — all cards linked to REAL working screens.
 /// ZERO "Coming Soon" — every card opens a real functional screen.
@@ -25,6 +28,10 @@ class ReportsScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // ── AD BANNER ──
+            kIsWeb ? const AdSenseWidget(adSlot: 'reports_top') : const AppBannerAd(screenName: 'reports'),
+            const SizedBox(height: AppDimens.spacingMD),
+
             // Munafa Nuqsan (P&L)
             _ReportCard(
               title: AppStrings.isUrdu ? 'منافع نقصان / Munafa Nuqsan' : 'Profit & Loss',
@@ -100,7 +107,7 @@ class ReportsScreen extends ConsumerWidget {
               title: AppStrings.isUrdu ? 'سپلائرز کے کھاتے ایکسل میں' : 'Supplier Ledgers to Excel',
               subtitle: AppStrings.isUrdu ? 'سپلیئرز کا ریکارڈ ایکسل فارمیٹ میں نکالیں' : 'Export suppliers records in Excel format',
               icon: Icons.file_upload_rounded,
-              color: Colors.blue.shade600,
+              color: AppColors.primary,
               onTap: () => _exportSupplierLedger(context, ref),
             ),
           ],

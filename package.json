@@ -1,0 +1,31 @@
+{
+  "name": "shop",
+  "version": "1.0.0",
+  "description": "A complete daily shop management system for small Pakistani shopkeepers (Android + iOS + Web PWA). Urdu-first interface, offline-capable, with Google Sheets sync, buyer/supplier ledgers, POS billing, and full inventory tracking.",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ZainMushtaq9/shop-app.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/ZainMushtaq9/shop-app/issues"
+  },
+  "homepage": "https://github.com/ZainMushtaq9/shop-app#readme",
+  "dependencies": {
+    "@playwright/test": "^1.58.2",
+    "fs-extra": "^11.3.4",
+    "playwright": "^1.58.2",
+    "sharp": "^0.34.5"
+  }
+}

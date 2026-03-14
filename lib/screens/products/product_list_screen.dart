@@ -29,7 +29,7 @@ class ProductListScreen extends ConsumerWidget {
           // Search bar + Category filter
           Container(
             padding: const EdgeInsets.all(AppDimens.spacingMD),
-            color: AppColors.surface,
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : AppColors.lightSurface,
             child: Column(
               children: [
                 // Search
@@ -228,14 +228,28 @@ class _ProductTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
       margin: const EdgeInsets.symmetric(
         horizontal: AppDimens.spacingMD,
         vertical: AppDimens.spacingXS,
       ),
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMD),
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
           padding: const EdgeInsets.all(AppDimens.spacingMD),
           child: Row(
@@ -379,7 +393,7 @@ class _CategoryChip extends StatelessWidget {
         ),
         selected: isSelected,
         selectedColor: AppColors.primary,
-        backgroundColor: AppColors.surfaceVariant,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark ? AppColors.darkBackground : AppColors.lightBackground,
         onSelected: (_) => onTap(),
         padding: const EdgeInsets.symmetric(horizontal: 4),
       ),

@@ -9,6 +9,92 @@ import '../utils/constants.dart';
 class PdfExportService {
   PdfExportService._();
 
+  /// Generate a daily sales and profit report
+  static Future<Uint8List> generateDailyReport({
+    required String shopName,
+    required DateTime date,
+    required List<Sale> sales,
+    required double totalSales,
+    required double totalExpenses,
+    required double expectedCash,
+  }) async {
+    final pdf = pw.Document();
+
+    pdf.addPage(
+      pw.MultiPage(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.all(40),
+        header: (context) => _buildHeader(
+          title: 'Daily Report / روزانہ رپورٹ',
+          customerName: 'All Customers',
+          shopName: shopName,
+          startDate: date,
+          endDate: date,
+        ),
+        footer: (context) => _buildFooter(context),
+        build: (context) => [
+          // Summary card
+          pw.Container(
+            padding: const pw.EdgeInsets.all(12),
+            decoration: pw.BoxDecoration(
+              border: pw.Border.all(color: PdfColors.grey400),
+              borderRadius: pw.BorderRadius.circular(8),
+            ),
+            child: pw.Row(
+              mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+              children: [
+                _summaryItem('Total Sales / کل بکری', 'Rs. ${AppFormatters.number(totalSales)}', PdfColors.green),
+                _summaryItem('Expenses / خرچے', 'Rs. ${AppFormatters.number(totalExpenses)}', PdfColors.red),
+                _summaryItem('Expected Cash / کیش', 'Rs. ${AppFormatters.number(expectedCash)}', PdfColors.teal),
+              ],
+            ),
+          ),
+          pw.SizedBox(height: 20),
+
+          // Sales table
+          pw.Text('Sales List / بل کی تفصیل', style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold)),
+          pw.SizedBox(height: 8),
+          pw.Table(
+            border: pw.TableBorder.all(color: PdfColors.grey400),
+            columnWidths: {
+              0: const pw.FlexColumnWidth(2),
+              1: const pw.FlexColumnWidth(3),
+              2: const pw.FlexColumnWidth(2),
+              3: const pw.FlexColumnWidth(2),
+              4: const pw.FlexColumnWidth(2),
+            },
+            children: [
+              // Header row
+              pw.TableRow(
+                decoration: const pw.BoxDecoration(color: PdfColors.grey800),
+                children: [
+                  _tableHeader('Bill No / بل نمب'),
+                  _tableHeader('Customer / گاہک'),
+                  _tableHeader('Total'),
+                  _tableHeader('Paid'),
+                  _tableHeader('Remaining'),
+                ],
+              ),
+              // Data rows
+              ...sales.map((s) => pw.TableRow(
+                    children: [
+                      _tableCell('#${s.id.substring(0, 6)}'),
+                      _tableCell(s.customerId ?? 'Walk-in'),
+                      _tableCell('Rs. ${AppFormatters.number(s.total)}'),
+                      _tableCell('Rs. ${AppFormatters.number(s.amountPaid)}'),
+                      _tableCell('Rs. ${AppFormatters.number(s.balanceDue)}',
+                          color: s.balanceDue > 0 ? PdfColors.red : PdfColors.black),
+                    ],
+                  )),
+            ],
+          ),
+        ],
+      ),
+    );
+
+    return pdf.save();
+  }
+
   /// Generate a customer ledger PDF with date filtering
   static Future<Uint8List> generateCustomerLedger({
     required String customerName,

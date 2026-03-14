@@ -7,17 +7,34 @@ import '../../models/models.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/skeleton_loader.dart';
+import '../../services/pdf_export_service.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 
-class DailyReportScreen extends ConsumerWidget {
+class DailyReportScreen extends ConsumerStatefulWidget {
   const DailyReportScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DailyReportScreen> createState() => _DailyReportScreenState();
+}
+
+class _DailyReportScreenState extends ConsumerState<DailyReportScreen> {
+
+  @override
+  Widget build(BuildContext context) {
     final asyncSales = ref.watch(todaySalesListProvider);
 
     return Scaffold(
       appBar: GlobalAppBar(
         title: AppStrings.isUrdu ? 'آج کی سیلز' : 'Today\'s Sales',
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.print_rounded),
+            onPressed: () => _exportDailyReport(context, ref, asyncSales.valueOrNull ?? []),
+          ),
+        ],
       ),
       body: asyncSales.when(
         data: (sales) {
@@ -111,6 +128,55 @@ class DailyReportScreen extends ConsumerWidget {
         ],
       ),
     );
+  }
+
+  Future<void> _exportDailyReport(BuildContext context, WidgetRef ref, List<Sale> sales) async {
+    if (sales.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppStrings.isUrdu ? 'کوئی سیلز نہیں ہیں' : 'No sales to export')),
+      );
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppStrings.isUrdu ? 'پی ڈی ایف بن رہی ہے...' : 'Generating PDF...'),
+        backgroundColor: AppColors.primary,
+        duration: const Duration(seconds: 1),
+      ),
+    );
+
+    try {
+      final db = ref.read(databaseProvider);
+      final totalSales = await db.getTodaySales();
+      final totalExpenses = await db.getTodayExpenses();
+      
+      final prefs = await SharedPreferences.getInstance();
+      final shopName = prefs.getString('app_name') ?? 'Super Business Shop';
+      
+      // Expected cash logically assumes opening cash is unknown here, so we just show net
+      final expectedCash = totalSales - totalExpenses;
+
+      final pdfBytes = await PdfExportService.generateDailyReport(
+        shopName: shopName,
+        date: DateTime.now(),
+        sales: sales,
+        totalSales: totalSales,
+        totalExpenses: totalExpenses,
+        expectedCash: expectedCash,
+      );
+
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/daily_report_${DateTime.now().millisecondsSinceEpoch}.pdf');
+      await file.writeAsBytes(pdfBytes);
+
+      await Share.shareXFiles([XFile(file.path)], subject: 'Daily Report');
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error generating PDF: $e'), backgroundColor: AppColors.moneyOwed),
+      );
+    }
   }
 }
 

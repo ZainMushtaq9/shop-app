@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ur"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006a75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0d1b2a",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "Noto Nastaliq Urdu", "serif"],
+                        "urdu": ["Noto Nastaliq Urdu", "serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', serif;
+        }
+        .urdu-text {
+            font-family: 'Noto Nastaliq Urdu', serif;
+            line-height: 2.5;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Header Section -->
+<header class="flex items-center justify-between p-4 sticky top-0 bg-background-dark/80 backdrop-blur-md z-10 border-b border-slate-800">
+<div class="flex size-10 items-center justify-center rounded-full bg-primary/20 text-primary">
+<span class="material-symbols-outlined">menu</span>
+</div>
+<h1 class="text-xl font-bold urdu-text">سپر بزنس شاپ</h1>
+<div class="relative">
+<button class="flex size-10 items-center justify-center rounded-full bg-slate-800 text-slate-100">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 flex h-2 w-2 rounded-full bg-red-500"></span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Shop Health Circular Section -->
+<section class="p-6 flex flex-col items-center">
+<div class="relative flex items-center justify-center">
+<svg class="w-32 h-32 transform -rotate-90">
+<circle class="text-slate-800" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="64" cy="64" fill="transparent" r="58" stroke="currentColor" stroke-dasharray="364.4" stroke-dashoffset="54.66" stroke-width="8"></circle>
+</svg>
+<div class="absolute inset-0 flex flex-col items-center justify-center">
+<span class="text-3xl font-bold">85</span>
+<span class="text-xs text-slate-400 urdu-text">سکور</span>
+</div>
+</div>
+<div class="mt-4 text-center">
+<h2 class="text-lg font-bold urdu-text">دکان کی صحت</h2>
+<p class="text-primary text-sm urdu-text">آپ کی کارکردگی بہترین ہے!</p>
+</div>
+</section>
+<!-- Stats Grid (2x2) -->
+<section class="px-4 grid grid-cols-2 gap-4">
+<!-- Sales Card -->
+<div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-primary bg-primary/10 p-2 rounded-lg">payments</span>
+<span class="text-green-500 text-xs font-bold">+12%</span>
+</div>
+<p class="text-slate-400 text-sm urdu-text pt-2">کل فروخت</p>
+<p class="text-lg font-bold">Rs. 45,000</p>
+</div>
+<!-- Udhaar Card -->
+<div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-red-400 bg-red-400/10 p-2 rounded-lg">history_edu</span>
+<span class="text-red-500 text-xs font-bold">-5%</span>
+</div>
+<p class="text-slate-400 text-sm urdu-text pt-2">کل ادھار</p>
+<p class="text-lg font-bold">Rs. 12,500</p>
+</div>
+<!-- Low Stock Card -->
+<div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-orange-400 bg-orange-400/10 p-2 rounded-lg">inventory_2</span>
+<span class="bg-orange-500/20 text-orange-500 px-2 py-0.5 rounded text-[10px]">توجہ درکار</span>
+</div>
+<p class="text-slate-400 text-sm urdu-text pt-2">کم اسٹاک</p>
+<p class="text-lg font-bold">8 آئٹمز</p>
+</div>
+<!-- Profit Card -->
+<div class="bg-slate-800/50 p-4 rounded-xl border border-slate-700 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<span class="material-symbols-outlined text-emerald-400 bg-emerald-400/10 p-2 rounded-lg">trending_up</span>
+<span class="text-green-500 text-xs font-bold">+8%</span>
+</div>
+<p class="text-slate-400 text-sm urdu-text pt-2">کل منافع</p>
+<p class="text-lg font-bold">Rs. 8,200</p>
+</div>
+</section>
+<!-- Quick Actions Section -->
+<section class="p-4 mt-4">
+<h3 class="text-lg font-bold urdu-text mb-4">فوری اقدامات</h3>
+<div class="grid grid-cols-4 gap-4">
+<button class="flex flex-col items-center gap-2">
+<div class="size-12 rounded-full bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+<span class="material-symbols-outlined text-white">add_shopping_cart</span>
+</div>
+<span class="text-[10px] urdu-text text-slate-300">نئی فروخت</span>
+</button>
+<button class="flex flex-col items-center gap-2">
+<div class="size-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-200">person_add</span>
+</div>
+<span class="text-[10px] urdu-text text-slate-300">نیا کسٹمر</span>
+</button>
+<button class="flex flex-col items-center gap-2">
+<div class="size-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-200">barcode_scanner</span>
+</div>
+<span class="text-[10px] urdu-text text-slate-300">سکینر</span>
+</button>
+<button class="flex flex-col items-center gap-2">
+<div class="size-12 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
+<span class="material-symbols-outlined text-slate-200">receipt_long</span>
+</div>
+<span class="text-[10px] urdu-text text-slate-300">بل ہسٹری</span>
+</button>
+</div>
+</section>
+<!-- Recent Activity Placeholder -->
+<section class="p-4 mt-2">
+<div class="flex justify-between items-center mb-4">
+<h3 class="text-lg font-bold urdu-text">حالیہ سرگرمی</h3>
+<a class="text-primary text-sm urdu-text" href="#">سب دیکھیں</a>
+</div>
+<div class="space-y-3">
+<div class="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30 border border-slate-800">
+<div class="size-10 rounded bg-green-500/10 flex items-center justify-center text-green-500">
+<span class="material-symbols-outlined">check_circle</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium urdu-text">فروخت مکمل ہوئی #1204</p>
+<p class="text-xs text-slate-500">2 منٹ پہلے</p>
+</div>
+<p class="font-bold">Rs. 450</p>
+</div>
+<div class="flex items-center gap-3 p-3 rounded-lg bg-slate-800/30 border border-slate-800">
+<div class="size-10 rounded bg-blue-500/10 flex items-center justify-center text-blue-500">
+<span class="material-symbols-outlined">person</span>
+</div>
+<div class="flex-1">
+<p class="text-sm font-medium urdu-text">نیا ادھار - احمد خان</p>
+<p class="text-xs text-slate-500">1 گھنٹہ پہلے</p>
+</div>
+<p class="font-bold text-red-400">Rs. 1,200</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 bg-slate-900 border-t border-slate-800 pb-safe shadow-2xl z-20">
+<div class="flex items-center justify-around h-16">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1">home</span>
+<span class="text-[10px] urdu-text font-bold">ہوم</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">inventory</span>
+<span class="text-[10px] urdu-text">اسٹاک</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">analytics</span>
+<span class="text-[10px] urdu-text">رپورٹس</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] urdu-text">ترتیبات</span>
+</a>
+</div>
+</nav>
+</body></html>

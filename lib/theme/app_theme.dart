@@ -10,10 +10,10 @@ import 'package:google_fonts/google_fonts.dart';
 class AppColors {
   AppColors._();
 
-  // Gold Accent (consistent in both modes)
-  static const Color primary = Color(0xFFB8931F);        
-  static const Color primaryLight = Color(0xFFE2C460);
-  static const Color primaryDark = Color(0xFFA68218);
+  // Stitch Primary (Teal)
+  static const Color primary = Color(0xFF006C75);        
+  static const Color primaryLight = Color(0xFF338991);
+  static const Color primaryDark = Color(0xFF00565E);
 
   // Semantic colors 
   static const Color moneyReceived = Color(0xFF20C997);
@@ -22,18 +22,18 @@ class AppColors {
   static const Color warning = Color(0xFFFD7E14);
 
   // ── Day / Sunlight Mode ──
-  static const Color lightBackground = Color(0xFFF8FAFC);
+  static const Color lightBackground = Color(0xFFF5F8F8);
   static const Color lightSurface    = Color(0xFFFFFFFF);
   static const Color lightTextPrimary = Color(0xFF111827);
   static const Color lightTextSecondary = Color(0xFF6B7280);
   static const Color lightDivider    = Color(0xFFE5E7EB);
 
   // ── Night / Dark Mode ──
-  static const Color darkBackground  = Color(0xFF1F2933);
-  static const Color darkSurface     = Color(0xFFFFFFFF);
+  static const Color darkBackground  = Color(0xFF0F2223);
+  static const Color darkSurface     = Color(0xFF1A2A3A);
   static const Color darkTextPrimary = Color(0xFFF9FAFB);
   static const Color darkTextSecondary = Color(0xFF9CA3AF);
-  static const Color darkDivider     = Color(0xFFE5E7EB);
+  static const Color darkDivider     = Color(0xFF374151);
 
   // Common
   static const Color textOnPrimary = Color(0xFF111827); // Dark text on gold buttons
@@ -42,7 +42,7 @@ class AppColors {
 
   // Gradients
   static const LinearGradient profitGradient = LinearGradient(
-    colors: [Color(0xFFC9A227), Color(0xFFA68218)],
+    colors: [Color(0xFF006C75), Color(0xFF00565E)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

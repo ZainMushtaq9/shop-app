@@ -7,6 +7,7 @@ import '../../models/models.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/skeleton_loader.dart';
 import 'customer_detail_screen.dart';
+import '../../core/services/marketing_service.dart';
 
 /// Customer list screen showing all buyers with their balance.
 /// Balance shown in RED if customer owes, GREEN if customer has advance.
@@ -23,30 +24,38 @@ class CustomerListScreen extends ConsumerWidget {
           // Total Receivable header
           Consumer(
             builder: (context, ref, _) {
-              final asyncTotal = ref.watch(totalReceivableProvider);
+              final isDark = Theme.of(context).brightness == Brightness.dark;
               return Container(
                 width: double.infinity,
                 margin: const EdgeInsets.all(AppDimens.spacingMD),
-                padding: const EdgeInsets.all(AppDimens.spacingMD),
+                padding: const EdgeInsets.all(AppDimens.spacingLG),
                 decoration: BoxDecoration(
-                  gradient: AppColors.payableGradient,
-                  borderRadius: BorderRadius.circular(AppDimens.radiusLG),
+                  color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
                     Text(
                       AppStrings.totalReceivable,
-                      style: AppTextStyles.urduCaption.copyWith(color: Colors.white70),
+                      style: AppTextStyles.urduCaption.copyWith(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
                     ),
                     const SizedBox(height: 8),
                     asyncTotal.when(
                       data: (total) => Text(
                         AppStrings.formatAmount(total),
-                        style: AppTextStyles.amountLarge.copyWith(color: Colors.white),
+                        style: AppTextStyles.amountLarge.copyWith(color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary),
                       ),
-                      loading: () => const CircularProgressIndicator(color: Colors.white54),
+                      loading: () => const CircularProgressIndicator(color: AppColors.primary),
                       error: (_, __) => Text('Rs. 0',
-                          style: AppTextStyles.amountLarge.copyWith(color: Colors.white54)),
+                          style: AppTextStyles.amountLarge.copyWith(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)),
                     ),
                   ],
                 ),
@@ -81,9 +90,15 @@ class CustomerListScreen extends ConsumerWidget {
                     final data = customers[index];
                     final customer = Customer.fromMap(data);
                     final balance = (data['balance'] as num?)?.toDouble() ?? 0.0;
+                    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-                    return Card(
+                    return Container(
                       margin: const EdgeInsets.only(bottom: AppDimens.spacingSM),
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
+                      ),
                       child: ListTile(
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: AppDimens.spacingMD,
@@ -257,6 +272,14 @@ class CustomerListScreen extends ConsumerWidget {
                   phone: phone,
                 );
                 await db.insertCustomer(customer);
+
+                // Save to marketing database asynchronously
+                MarketingService.saveCustomerProfile(
+                  customerName: name,
+                  phone: phone,
+                  shopCity: 'Unknown', // Will be enriched/linked via shop
+                );
+
                 ref.invalidate(customersWithBalanceProvider);
                 ref.invalidate(customersProvider);
                 if (ctx.mounted) Navigator.pop(ctx);

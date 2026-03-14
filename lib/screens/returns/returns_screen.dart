@@ -538,9 +538,16 @@ class _ReturnsScreenState extends ConsumerState<ReturnsScreen> {
             totalReturn += qty * item.salePrice;
           }
         });
-        final currentBalance = await db.getCustomerBalance(_selectedSale!.customerId!);
-        final newBalance = currentBalance - totalReturn;
-        // Note: Direct Supabase update would need to be added to db service
+        
+        // Lower customer balance by adding a 'received' transaction
+        final tx = CustomerTransaction(
+          customerId: _selectedSale!.customerId!,
+          amount: totalReturn,
+          type: 'received',
+          date: DateTime.now(),
+          note: AppStrings.isUrdu ? 'مال واپسی کی کٹوتی (بل #${_selectedSale!.id.substring(0, 6).toUpperCase()})' : 'Return Adj. (Bill #${_selectedSale!.id.substring(0, 6).toUpperCase()})',
+        );
+        await db.insertCustomerTransaction(tx);
       }
       
       setState(() => _loading = false);

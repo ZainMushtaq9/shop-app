@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+
+<html class="dark" dir="rtl" lang="ur"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Nastaliq+Urdu:wght@400;700&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#006a75",
+                        "background-light": "#f5f8f8",
+                        "background-dark": "#0D1B2A",
+                        "card-dark": "#1A2A3A",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"],
+                        "urdu": ["'Noto Nastaliq Urdu'", "serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', 'Noto Nastaliq Urdu', sans-serif;
+        }
+        .urdu-text {
+            font-family: 'Noto Nastaliq Urdu', serif;
+            line-height: 2.2;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+<!-- Top Navigation Bar -->
+<header class="flex items-center bg-card-dark/50 backdrop-blur-md sticky top-0 z-50 p-4 border-b border-primary/20 justify-between">
+<div class="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+<span class="material-symbols-outlined">calendar_today</span>
+</div>
+<h1 class="text-xl font-bold urdu-text text-slate-100">رپورٹس</h1>
+<div class="flex size-10 items-center justify-end">
+<button class="flex items-center justify-center rounded-lg h-10 w-10 bg-transparent text-slate-100">
+<span class="material-symbols-outlined">search</span>
+</button>
+</div>
+</header>
+<main class="flex-1 overflow-y-auto pb-24">
+<!-- Date Picker Section -->
+<section class="p-4">
+<div class="bg-card-dark rounded-xl p-4 border border-primary/10">
+<div class="flex items-center justify-between mb-2">
+<button class="text-primary hover:bg-primary/10 p-1 rounded-full transition-colors">
+<span class="material-symbols-outlined">chevron_right</span>
+</button>
+<p class="text-lg font-bold urdu-text text-slate-100">اکتوبر ۲۰۲۳</p>
+<button class="text-primary hover:bg-primary/10 p-1 rounded-full transition-colors">
+<span class="material-symbols-outlined">chevron_left</span>
+</button>
+</div>
+<div class="grid grid-cols-7 gap-1 text-center">
+<span class="text-xs font-bold text-slate-400 py-2">S</span>
+<span class="text-xs font-bold text-slate-400 py-2">M</span>
+<span class="text-xs font-bold text-slate-400 py-2">T</span>
+<span class="text-xs font-bold text-slate-400 py-2">W</span>
+<span class="text-xs font-bold text-slate-400 py-2">T</span>
+<span class="text-xs font-bold text-slate-400 py-2">F</span>
+<span class="text-xs font-bold text-slate-400 py-2">S</span>
+<!-- Calendar days placeholder -->
+<div class="col-span-3"></div>
+<button class="h-10 w-10 mx-auto flex items-center justify-center rounded-full hover:bg-primary/20 text-sm">1</button>
+<button class="h-10 w-10 mx-auto flex items-center justify-center rounded-full hover:bg-primary/20 text-sm">2</button>
+<button class="h-10 w-10 mx-auto flex items-center justify-center rounded-full hover:bg-primary/20 text-sm">3</button>
+<button class="h-10 w-10 mx-auto flex items-center justify-center rounded-full hover:bg-primary/20 text-sm">4</button>
+<button class="h-10 w-10 mx-auto flex items-center justify-center rounded-full bg-primary text-white text-sm font-bold shadow-lg shadow-primary/30">5</button>
+<button class="h-10 w-10 mx-auto flex items-center justify-center rounded-full hover:bg-primary/20 text-sm text-slate-400">6</button>
+<button class="h-10 w-10 mx-auto flex items-center justify-center rounded-full hover:bg-primary/20 text-sm">7</button>
+</div>
+</div>
+</section>
+<!-- Stats Cards -->
+<section class="px-4 py-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="bg-card-dark p-5 rounded-xl border border-primary/10 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<p class="text-slate-400 text-sm urdu-text">کل آمدنی</p>
+<span class="material-symbols-outlined text-green-500 text-xl">trending_up</span>
+</div>
+<p class="text-2xl font-bold text-slate-100">Rs. 40,000</p>
+<p class="text-green-500 text-xs font-medium">+8% پچھلے مہینے سے</p>
+</div>
+<div class="bg-card-dark p-5 rounded-xl border border-primary/10 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<p class="text-slate-400 text-sm urdu-text">اخراجات</p>
+<span class="material-symbols-outlined text-red-400 text-xl">trending_down</span>
+</div>
+<p class="text-2xl font-bold text-slate-100">Rs. 15,000</p>
+<p class="text-red-400 text-xs font-medium">-5% پچھلے مہینے سے</p>
+</div>
+<div class="bg-card-dark p-5 rounded-xl border border-primary/10 flex flex-col gap-1">
+<div class="flex justify-between items-start">
+<p class="text-slate-400 text-sm urdu-text">منافع</p>
+<span class="material-symbols-outlined text-primary text-xl">payments</span>
+</div>
+<p class="text-2xl font-bold text-slate-100">Rs. 25,000</p>
+<p class="text-green-500 text-xs font-medium">+12% پچھلے مہینے سے</p>
+</div>
+</section>
+<!-- Bar Chart Placeholder -->
+<section class="p-4">
+<div class="bg-card-dark rounded-xl p-6 border border-primary/10">
+<h3 class="text-lg font-bold urdu-text mb-6 text-slate-100">تجزیہ فروخت</h3>
+<div class="flex items-end justify-between h-40 gap-2 px-2">
+<div class="flex-1 bg-primary/20 hover:bg-primary/40 rounded-t-lg transition-all h-[40%]" title="ہفتہ 1"></div>
+<div class="flex-1 bg-primary/30 hover:bg-primary/50 rounded-t-lg transition-all h-[70%]" title="ہفتہ 2"></div>
+<div class="flex-1 bg-primary hover:bg-primary/80 rounded-t-lg transition-all h-[95%]" title="ہفتہ 3"></div>
+<div class="flex-1 bg-primary/40 hover:bg-primary/60 rounded-t-lg transition-all h-[60%]" title="ہفتہ 4"></div>
+<div class="flex-1 bg-primary/25 hover:bg-primary/45 rounded-t-lg transition-all h-[30%]" title="ہفتہ 5"></div>
+</div>
+<div class="flex justify-between mt-4 text-[10px] text-slate-400 urdu-text px-2">
+<span>ہفتہ ۱</span>
+<span>ہفتہ ۲</span>
+<span>ہفتہ ۳</span>
+<span>ہفتہ ۴</span>
+<span>ہفتہ ۵</span>
+</div>
+</div>
+</section>
+<!-- Top Selling Products List -->
+<section class="p-4">
+<div class="bg-card-dark rounded-xl overflow-hidden border border-primary/10">
+<div class="p-4 border-b border-primary/10">
+<h3 class="text-lg font-bold urdu-text text-slate-100">بہترین فروخت ہونے والی مصنوعات</h3>
+</div>
+<div class="divide-y divide-primary/5">
+<div class="flex items-center p-4 gap-4">
+<div class="size-12 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Minimalist wrist watch product photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAyW8SBnPvPVnmclRY90yK8HpCA030CpfXxUDuDO7XmxRWJJi4IbMlES_ugvTnUU6u8_ToKSB00XmetlStQbEqg2LDCkhNWjmgRTxVqtcr64Gt74ewQ0rFwuzQMiV0b-pabdG1_R9JVfJkPZ6eP-_lKW4gBC1NVoNI6HdFqvaTMQ5UmRLWWTjvMg3Odop5pvkQEN37E8kNJVs1cIklZj-WZDKAL68mQBhujC8s0nhe9IszmV2hyUSdVOct6ONgRplvTyoBCegqyZzT_"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-bold text-slate-100 truncate urdu-text leading-tight">پریمیم کلائی گھڑی</p>
+<p class="text-xs text-slate-400">142 آرڈرز</p>
+</div>
+<div class="text-left">
+<p class="font-bold text-primary">Rs. 8,500</p>
+</div>
+</div>
+<div class="flex items-center p-4 gap-4">
+<div class="size-12 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Red athletic running shoe" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOVW1KCMA5E6PDSsMDVmpjPMAsxL0FULRFiaf5nI4TCKgOn3je-uke2r_ZOsQcr39kl7WiXwzBvmUBxhHIUmzPikzAtsq4767_BdgubNH9R4isTtTrkGYoybE1vZ6YqJw34oAOu_teOFCp7njH27i53skwXq9V6_go2Z0NG1CsulNddzxn0NhwbVl2SdKd6d6hVcd29RDkxMUeqdzYAVxpmnyzIaRPLiY16fBGjeBIhU3L6YXpiQbDGw-DllkwD2W-SiWLUao460Fy"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-bold text-slate-100 truncate urdu-text leading-tight">کھیلوں کے جوتے</p>
+<p class="text-xs text-slate-400">98 آرڈرز</p>
+</div>
+<div class="text-left">
+<p class="font-bold text-primary">Rs. 4,200</p>
+</div>
+</div>
+<div class="flex items-center p-4 gap-4">
+<div class="size-12 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Wireless noise cancelling headphones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDGG_Ii5qrU865VI0ZzYaOOCkqlzmFeCVyq7GcmKtoqJY3L9zsH5BqdYxP6hdR7KTTL8-HF8fA3jrDKIyftqRdqpMhOHYry55x02ifUz4pZuxiFkSM_tffFnmQQ8qwyYWu6ZqvHhenVbViDbHfTfgF-6QAtdtCuttDs5K5mBhlycOr9p2J97oh6S7qr8njhF3oRfIqHokSatrO-5niPFmNSV5dEAxuvjN3tCjLUlkHsJb_FIt7qfi0t6VsFDCa4Wg5Ix93iXz8A5YUM"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-bold text-slate-100 truncate urdu-text leading-tight">وائرلیس ہیڈ فون</p>
+<p class="text-xs text-slate-400">76 آرڈرز</p>
+</div>
+<div class="text-left">
+<p class="font-bold text-primary">Rs. 12,000</p>
+</div>
+</div>
+<div class="flex items-center p-4 gap-4">
+<div class="size-12 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Luxury skincare product bottle" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC2NJUIRes_sCGGvngvjsH7dMrDzm1UguV-D7-45u0zvgM1KbrhdYpWQBK4EaIaKOweoQKzF1pH6dFv5vDBQnxnkl0mS--hBIgrqMSYkxoW-tyafDfK-g5gMuE-rbW9kb3sfaeJRuZ3k2VESsNNbqd-PqYNZQLJ8tFuy9DOvA6_AHnf3eqdC31K8EbyNReSHo94LFpSYFt1Pte7UIuYBUUgK35gEiLqCP5VIyk2xbpeuURhxV8_7mQ7Ei_OPPWIfqI6O3tpSk48xMxv"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-bold text-slate-100 truncate urdu-text leading-tight">جلد کی دیکھ بھال کا سیٹ</p>
+<p class="text-xs text-slate-400">54 آرڈرز</p>
+</div>
+<div class="text-left">
+<p class="font-bold text-primary">Rs. 3,100</p>
+</div>
+</div>
+<div class="flex items-center p-4 gap-4">
+<div class="size-12 rounded-lg bg-slate-800 flex items-center justify-center overflow-hidden shrink-0">
+<img class="w-full h-full object-cover" data-alt="Retro style camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDaNlDVLlzImt9W9OlSkiw-jGPpkk5n3g7dA6XTiJiYopx6m6sMAHKhJ4NHf37IbZKeTWnHV9jmO_EGF__oN_1K5lzc6HQkRHYTJy6TQcvhgs0ZnNmyobCothymcCrZdk5n5jO_wkF87mKUFOat9hhzpiyuSshk9CErF1llCjZYLWGjG98xUsRpz8F-bhProeNBizTpVldlMOcQ9tdwqjr4IO_7kEaz47l5KTQc5kMzabQ6eUW6uA4i3IfuEJYEgJLegqcut0lzSSeB"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="font-bold text-slate-100 truncate urdu-text leading-tight">ڈیجیٹل کیمرہ</p>
+<p class="text-xs text-slate-400">32 آرڈرز</p>
+</div>
+<div class="text-left">
+<p class="font-bold text-primary">Rs. 45,000</p>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 border-t border-primary/20 bg-card-dark/95 backdrop-blur-lg px-4 pb-4 pt-2">
+<div class="flex gap-2 max-w-md mx-auto">
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">home</span>
+<p class="text-[10px] font-medium urdu-text leading-none">ہوم</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined fill-[1]">bar_chart</span>
+<p class="text-[10px] font-bold urdu-text leading-none">رپورٹس</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">shopping_bag</span>
+<p class="text-[10px] font-medium urdu-text leading-none">آرڈرز</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-center gap-1 text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-symbols-outlined">settings</span>
+<p class="text-[10px] font-medium urdu-text leading-none">ترتیبات</p>
+</a>
+</div>
+</nav>
+</body></html>

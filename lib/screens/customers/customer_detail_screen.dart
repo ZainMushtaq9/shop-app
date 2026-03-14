@@ -97,8 +97,9 @@ class CustomerDetailScreen extends ConsumerWidget {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                         decoration: BoxDecoration(
-                          color: AppColors.primary.withOpacity(0.1),
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : AppColors.lightSurface,
                           borderRadius: const BorderRadius.vertical(top: Radius.circular(8)),
+                          border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkDivider : AppColors.lightDivider),
                         ),
                         child: Row(
                           children: [
@@ -326,19 +327,21 @@ class _BalanceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isOwed = balance > 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       width: double.infinity,
       margin: const EdgeInsets.all(AppDimens.spacingMD),
       padding: const EdgeInsets.all(AppDimens.spacingLG),
       decoration: BoxDecoration(
-        gradient: isOwed ? AppColors.payableGradient : AppColors.receivableGradient,
-        borderRadius: BorderRadius.circular(AppDimens.radiusLG),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
         boxShadow: [
           BoxShadow(
-            color: (isOwed ? AppColors.moneyOwed : AppColors.moneyReceived).withOpacity(0.3),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -346,12 +349,12 @@ class _BalanceCard extends StatelessWidget {
         children: [
           Text(
             AppStrings.totalRemaining,
-            style: AppTextStyles.urduCaption.copyWith(color: Colors.white70),
+            style: AppTextStyles.urduCaption.copyWith(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary),
           ),
           const SizedBox(height: 8),
           Text(
             AppStrings.formatAmount(balance.abs()),
-            style: AppTextStyles.amountLarge.copyWith(color: Colors.white, fontSize: 32),
+            style: AppTextStyles.amountLarge.copyWith(color: isOwed ? AppColors.moneyOwed : AppColors.moneyReceived, fontSize: 32),
           ),
           const SizedBox(height: 16),
           Row(
@@ -389,22 +392,23 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white24,
+          color: isDark ? AppColors.darkBackground : AppColors.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.white, size: 22),
+            Icon(icon, color: AppColors.primary, size: 22),
             const SizedBox(height: 4),
             Text(
               label,
-              style: AppTextStyles.urduCaption.copyWith(color: Colors.white, fontSize: 10),
+              style: AppTextStyles.urduCaption.copyWith(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.bold),
               maxLines: 1,
             ),
           ],
@@ -627,9 +631,9 @@ class _LedgerFooter extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
+        color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface.withOpacity(0.5) : AppColors.lightSurface,
         borderRadius: BorderRadius.circular(AppDimens.radiusSM),
-        border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkDivider : AppColors.lightDivider),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,

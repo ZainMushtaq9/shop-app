@@ -7,6 +7,12 @@ import '../../providers/app_providers.dart';
 import '../../widgets/global_app_bar.dart';
 import '../../widgets/skeleton_loader.dart';
 import '../../models/models.dart';
+import '../../services/pdf_export_service.dart';
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// All Bills screen — shows full bill history with filters.
 /// Tabs: Tamam | Naqdh | Udhaar | Filtered by date.
@@ -334,7 +340,10 @@ class _BillsListScreenState extends ConsumerState<BillsListScreen> with SingleTi
                 children: [
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () { Navigator.pop(ctx); },
+                      onPressed: () { 
+                        Navigator.pop(ctx); 
+                        _printBill(sale, items);
+                      },
                       icon: const Icon(Icons.print_rounded),
                       label: Text(AppStrings.isUrdu ? 'پرنٹ' : 'Print'),
                     ),
@@ -342,13 +351,32 @@ class _BillsListScreenState extends ConsumerState<BillsListScreen> with SingleTi
                   const SizedBox(width: 8),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () { Navigator.pop(ctx); },
+                      onPressed: () { 
+                        Navigator.pop(ctx); 
+                        _shareBill(sale, items);
+                      },
                       icon: const Icon(Icons.share_rounded, color: AppColors.moneyReceived),
                       label: Text(AppStrings.isUrdu ? 'شیئر' : 'Share', style: TextStyle(color: AppColors.moneyReceived)),
                       style: OutlinedButton.styleFrom(side: BorderSide(color: AppColors.moneyReceived)),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(height: 12),
+              // Cancel Bill Button
+              SizedBox(
+                width: double.infinity,
+                child: TextButton.icon(
+                  onPressed: () {
+                    Navigator.pop(ctx);
+                    _confirmCancelBill(sale);
+                  },
+                  icon: const Icon(Icons.cancel_rounded, color: AppColors.moneyOwed),
+                  label: Text(
+                    AppStrings.isUrdu ? 'یہ بل منسوخ کریں (Cancel)' : 'Cancel this Bill',
+                    style: const TextStyle(color: AppColors.moneyOwed),
+                  ),
+                ),
               ),
             ],
           ),
@@ -370,5 +398,139 @@ class _BillsListScreenState extends ConsumerState<BillsListScreen> with SingleTi
         ],
       ),
     );
+  }
+
+  void _confirmCancelBill(Sale sale) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(AppStrings.isUrdu ? 'بل منسوخ کریں؟' : 'Cancel Bill?', style: AppTextStyles.urduTitle),
+        content: Text(
+          AppStrings.isUrdu 
+            ? 'کیا آپ واقعی یہ بل ختم کرنا چاہتے ہیں؟\n\n• خریدا گیا سامان واپس سٹاک میں شامل ہو جائے گا۔\n• ادھار خودبخود واپس ہو جائے گا۔' 
+            : 'Are you sure you want to cancel this bill? Items will return to stock and credit will be reversed.',
+          style: AppTextStyles.urduBody,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(AppStrings.cancel),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(ctx);
+              _cancelBill(sale);
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.moneyOwed, foregroundColor: Colors.white),
+            child: Text(AppStrings.isUrdu ? 'جی ہاں، ختم کریں' : 'Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _cancelBill(Sale sale) async {
+    setState(() => _loading = true);
+    try {
+      final db = ref.read(databaseProvider);
+      await db.deleteSale(sale.id); // Reverses stock and balances internally
+      
+      if (mounted) {
+        // Remove from local lists
+        setState(() {
+          _allSales.removeWhere((s) => s.id == sale.id);
+          _loading = false;
+        });
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppStrings.isUrdu ? '✅ بل کامیابی سے ختم ہو گیا' : '✅ Bill cancelled successfully'),
+            backgroundColor: AppColors.moneyReceived,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _loading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.moneyOwed,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _printBill(Sale sale, List<SaleItem> items) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final shopName = prefs.getString('app_name') ?? 'Super Business Shop';
+      
+      final pdfBytes = await PdfExportService.generateBill(
+        shopName: shopName,
+        shopPhone: '', // Add logic to get shop phone later if added to settings
+        billNo: sale.id.substring(0, 8).toUpperCase(),
+        customerName: sale.customerId != null ? 'Customer (${sale.customerId})' : 'Walk-in Customer',
+        items: items,
+        subtotal: sale.subtotal,
+        discount: sale.discount,
+        discountPercentage: 0, // Usually stored, omitting for simplicity
+        tax: sale.taxAmount,
+        total: sale.total,
+        amountPaid: sale.amountPaid,
+        balanceDue: sale.balanceDue,
+        paymentType: sale.paymentMethod,
+        date: sale.createdAt,
+      );
+
+      await Printing.layoutPdf(
+        onLayout: (format) async => pdfBytes,
+        name: 'Bill_${sale.id}.pdf',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Print error: $e'), backgroundColor: AppColors.moneyOwed),
+      );
+    }
+  }
+
+  Future<void> _shareBill(Sale sale, List<SaleItem> items) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final shopName = prefs.getString('app_name') ?? 'Super Business Shop';
+      
+      final pdfBytes = await PdfExportService.generateBill(
+        shopName: shopName,
+        shopPhone: '',
+        billNo: sale.id.substring(0, 8).toUpperCase(),
+        customerName: sale.customerId != null ? 'Customer (${sale.customerId})' : 'Walk-in Customer',
+        items: items,
+        subtotal: sale.subtotal,
+        discount: sale.discount,
+        discountPercentage: 0,
+        tax: sale.taxAmount,
+        total: sale.total,
+        amountPaid: sale.amountPaid,
+        balanceDue: sale.balanceDue,
+        paymentType: sale.paymentMethod,
+        date: sale.createdAt,
+      );
+
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/receipt_${sale.id}.pdf');
+      await file.writeAsBytes(pdfBytes);
+
+      await Share.shareXFiles(
+        [XFile(file.path)],
+        subject: 'Receipt from $shopName (Bill #${sale.id.substring(0, 6)})',
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Share error: $e'), backgroundColor: AppColors.moneyOwed),
+      );
+    }
   }
 }

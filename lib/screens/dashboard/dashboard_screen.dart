@@ -6,6 +6,12 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/skeleton_loader.dart';
+<<<<<<< HEAD
+=======
+import '../../core/ads/app_banner_ad.dart';
+import '../../core/ads/adsense_widget.dart';
+import 'package:flutter/foundation.dart';
+>>>>>>> feature/gemini-complete-review
 
 /// Dashboard — the main home screen showing today's summary.
 /// Matches the dashboard layout from Section 09 of requirements:
@@ -36,6 +42,10 @@ class DashboardScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ── AD BANNER ──
+              kIsWeb ? const AdSenseWidget(adSlot: 'dashboard_top') : const AppBannerAd(screenName: 'dashboard'),
+              const SizedBox(height: AppDimens.spacingMD),
+
               // ── Row 1: Sales & Profit Cards ──
               Row(
                 children: [
@@ -134,63 +144,75 @@ class _SummaryCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncValue = ref.watch(provider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final baseColor = gradient.colors.first; // use as primary color
 
     return Container(
       padding: const EdgeInsets.all(AppDimens.spacingMD),
       decoration: BoxDecoration(
-        gradient: gradient,
-        borderRadius: BorderRadius.circular(AppDimens.radiusLG),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
         boxShadow: [
           BoxShadow(
-            color: gradient.colors.first.withOpacity(0.3),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 8,
-            offset: const Offset(0, 4),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            children: [
-              Icon(icon, color: Colors.white70, size: 20),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: baseColor.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: baseColor, size: 28),
+          ),
+          const SizedBox(width: AppDimens.spacingSM),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
                   title,
                   style: AppTextStyles.urduCaption.copyWith(
-                    color: Colors.white70,
+                    color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
                     fontSize: 13,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          asyncValue.when(
-            data: (amount) => Text(
-              AppStrings.formatAmount(amount),
-              style: AppTextStyles.amountLarge.copyWith(
-                color: Colors.white,
-                fontSize: 22,
-              ),
-            ),
-            loading: () => const SizedBox(
-              height: 28,
-              width: 28,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white54,
-              ),
-            ),
-            error: (_, __) => Text(
-              'Rs. 0',
-              style: AppTextStyles.amountLarge.copyWith(
-                color: Colors.white54,
-                fontSize: 22,
-              ),
+                const SizedBox(height: 4),
+                asyncValue.when(
+                  data: (amount) => Text(
+                    AppStrings.formatAmount(amount),
+                    style: AppTextStyles.amountLarge.copyWith(
+                      color: isDark ? AppColors.darkTextPrimary : AppColors.lightTextPrimary,
+                      fontSize: 18,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.visible, // shrink or overflow
+                  ),
+                  loading: () => const SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  error: (_, __) => Text(
+                    'Rs. 0',
+                    style: AppTextStyles.amountLarge.copyWith(
+                      color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                      fontSize: 18,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -297,15 +319,17 @@ class _WeeklyChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncData = ref.watch(weeklySalesProfitProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(AppDimens.spacingMD),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimens.radiusLG),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -457,15 +481,17 @@ class _LowStockAlerts extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncProducts = ref.watch(lowStockProductsProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(AppDimens.spacingMD),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimens.radiusLG),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
