@@ -25,6 +25,7 @@ class CustomerListScreen extends ConsumerWidget {
           Consumer(
             builder: (context, ref, _) {
               final isDark = Theme.of(context).brightness == Brightness.dark;
+              final asyncTotal = ref.watch(totalReceivableProvider);
               return Container(
                 width: double.infinity,
                 margin: const EdgeInsets.all(AppDimens.spacingMD),

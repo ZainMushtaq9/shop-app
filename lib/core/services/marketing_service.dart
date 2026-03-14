@@ -111,10 +111,7 @@ class MarketingService {
       }
 
       return await Geolocator.getCurrentPosition(
-        locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.low,
-          timeLimit: Duration(seconds: 5),
-        ),
+        desiredAccuracy: LocationAccuracy.low,
       );
     } catch (_) {
       return null;

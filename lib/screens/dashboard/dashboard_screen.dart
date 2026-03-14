@@ -6,12 +6,9 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/skeleton_loader.dart';
-<<<<<<< HEAD
-=======
 import '../../core/ads/app_banner_ad.dart';
 import '../../core/ads/adsense_widget.dart';
 import 'package:flutter/foundation.dart';
->>>>>>> feature/gemini-complete-review
 
 /// Dashboard — the main home screen showing today's summary.
 /// Matches the dashboard layout from Section 09 of requirements:

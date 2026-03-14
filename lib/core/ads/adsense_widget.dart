@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'dart:ui' as ui;
-import 'package:universal_html/html.dart' as html;
+import 'dart:html' as html;
 
 class AdSenseWidget extends StatefulWidget {
   final String adSlot;

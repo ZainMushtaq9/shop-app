@@ -476,11 +476,11 @@ class _BillsListScreenState extends ConsumerState<BillsListScreen> with SingleTi
         subtotal: sale.subtotal,
         discount: sale.discount,
         discountPercentage: 0, // Usually stored, omitting for simplicity
-        tax: sale.taxAmount,
+        tax: sale.tax,
         total: sale.total,
         amountPaid: sale.amountPaid,
         balanceDue: sale.balanceDue,
-        paymentType: sale.paymentMethod,
+        paymentType: sale.paymentType,
         date: sale.createdAt,
       );
 
@@ -510,11 +510,11 @@ class _BillsListScreenState extends ConsumerState<BillsListScreen> with SingleTi
         subtotal: sale.subtotal,
         discount: sale.discount,
         discountPercentage: 0,
-        tax: sale.taxAmount,
+        tax: sale.tax,
         total: sale.total,
         amountPaid: sale.amountPaid,
         balanceDue: sale.balanceDue,
-        paymentType: sale.paymentMethod,
+        paymentType: sale.paymentType,
         date: sale.createdAt,
       );
 

@@ -6,12 +6,18 @@ import '../providers/app_providers.dart';
 class GlobalAppBar extends ConsumerWidget implements PreferredSizeWidget {
   final String title;
   final bool showDrawer;
+  final bool showMenu;
+  final bool centerTitle;
+  final Color? backgroundColor;
   final List<Widget>? actions;
 
   const GlobalAppBar({
     super.key,
     required this.title,
     this.showDrawer = false,
+    this.showMenu = true,
+    this.centerTitle = false,
+    this.backgroundColor,
     this.actions,
   });
 

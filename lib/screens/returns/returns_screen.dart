@@ -542,10 +542,10 @@ class _ReturnsScreenState extends ConsumerState<ReturnsScreen> {
         // Lower customer balance by adding a 'received' transaction
         final tx = CustomerTransaction(
           customerId: _selectedSale!.customerId!,
-          amount: totalReturn,
-          type: 'received',
+          creditAmount: totalReturn,
+          type: 'RETURN',
+          description: AppStrings.isUrdu ? 'مال واپسی کی کٹوتی (بل #${_selectedSale!.id.substring(0, 6).toUpperCase()})' : 'Return Adj. (Bill #${_selectedSale!.id.substring(0, 6).toUpperCase()})',
           date: DateTime.now(),
-          note: AppStrings.isUrdu ? 'مال واپسی کی کٹوتی (بل #${_selectedSale!.id.substring(0, 6).toUpperCase()})' : 'Return Adj. (Bill #${_selectedSale!.id.substring(0, 6).toUpperCase()})',
         );
         await db.insertCustomerTransaction(tx);
       }
