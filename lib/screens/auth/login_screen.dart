@@ -9,6 +9,7 @@ import '../app_shell.dart';
 import 'signup_screen.dart';
 import '../buyer_dashboard/buyer_dashboard_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/services/marketing_service.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -62,6 +63,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
       // Route based on role from metadata
       final role = response.user!.userMetadata?['role'] ?? 'shopkeeper';
+
+      // Record Marketing Session
+      MarketingService.trackSession(response.user!.id);
+      MarketingService.updateLocation(response.user!.id);
       
       if (role == 'shopkeeper') {
         Navigator.of(context).pushReplacement(
@@ -166,130 +171,247 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch language changes so the entire screen rebuilds
     ref.watch(isUrduProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: GlobalAppBar(
-        title: AppStrings.isUrdu ? 'لاگ ان کریں' : 'Login',
+      extendBodyBehindAppBar: true,
+      appBar: const GlobalAppBar(
+        title: '',
+        showMenu: false,
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
       ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimens.spacingLG),
-            child: Card(
-              elevation: 8,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimens.spacingXL),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark 
+              ? [AppColors.primary.withOpacity(0.2), AppColors.darkBackground, AppColors.darkBackground]
+              : [AppColors.primary.withOpacity(0.1), AppColors.lightBackground, AppColors.primary.withOpacity(0.05)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingLG, vertical: AppDimens.spacingMD),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     // Logo Header
                     Container(
-                      padding: const EdgeInsets.all(16),
+                      width: 96,
+                      height: 96,
                       decoration: BoxDecoration(
-                        color: AppColors.primary.withOpacity(0.1),
-                        shape: BoxShape.circle,
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.3),
+                            blurRadius: 16,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
-                      child: Icon(Icons.storefront, size: 64, color: AppColors.primary),
-                    ),
-                    const SizedBox(height: AppDimens.spacingSM),
-                    Text(
-                      AppStrings.isUrdu ? 'سپر بزنس میں خوش آمدید' : 'Welcome to Super Business',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.urduHeading.copyWith(fontSize: 22, color: AppColors.textPrimary),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      AppStrings.isUrdu ? 'لاگ ان کریں اور اپنا کاروبار سنبھالیں' : 'Login to manage your shop',
-                      textAlign: TextAlign.center,
-                      style: AppTextStyles.urduCaption.copyWith(fontSize: 14),
-                    ),
-                    const SizedBox(height: AppDimens.spacingXL),
-
-                    // Login Form
-                    TextField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        labelText: AppStrings.isUrdu ? 'ای میل' : 'Email Address',
-                        prefixIcon: const Icon(Icons.email_outlined),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      child: const Center(
+                        child: Icon(Icons.storefront_outlined, size: 56, color: Colors.white),
                       ),
                     ),
                     const SizedBox(height: AppDimens.spacingMD),
-
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: AppStrings.isUrdu ? 'پاس ورڈ' : 'Password',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    Text(
+                      'سپر بزنس شاپ',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.urduHeading.copyWith(
+                        fontSize: 32,
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w900,
+                        height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: AppDimens.spacingSM),
-
-                    // Forgot Password
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: _forgotPassword,
-                        child: Text(
-                          AppStrings.isUrdu ? 'پاس ورڈ بھول گئے؟' : 'Forgot Password?',
-                          style: TextStyle(color: AppColors.info, fontWeight: FontWeight.bold),
-                        ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Super Business Shop',
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.title.copyWith(
+                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    const SizedBox(height: AppDimens.spacingMD),
-
-                    // Login Button
-                    SizedBox(
-                      width: double.infinity,
-                      height: 52,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primary,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          elevation: 2,
-                        ),
-                        onPressed: _isLoading ? null : _login,
-                        icon: _isLoading
-                            ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                            : const Icon(Icons.login),
-                        label: Text(
-                          AppStrings.isUrdu ? 'لاگ ان کریں' : 'Login',
-                          style: AppTextStyles.urduHeading.copyWith(color: Colors.white, fontSize: 16),
-                        ),
-                      ),
-                    ),
-
                     const SizedBox(height: AppDimens.spacingXL),
 
-                    // Sign up Switch
+                    // Login Form Card
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkSurface.withOpacity(0.7) : AppColors.lightSurface,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                            blurRadius: 24,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(AppDimens.spacingXL),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          // Custom Tab Header
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  decoration: const BoxDecoration(
+                                    border: Border(bottom: BorderSide(color: AppColors.primary, width: 2)),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      AppStrings.isUrdu ? 'لاگ ان / Login' : 'Login / لاگ ان',
+                                      style: AppTextStyles.title.copyWith(fontSize: 14, color: AppColors.primary),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Container(
+                                  padding: const EdgeInsets.only(bottom: 12),
+                                  decoration: BoxDecoration(
+                                    border: Border(bottom: BorderSide(color: isDark ? AppColors.darkDivider : AppColors.lightDivider, width: 2)),
+                                  ),
+                                  child: Center(
+                                    child: Text(
+                                      AppStrings.isUrdu ? 'تصدیق / Verify' : 'Verify / تصدیق',
+                                      style: AppTextStyles.title.copyWith(
+                                        fontSize: 14, 
+                                        color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppDimens.spacingXL),
+                          
+                          // Email Input
+                          Text(
+                            AppStrings.isUrdu ? 'ای میل / Email' : 'Email / ای میل',
+                            style: AppTextStyles.label.copyWith(fontSize: 14),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            decoration: InputDecoration(
+                              hintText: 'email@example.com',
+                              prefixIcon: const Icon(Icons.mail_outline),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                          const SizedBox(height: AppDimens.spacingMD),
+
+                          // Password Input
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                AppStrings.isUrdu ? 'پاس ورڈ / Password' : 'Password / پاس ورڈ',
+                                style: AppTextStyles.label.copyWith(fontSize: 14),
+                              ),
+                              InkWell(
+                                onTap: _forgotPassword,
+                                child: Text(
+                                  AppStrings.isUrdu ? 'بھول گئے؟ / Forgot?' : 'Forgot? / بھول گئے؟',
+                                  style: AppTextStyles.label.copyWith(fontSize: 12, color: AppColors.primary),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            decoration: InputDecoration(
+                              hintText: '••••••••',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                            ),
+                          ),
+                          const SizedBox(height: AppDimens.spacingXL),
+
+                          // Login Button
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppColors.primary,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 4,
+                              shadowColor: AppColors.primary.withOpacity(0.5),
+                            ),
+                            onPressed: _isLoading ? null : _login,
+                            child: _isLoading
+                                ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        AppStrings.isUrdu ? 'لاگ ان کریں / Login' : 'Login / لاگ ان کریں',
+                                        style: AppTextStyles.title.copyWith(color: Colors.white, fontSize: 16),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.arrow_forward),
+                                    ],
+                                  ),
+                          ),
+
+                          const SizedBox(height: AppDimens.spacingLG),
+                          
+                          // Sign up link
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                AppStrings.isUrdu ? 'اکاؤنٹ نہیں ہے؟ ' : 'Don\'t have an account? ',
+                                style: AppTextStyles.body.copyWith(
+                                  color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).push(
+                                    MaterialPageRoute(builder: (_) => const SignupScreen()),
+                                  );
+                                },
+                                style: TextButton.styleFrom(padding: EdgeInsets.zero, minimumSize: Size.zero),
+                                child: Text(
+                                  AppStrings.isUrdu ? 'نیا اکاؤنٹ بنائیں' : 'Sign Up',
+                                  style: AppTextStyles.title.copyWith(color: AppColors.primary, fontSize: 14),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppDimens.spacingLG),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text(
-                          AppStrings.isUrdu ? 'اکاؤنٹ نہیں ہے؟ ' : 'Don\'t have an account? ',
-                          style: AppTextStyles.urduBody.copyWith(color: AppColors.textSecondary),
-                        ),
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(builder: (_) => const SignupScreen()),
-                            );
-                          },
-                          child: Text(
-                            AppStrings.isUrdu ? 'نیا اکاؤنٹ بنائیں' : 'Sign Up Here',
-                            style: AppTextStyles.urduBody.copyWith(color: AppColors.primary, fontWeight: FontWeight.bold),
-                          ),
-                        ),
+                        Text('Privacy Policy', style: AppTextStyles.caption.copyWith(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)),
+                        const SizedBox(width: 16),
+                        Text('Terms of Service', style: AppTextStyles.caption.copyWith(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)),
+                        const SizedBox(width: 16),
+                        Text('Support', style: AppTextStyles.caption.copyWith(color: isDark ? AppColors.darkTextSecondary : AppColors.lightTextSecondary)),
                       ],
-                    ),
+                    )
                   ],
                 ),
               ),

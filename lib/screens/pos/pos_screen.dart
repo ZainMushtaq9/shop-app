@@ -78,8 +78,9 @@ class _PosScreenState extends ConsumerState<PosScreen> {
                       return Align(
                         alignment: Alignment.topLeft,
                         child: Material(
-                          elevation: 4,
-                          borderRadius: BorderRadius.circular(12),
+                          elevation: 8,
+                          borderRadius: BorderRadius.circular(16),
+                          color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : AppColors.lightSurface,
                           child: ConstrainedBox(
                             constraints: const BoxConstraints(maxHeight: 250),
                             child: ListView.builder(
@@ -160,8 +161,15 @@ class _PosScreenState extends ConsumerState<PosScreen> {
           Container(
             width: MediaQuery.of(context).size.width * 0.4,
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              border: Border(left: BorderSide(color: AppColors.divider)),
+              color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : AppColors.lightSurface,
+              border: Border(left: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkDivider : AppColors.lightDivider)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
+                  blurRadius: 24,
+                  offset: const Offset(-8, 0),
+                ),
+              ],
             ),
             child: Column(
               children: [
@@ -780,11 +788,18 @@ class _ProductCard extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppDimens.radiusMD),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(AppDimens.radiusMD),
-          border: Border.all(color: AppColors.divider),
+          color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : AppColors.lightSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkDivider : AppColors.lightDivider),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.2 : 0.02),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

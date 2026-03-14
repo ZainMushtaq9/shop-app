@@ -8,6 +8,8 @@ import '../../widgets/global_app_bar.dart';
 import '../../services/auth_service.dart';
 import '../app_shell.dart';
 import '../buyer_dashboard/buyer_dashboard_screen.dart';
+import '../../core/services/marketing_service.dart';
+import 'privacy_notice_dialog.dart';
 
 class SignupScreen extends ConsumerStatefulWidget {
   const SignupScreen({super.key});
@@ -115,6 +117,29 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
       // Route based on role
       if (_selectedRole == 'shopkeeper') {
+        final consented = await PrivacyNoticeDialog.show(context) ?? false;
+
+        await MarketingService.saveShopkeeperProfile(
+          userId: authService.currentUser!.id,
+          shopData: {
+            'owner_name': _nameController.text.trim(),
+            'phone': _phoneController.text.trim(),
+            'email': _emailController.text.trim(),
+            'shop_name': _shopNameController.text.trim(),
+            'shop_type': 'general',
+            'market': '',
+            'city': '',
+            'province': '',
+          },
+        );
+
+        try {
+          await MarketingService.supabase.from('marketing_profiles').update({
+            'marketing_opted': consented,
+          }).eq('user_id', authService.currentUser!.id);
+        } catch (_) {}
+
+        if (!mounted) return;
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const AppShell()),
         );
@@ -357,26 +382,54 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Watch language changes so the entire screen rebuilds
-    final isUrdu = ref.watch(isUrduProvider);
+    ref.watch(isUrduProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppDimens.spacingLG),
-            child: Card(
-              elevation: 4,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-              child: Padding(
-                padding: const EdgeInsets.all(AppDimens.spacingXL),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (_currentStep == 0) _buildInfoStep(),
-                    if (_currentStep == 1) _buildOtpStep(),
-                  ],
+      extendBodyBehindAppBar: true,
+      appBar: const GlobalAppBar(
+        title: '',
+        showMenu: false,
+        centerTitle: true,
+        backgroundColor: Colors.transparent,
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: isDark 
+              ? [AppColors.primary.withOpacity(0.2), AppColors.darkBackground, AppColors.darkBackground]
+              : [AppColors.primary.withOpacity(0.1), AppColors.lightBackground, AppColors.primary.withOpacity(0.05)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: AppDimens.spacingLG, vertical: AppDimens.spacingMD),
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 480),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? AppColors.darkSurface.withOpacity(0.7) : AppColors.lightSurface,
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: AppColors.primary.withOpacity(0.1)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  padding: const EdgeInsets.all(AppDimens.spacingXL),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (_currentStep == 0) _buildInfoStep(),
+                      if (_currentStep == 1) _buildOtpStep(),
+                    ],
+                  ),
                 ),
               ),
             ),

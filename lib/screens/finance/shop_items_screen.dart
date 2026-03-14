@@ -6,6 +6,8 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/global_app_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 /// Dukaan ki Cheezein — Simple list of shop's big purchases /equipment.
 /// No depreciation, no complex calculations. Just a list of what you own.
@@ -30,15 +32,34 @@ class _ShopItemsScreenState extends ConsumerState<ShopItemsScreen> {
   Future<void> _loadItems() async {
     setState(() => _loading = true);
     try {
-      // Shop items stored locally for now — can be migrated to Supabase table later
-      // Using in-memory list since the shop_items table may not exist yet
-      setState(() {
-        _loading = false;
-        _totalValue = _items.fold<double>(0, (sum, item) => sum + ((item['price'] as num?)?.toDouble() ?? 0));
-      });
+      final prefs = await SharedPreferences.getInstance();
+      final itemsJson = prefs.getString('shop_items_cache');
+      
+      if (itemsJson != null) {
+        final List<dynamic> decoded = jsonDecode(itemsJson);
+        _items = decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+      
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _recalcTotal();
+        });
+      }
     } catch (e) {
-      setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Future<void> _saveItems() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('shop_items_cache', jsonEncode(_items));
+    } catch (_) {}
+  }
+
+  void _recalcTotal() {
+    _totalValue = _items.fold<double>(0, (sum, item) => sum + ((item['price'] as num?)?.toDouble() ?? 0));
   }
 
   @override
@@ -155,8 +176,11 @@ class _ShopItemsScreenState extends ConsumerState<ShopItemsScreen> {
                     style: AppTextStyles.amountSmall.copyWith(color: AppColors.primary),
                   ),
                   onLongPress: () {
-                    setState(() => _items.removeAt(index));
-                    _recalcTotal();
+                    setState(() {
+                      _items.removeAt(index);
+                      _recalcTotal();
+                    });
+                    _saveItems();
                   },
                 ),
               );
@@ -167,9 +191,6 @@ class _ShopItemsScreenState extends ConsumerState<ShopItemsScreen> {
     );
   }
 
-  void _recalcTotal() {
-    _totalValue = _items.fold<double>(0, (sum, item) => sum + ((item['price'] as num?)?.toDouble() ?? 0));
-  }
 
   void _addItemDialog() {
     final nameController = TextEditingController();
@@ -221,6 +242,7 @@ class _ShopItemsScreenState extends ConsumerState<ShopItemsScreen> {
                 });
                 _recalcTotal();
               });
+              _saveItems();
               Navigator.pop(ctx);
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.primary),

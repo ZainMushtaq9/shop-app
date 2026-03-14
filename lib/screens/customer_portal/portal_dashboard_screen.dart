@@ -8,6 +8,8 @@ import 'portal_login_screen.dart';
 import 'portal_providers.dart';
 import 'portal_shop_detail_screen.dart';
 import 'portal_notifications_screen.dart';
+import '../../core/ads/app_banner_ad.dart';
+import 'package:flutter/foundation.dart';
 
 class PortalDashboardScreen extends ConsumerWidget {
   const PortalDashboardScreen({super.key});
@@ -99,6 +101,10 @@ class PortalDashboardScreen extends ConsumerWidget {
             child: ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                // ── AD BANNER ──
+                if (!kIsWeb) const AppBannerAd(screenName: 'customer_portal'),
+                const SizedBox(height: 16),
+
                 // Top Summary Card
                 Container(
                   padding: const EdgeInsets.all(24),

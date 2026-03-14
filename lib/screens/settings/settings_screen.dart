@@ -10,6 +10,7 @@ import 'sync_status_screen.dart';
 import '../../utils/export_helper.dart';
 import 'customer_portal_qr_screen.dart';
 import 'whatsapp_queue_screen.dart';
+import 'backup_screen.dart';
 
 /// Settings screen — Branding, store type, language, security, backup, account.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -349,7 +350,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         children: [
           // ── Branding ──
           _SectionHeader(AppStrings.isUrdu ? 'برانڈنگ' : 'Branding'),
-          Card(
+          _SettingsCard(
             margin: const EdgeInsets.only(bottom: AppDimens.spacingLG),
             child: Column(
               children: [
@@ -374,7 +375,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // ── App Settings ──
           _SectionHeader(AppStrings.isUrdu ? 'ایپ کی سیٹنگز' : 'App Settings'),
-          Card(
+          _SettingsCard(
             margin: const EdgeInsets.only(bottom: AppDimens.spacingLG),
             child: Column(
               children: [
@@ -420,7 +421,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // ── Security ──
           _SectionHeader(AppStrings.isUrdu ? 'سیکورٹی' : 'Security'),
-          Card(
+          _SettingsCard(
             margin: const EdgeInsets.only(bottom: AppDimens.spacingLG),
             child: Column(
               children: [
@@ -465,7 +466,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
           // ── Data & Backup ──
           _SectionHeader(AppStrings.isUrdu ? 'ڈیٹا اور بیک اپ' : 'Data & Backup'),
-          Card(
+          _SettingsCard(
             margin: const EdgeInsets.only(bottom: AppDimens.spacingLG),
             child: Column(
               children: [
@@ -504,13 +505,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     }
                   },
                 ),
+                const Divider(height: 1),
+                ListTile(
+                  leading: const Icon(Icons.cloud_upload_rounded, color: AppColors.primary),
+                  title: Text(AppStrings.isUrdu ? 'گوگل ڈرائیو بیک اپ' : 'Google Drive Backup', style: AppTextStyles.urduBody),
+                  subtitle: Text(AppStrings.isUrdu ? 'کلاؤڈ پر محفوظ کریں' : 'Save to cloud backup', style: AppTextStyles.caption),
+                  trailing: const Icon(Icons.chevron_right_rounded, color: AppColors.primary),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (_) => const GoogleDriveBackupScreen()),
+                    );
+                  },
+                ),
               ],
             ),
           ),
 
           // ── Account ──
           _SectionHeader(AppStrings.isUrdu ? 'اکاؤنٹ' : 'Account'),
-          Card(
+          _SettingsCard(
             child: Column(
               children: [
                 ListTile(
@@ -551,6 +565,40 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
       child: Text(title, style: AppTextStyles.urduTitle.copyWith(fontSize: 14, color: AppColors.primary)),
+    );
+  }
+}
+
+class _SettingsCard extends StatelessWidget {
+  final Widget child;
+  final EdgeInsetsGeometry margin;
+
+  const _SettingsCard({
+    required this.child,
+    this.margin = const EdgeInsets.only(bottom: AppDimens.spacingLG),
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Container(
+      margin: margin,
+      decoration: BoxDecoration(
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDark ? AppColors.darkDivider : AppColors.lightDivider),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: child,
+      ),
     );
   }
 }

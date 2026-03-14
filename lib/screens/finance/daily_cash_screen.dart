@@ -6,6 +6,8 @@ import '../../theme/app_theme.dart';
 import '../../utils/constants.dart';
 import '../../providers/app_providers.dart';
 import '../../widgets/global_app_bar.dart';
+import '../../core/ads/app_banner_ad.dart';
+import 'package:flutter/foundation.dart';
 
 /// Daily Cash / Aaj ka Hisaab — Tracks daily opening/closing cash.
 /// Concept: Subah kitna tha + jo aaya - jo gaya = raat ko kitna hona chahiye
@@ -92,6 +94,10 @@ class _DailyCashScreenState extends ConsumerState<DailyCashScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // ── AD BANNER ──
+                if (!kIsWeb) const AppBannerAd(screenName: 'daily_summary'),
+                const SizedBox(height: AppDimens.spacingMD),
+
                 if (!_sessionOpen && !_sessionClosed)
                   _buildOpenDayCard()
                 else if (_sessionOpen && !_sessionClosed)
@@ -106,12 +112,20 @@ class _DailyCashScreenState extends ConsumerState<DailyCashScreen> {
 
   // ─── OPEN THE DAY ───
   Widget _buildOpenDayCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(AppDimens.spacingLG),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMD),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.primary.withOpacity(0.2)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
@@ -200,9 +214,16 @@ class _DailyCashScreenState extends ConsumerState<DailyCashScreen> {
         Container(
           padding: const EdgeInsets.all(AppDimens.spacingMD),
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimens.radiusMD),
-            border: Border.all(color: AppColors.divider),
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : AppColors.lightSurface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkDivider : AppColors.lightDivider),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -220,9 +241,16 @@ class _DailyCashScreenState extends ConsumerState<DailyCashScreen> {
         Container(
           padding: const EdgeInsets.all(AppDimens.spacingLG),
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimens.radiusMD),
+            color: Theme.of(context).brightness == Brightness.dark ? AppColors.darkSurface : AppColors.lightSurface,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: AppColors.warning.withOpacity(0.3)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(Theme.of(context).brightness == Brightness.dark ? 0.3 : 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -285,12 +313,20 @@ class _DailyCashScreenState extends ConsumerState<DailyCashScreen> {
   // ─── DAY SUMMARY ───
   Widget _buildDaySummaryCard() {
     final match = _difference.abs() < 1;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       padding: const EdgeInsets.all(AppDimens.spacingLG),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimens.radiusMD),
+        color: isDark ? AppColors.darkSurface : AppColors.lightSurface,
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: match ? AppColors.moneyReceived : AppColors.warning, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         children: [
