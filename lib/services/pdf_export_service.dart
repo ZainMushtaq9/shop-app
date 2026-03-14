@@ -45,7 +45,7 @@ class PdfExportService {
               children: [
                 _summaryItem('Total Sales / کل بکری', 'Rs. ${AppFormatters.number(totalSales)}', PdfColors.green),
                 _summaryItem('Expenses / خرچے', 'Rs. ${AppFormatters.number(totalExpenses)}', PdfColors.red),
-                _summaryItem('Expected Cash / کیش', 'Rs. ${AppFormatters.number(expectedCash)}', PdfColors.blue),
+                _summaryItem('Expected Cash / کیش', 'Rs. ${AppFormatters.number(expectedCash)}', PdfColors.teal),
               ],
             ),
           ),

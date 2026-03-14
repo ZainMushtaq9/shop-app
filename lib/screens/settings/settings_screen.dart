@@ -487,10 +487,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const Divider(height: 1),
                 ListTile(
-                  leading: const Icon(Icons.download_rounded, color: Colors.blue),
+                  leading: const Icon(Icons.download_rounded, color: AppColors.primary),
                   title: Text(AppStrings.isUrdu ? 'ڈیٹا ایکسپورٹ' : 'Export Data', style: AppTextStyles.urduBody),
                   subtitle: Text(AppStrings.isUrdu ? 'تمام ڈیٹا JSON فارمیٹ میں ایکسپورٹ' : 'Export all data in JSON format', style: AppTextStyles.caption),
-                  trailing: const Icon(Icons.cloud_download_outlined, color: Colors.blue),
+                  trailing: const Icon(Icons.cloud_download_outlined, color: AppColors.primary),
                   onTap: () async {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(content: Text(AppStrings.isUrdu ? 'ایکسپورٹ ہو رہا ہے...' : 'Preparing export...')),

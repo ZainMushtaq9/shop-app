@@ -107,7 +107,7 @@ class ReportsScreen extends ConsumerWidget {
               title: AppStrings.isUrdu ? 'سپلائرز کے کھاتے ایکسل میں' : 'Supplier Ledgers to Excel',
               subtitle: AppStrings.isUrdu ? 'سپلیئرز کا ریکارڈ ایکسل فارمیٹ میں نکالیں' : 'Export suppliers records in Excel format',
               icon: Icons.file_upload_rounded,
-              color: Colors.blue.shade600,
+              color: AppColors.primary,
               onTap: () => _exportSupplierLedger(context, ref),
             ),
           ],
