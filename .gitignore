@@ -43,3 +43,14 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Test artifacts (screenshots, videos etc. are local only)
+test/images/
+test/videos/
+test/reports/
+test/node_modules/
+test/manual/
+
+# Node
+node_modules/
+package-lock.json
