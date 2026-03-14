@@ -22,8 +22,8 @@ class AppColors {
   static const Color warning = Color(0xFFFD7E14);
 
   // ── Day / Sunlight Mode ──
-  static const Color lightBackground = Color(0xFFF5F8F8);
-  static const Color lightSurface    = Color(0xFFFFFFFF);
+  static const Color lightBackground = Color(0xFFF8F9FA); // Stitch design
+  static const Color lightSurface    = Color(0xFFFFFFFF); // Stitch design
   static const Color lightTextPrimary = Color(0xFF111827);
   static const Color lightTextSecondary = Color(0xFF6B7280);
   static const Color lightDivider    = Color(0xFFE5E7EB);

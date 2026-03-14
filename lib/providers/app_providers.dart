@@ -193,4 +193,4 @@ final selectedCategoryProvider = StateProvider<String?>((ref) => null);
 final productSearchQueryProvider = StateProvider<String>((ref) => '');
 
 /// Theme mode toggle (light / dark / system)
-final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.system);
+final themeModeProvider = StateProvider<ThemeMode>((ref) => ThemeMode.light);
