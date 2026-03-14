@@ -9,6 +9,7 @@ services:
   - type: web
     name: super-business-backend
     env: python
+    rootDir: backend
     buildCommand: pip install -r requirements.txt
     startCommand: gunicorn app:app
     plan: free
